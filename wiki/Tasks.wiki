@@ -1,0 +1,30 @@
+#summary Seperation of Tasks and Assignments.
+
+= Introduction =
+
+These are the tasks assigned to each person until the Issues section starts working.
+
+----
+= Assignments =
+
+*David*
+    * Network Server
+
+*Omar*
+    * Menus and Menu Layout
+
+*Julio*
+    * General Ship Class
+
+*Ayman*
+    * 
+----
+
+
+*Unassigned Tasks
+    * Create the Client Side Networking
+    * Create a Game State Manager
+    * Create a physics manager
+    * Create the game environment
+    * Create the game AI
+    * Create different ammo types
