@@ -39,7 +39,6 @@ namespace BattleBoatsServer
         /// </summary>
         private void ListenForClients(){
             this.tcpListener.Start();
-
             while (active)
             {
                 //blocks until a client has connected to the server
