@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleBoatsServer", "BattleBoatsServer\BattleBoatsServer.csproj", "{C607D656-6297-44AF-AC90-247D8D6CE925}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerTestUpdateData", "ServerTestUpdateData\ServerTestUpdateData.csproj", "{98796335-A1A8-4690-B04D-B0FF93F0DA49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerTesterGetData", "ServerTesterGetData\ServerTesterGetData.csproj", "{A020A2E5-03C6-4E25-AB3C-D6B7D0CA18C6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C607D656-6297-44AF-AC90-247D8D6CE925}.Debug|x86.ActiveCfg = Debug|x86
+		{C607D656-6297-44AF-AC90-247D8D6CE925}.Debug|x86.Build.0 = Debug|x86
+		{C607D656-6297-44AF-AC90-247D8D6CE925}.Release|x86.ActiveCfg = Release|x86
+		{C607D656-6297-44AF-AC90-247D8D6CE925}.Release|x86.Build.0 = Release|x86
+		{98796335-A1A8-4690-B04D-B0FF93F0DA49}.Debug|x86.ActiveCfg = Debug|x86
+		{98796335-A1A8-4690-B04D-B0FF93F0DA49}.Debug|x86.Build.0 = Debug|x86
+		{98796335-A1A8-4690-B04D-B0FF93F0DA49}.Release|x86.ActiveCfg = Release|x86
+		{98796335-A1A8-4690-B04D-B0FF93F0DA49}.Release|x86.Build.0 = Release|x86
+		{A020A2E5-03C6-4E25-AB3C-D6B7D0CA18C6}.Debug|x86.ActiveCfg = Debug|x86
+		{A020A2E5-03C6-4E25-AB3C-D6B7D0CA18C6}.Debug|x86.Build.0 = Debug|x86
+		{A020A2E5-03C6-4E25-AB3C-D6B7D0CA18C6}.Release|x86.ActiveCfg = Release|x86
+		{A020A2E5-03C6-4E25-AB3C-D6B7D0CA18C6}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
