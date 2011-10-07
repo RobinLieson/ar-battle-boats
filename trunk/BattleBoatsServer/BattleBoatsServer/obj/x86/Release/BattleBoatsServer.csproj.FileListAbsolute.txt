@@ -1,0 +1,1 @@
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\bin\Release\BattleBoatsServer.exe.config
