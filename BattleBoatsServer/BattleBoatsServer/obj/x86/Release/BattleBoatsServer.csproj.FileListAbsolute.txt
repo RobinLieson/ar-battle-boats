@@ -1,1 +1,10 @@
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\bin\Release\BattleBoatsServer.exe.config
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\bin\Release\BattleBoatsServer.exe
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\bin\Release\BattleBoatsServer.pdb
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\BattleBoatsServer.BattleBoatServer.resources
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\BattleBoatsServer.Properties.Resources.resources
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\GenerateResource.read.1.tlog
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\GenerateResource.write.1.tlog
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\BattleBoatsServer.exe
+C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\trunk\BattleBoatsServer\BattleBoatsServer\obj\x86\Release\BattleBoatsServer.pdb
