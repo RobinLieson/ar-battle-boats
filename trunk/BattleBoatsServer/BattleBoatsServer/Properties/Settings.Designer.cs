@@ -26,8 +26,7 @@ namespace BattleBoatsServer.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=C:\\Users\\David Gorena\\Documents\\School\\CS 4393 - User Interfaces\\AR B" +
-            "attle Boats\\Source\\trunk\\BattleBoatsServer\\BattleBoatsServer\\BattleBoatsDB.sdf")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=|DataDirectory|\\BattleBoatsDB.sdf")]
         public string BattleBoatsDatabaseConnectionString {
             get {
                 return ((string)(this["BattleBoatsDatabaseConnectionString"]));
