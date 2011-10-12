@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+//XNA
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -10,6 +12,15 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+
+//Goblin XNA
+using GoblinXNA;
+using GoblinXNA.Graphics;
+using GoblinXNA.SceneGraph;
+using Model = GoblinXNA.Graphics.Model;
+using GoblinXNA.Graphics.Geometry;
+using GoblinXNA.Device.Generic;
+using GoblinXNA.UI.UI2D;
 
 //Networking
 using System.Text;
@@ -94,7 +105,15 @@ namespace AR_Battle_Boats
                     bool result = info.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
                     if (!result)
                     {
-                        info = null;
+                        info = new PlayerInfo();
+                        info.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                        info.Ammo_Level = 0;
+                        info.Armour_Level = 0;
+                        info.Money = 0;
+                        info.Speed_Level = 0;
+                        info.Ship_Model_Name = "Base";
+                        Console.WriteLine("Creating new profile");
+                        Console.Write(info.ToString());
                     }
                 }
             }
