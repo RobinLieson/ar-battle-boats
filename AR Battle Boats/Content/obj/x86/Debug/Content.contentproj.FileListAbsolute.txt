@@ -1,3 +1,2 @@
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\AR Battle Boats\AR Battle Boats\Content\obj\x86\Debug\ResolveAssemblyReference.cache
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\Content\obj\x86\Debug\ResolveAssemblyReference.cache
-C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\Content\obj\x86\Debug\ResolveAssemblyReference.cache
