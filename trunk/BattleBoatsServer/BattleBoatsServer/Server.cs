@@ -12,6 +12,9 @@ using System.Xml;
 using System.Configuration;
 using System.Data.SqlServerCe;
 
+//AR Battle Boats
+using AR_Battle_Boats;
+
 //Code hijacked from http://www.switchonthecode.com/tutorials/csharp-tutorial-simple-threaded-tcp-server
 
 
@@ -86,10 +89,9 @@ namespace BattleBoatsServer
             if (tokens.Length > 1)//We're getting an update string, so update
             {
                 Console.WriteLine("Player Update data for " + tokens[1] + " recieved.");
-                PlayerInfo info = new PlayerInfo();
-                info.CreateFromString(sentString);
+                PlayerInfo info = new PlayerInfo(sentString);
                 UpdatePlayerInfo(info);
-                gamerID = info.userName;
+                gamerID = info.PlayerName;
             }
             else
             {
@@ -142,12 +144,12 @@ namespace BattleBoatsServer
                 adapter.Update(dataset, "PlayerInfo");
             }
 
-            info.userName = dataset.PlayerInfo[0].UserName;
-            info.ammo = dataset.PlayerInfo[0].AmmoUpgrades;
-            info.armour = dataset.PlayerInfo[0].ArmourUpgrades;
-            info.money = dataset.PlayerInfo[0].Money;
-            info.speed = dataset.PlayerInfo[0].SpeedUpgrades;
-            info.ship = dataset.PlayerInfo[0].ShipModel;
+            info.PlayerName = dataset.PlayerInfo[0].UserName;
+            info.Ammo_Level = dataset.PlayerInfo[0].AmmoUpgrades;
+            info.Armour_Level = dataset.PlayerInfo[0].ArmourUpgrades;
+            info.Money = dataset.PlayerInfo[0].Money;
+            info.Speed_Level = dataset.PlayerInfo[0].SpeedUpgrades;
+            info.Ship_Model_Name = dataset.PlayerInfo[0].ShipModel;
 
             return info;
         }
@@ -160,19 +162,19 @@ namespace BattleBoatsServer
         {
             BattleBoatsDataSet dataset = new BattleBoatsDataSet();
             PlayerInfo info = new PlayerInfo();
-            String select = "SELECT * FROM PlayerInfo WHERE UserName = \'" + newInfo.userName + "\'";
+            String select = "SELECT * FROM PlayerInfo WHERE UserName = \'" + newInfo.PlayerName + "\'";
 
             SqlCeDataAdapter adapter = new SqlCeDataAdapter(select, conn);
             adapter.Fill(dataset, "PlayerInfo");
 
             if (dataset.PlayerInfo.Rows.Count == 1)//New user, create table entries for them
             {
-                dataset.PlayerInfo.Rows[0]["UserName"] = newInfo.userName;
-                dataset.PlayerInfo.Rows[0]["AmmoUpgrades"] = newInfo.ammo;
-                dataset.PlayerInfo.Rows[0]["ArmourUpgrades"] = newInfo.armour;
-                dataset.PlayerInfo.Rows[0]["Money"] = newInfo.money;
-                dataset.PlayerInfo.Rows[0]["SpeedUpgrades"] = newInfo.speed;
-                dataset.PlayerInfo.Rows[0]["ShipModel"] = newInfo.ship;
+                dataset.PlayerInfo.Rows[0]["UserName"] = newInfo.PlayerName;
+                dataset.PlayerInfo.Rows[0]["AmmoUpgrades"] = newInfo.Ammo_Level;
+                dataset.PlayerInfo.Rows[0]["ArmourUpgrades"] = newInfo.Armour_Level;
+                dataset.PlayerInfo.Rows[0]["Money"] = newInfo.Money;
+                dataset.PlayerInfo.Rows[0]["SpeedUpgrades"] = newInfo.Speed_Level;
+                dataset.PlayerInfo.Rows[0]["ShipModel"] = newInfo.Ship_Model_Name;
 
                 SqlCeCommandBuilder builder = new SqlCeCommandBuilder(adapter);
                 builder.QuotePrefix = "[";

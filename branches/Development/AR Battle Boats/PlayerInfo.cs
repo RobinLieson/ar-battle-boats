@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 
-namespace BattleBoatsServer
+namespace AR_Battle_Boats
 {
     public class PlayerInfo
     {
@@ -94,7 +94,7 @@ namespace BattleBoatsServer
             }
             set
             {
-                spped = value;
+                speed = value;
             }
         }
 
@@ -224,7 +224,7 @@ namespace BattleBoatsServer
         /// <param name="Server_address">Address of the Remote Server</param>
         /// <param name="Port_Num">Port Number on the Remote Server</param>
         /// <returns>True if update was successful, false otherwise</returns>
-        private bool UpdateInfoOnServer(string Server_address, int Port_Num)
+        public bool UpdateInfoOnServer(string Server_address, int Port_Num)
         {
             NetworkStream stream; //Stream to write and read data to
 

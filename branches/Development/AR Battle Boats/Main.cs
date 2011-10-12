@@ -90,7 +90,12 @@ namespace AR_Battle_Boats
             {
                 if (info == null)
                 {
-                    info = GetPlayerInfo(SignedInGamer.SignedInGamers[0].Gamertag);
+                    info = new PlayerInfo();
+                    bool result = info.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
+                    if (!result)
+                    {
+                        info = null;
+                    }
                 }
             }
 

@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Net;
 using System;
 
-namespace BattleBoatsServer
+namespace AR_Battle_Boats
 {
     public class PlayerInfo
     {
@@ -20,6 +20,15 @@ namespace BattleBoatsServer
         public PlayerInfo()
         {
 
+        }
+
+        /// <summary>
+        /// Will create a new PlayerInfo object from the string given
+        /// </summary>
+        /// <param name="Creation_String">String used to populat the PlayerInfo object</param>
+        public PlayerInfo(string Creation_String)
+        {
+            CreateFromString(Creation_String);
         }
 
         /// <summary>
@@ -94,7 +103,7 @@ namespace BattleBoatsServer
             }
             set
             {
-                spped = value;
+                speed = value;
             }
         }
 

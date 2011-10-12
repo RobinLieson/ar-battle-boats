@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using BattleBoatsServer;
+using AR_Battle_Boats;
 
 namespace ServerTester
 {
@@ -38,12 +39,12 @@ namespace ServerTester
             //Write the GamerTag to the server
 
             PlayerInfo newInfo = new PlayerInfo();
-            newInfo.userName = "thenewzerov";
-            newInfo.ammo = 1;
-            newInfo.armour = 3;
-            newInfo.money = 100;
-            newInfo.speed = 0;
-            newInfo.ship = "Galleon";
+            newInfo.PlayerName = "thenewzerov";
+            newInfo.Ammo_Level = 1;
+            newInfo.Armour_Level = 3;
+            newInfo.Money = 100;
+            newInfo.Speed_Level = 0;
+            newInfo.Ship_Model_Name = "Galleon";
 
             stream = client.GetStream();
             stream.Write(encoder.GetBytes(newInfo.ToString()), 0, encoder.GetByteCount(newInfo.ToString()));
@@ -68,8 +69,7 @@ namespace ServerTester
                 return;
             }
 
-            info = new PlayerInfo();
-            info.CreateFromString(message);
+            info = new PlayerInfo(message);
 
             Console.WriteLine(info.ToString());
             Console.ReadLine();

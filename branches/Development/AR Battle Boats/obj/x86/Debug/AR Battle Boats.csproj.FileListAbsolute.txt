@@ -10,3 +10,9 @@ C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.exe
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.exe
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\AR Battle Boats.exe
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\AR Battle Boats.pdb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb

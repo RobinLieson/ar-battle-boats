@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using BattleBoatsServer;
+using AR_Battle_Boats;
 
 namespace ServerTester
 {
@@ -61,8 +62,7 @@ namespace ServerTester
                 return;
             }
 
-            info = new PlayerInfo();
-            info.CreateFromString(message);
+            info = new PlayerInfo(message);
 
             Console.WriteLine(info.ToString());
             Console.ReadLine();
