@@ -36,7 +36,9 @@ namespace AR_Battle_Boats
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        PlayerInfo info;
+        PlayerInfo playerInfo1; //Information for Player 1
+        PlayerInfo playerInfo2; //Information for Player 2 (Only if we're not playing online)
+        Scene scene;
 
         public Main()
         {
@@ -52,9 +54,14 @@ namespace AR_Battle_Boats
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             Components.Add(new GamerServicesComponent(this));
 
+            State.InitGoblin(graphics, Content, ""); //Start Goblin XNA
+            scene = new Scene(this); //Create a new Scene
+
+            this.IsMouseVisible = true; //Set Mouse Visible         
+            
+            
             base.Initialize();
         }
 
@@ -67,7 +74,13 @@ namespace AR_Battle_Boats
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // TODO: use this.Content to load your game content here
+            GeometryNode water = new GeometryNode("Ocean");
+            water.Model = Content.Load<Model>(".\\Models\\OceanWater");
+
+            TransformNode oceanTransNode = new TransformNode("Ocean Transform Node");
+
+            scene.RootNode.AddChild(oceanTransNode);
+            oceanTransNode.AddChild(water);
         }
 
         /// <summary>
@@ -99,21 +112,21 @@ namespace AR_Battle_Boats
             }
             else
             {
-                if (info == null)
+                if (playerInfo1 == null)
                 {
-                    info = new PlayerInfo();
-                    bool result = info.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
+                    playerInfo1 = new PlayerInfo();
+                    bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
                     if (!result)
                     {
-                        info = new PlayerInfo();
-                        info.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
-                        info.Ammo_Level = 0;
-                        info.Armour_Level = 0;
-                        info.Money = 0;
-                        info.Speed_Level = 0;
-                        info.Ship_Model_Name = "Base";
+                        playerInfo1 = new PlayerInfo();
+                        playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                        playerInfo1.Ammo_Level = 0;
+                        playerInfo1.Armour_Level = 0;
+                        playerInfo1.Money = 0;
+                        playerInfo1.Speed_Level = 0;
+                        playerInfo1.Ship_Model_Name = "Base";
                         Console.WriteLine("Creating new profile");
-                        Console.Write(info.ToString());
+                        Console.Write(playerInfo1.ToString());
                     }
                 }
             }
