@@ -12,7 +12,7 @@ namespace AR_Battle_Boats
         private int armour;
         private int ammo;
         private int speed;
-        private string ship;
+        private Ship ship;
 
         /// <summary>
         /// Create a new PlayerInfo class
@@ -20,6 +20,15 @@ namespace AR_Battle_Boats
         public PlayerInfo()
         {
 
+        }
+
+        /// <summary>
+        /// Will create a new PlayerInfo object from the string given
+        /// </summary>
+        /// <param name="Creation_String">String used to populat the PlayerInfo object</param>
+        public PlayerInfo(string Creation_String)
+        {
+            CreateFromString(Creation_String);
         }
 
         /// <summary>
@@ -101,7 +110,7 @@ namespace AR_Battle_Boats
         /// <summary>
         /// Get or Set the Ship Model Info for this PlayerInfo
         /// </summary>
-        public string Ship_Model_Name
+        public Ship Player_Ship
         {
             get
             {
@@ -110,6 +119,10 @@ namespace AR_Battle_Boats
             set
             {
                 ship = value;
+                ship.Ammo = ammo;
+                ship.Speed = speed;
+                ship.Health = 100;
+                ship.Armour = armour;
             }
         }
 
@@ -135,8 +148,6 @@ namespace AR_Battle_Boats
                     ammo = int.Parse(items[1]);
                 if (items[0] == "speed")
                     speed = int.Parse(items[1]);
-                if (items[0] == "ship")
-                    ship = items[1];
             }
         }
 
@@ -224,7 +235,7 @@ namespace AR_Battle_Boats
         /// <param name="Server_address">Address of the Remote Server</param>
         /// <param name="Port_Num">Port Number on the Remote Server</param>
         /// <returns>True if update was successful, false otherwise</returns>
-        public bool UpdateInfoOnServer(string Server_address, int Port_Num)
+        private bool UpdateInfoOnServer(string Server_address, int Port_Num)
         {
             NetworkStream stream; //Stream to write and read data to
 

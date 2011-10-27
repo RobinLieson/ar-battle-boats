@@ -39,6 +39,12 @@ namespace AR_Battle_Boats
         PlayerInfo playerInfo1; //Information for Player 1
         PlayerInfo playerInfo2; //Information for Player 2 (Only if we're not playing online)
         Scene scene;
+        GameMode gameMode;
+        GameState gameState;
+        List<Ship> AvailableShips;
+        NetworkSession session;
+
+        PacketWriter packetWriter; //For writing to the network
 
         public Main()
         {
@@ -60,7 +66,14 @@ namespace AR_Battle_Boats
             scene = new Scene(this); //Create a new Scene
 
             this.IsMouseVisible = true; //Set Mouse Visible         
-            
+
+            gameState = GameState.Main_Menu;
+            gameMode = GameMode.Menu;
+
+            CreateShips();
+
+            DisplayMainMenu();
+
             
             base.Initialize();
         }
@@ -73,14 +86,6 @@ namespace AR_Battle_Boats
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            GeometryNode water = new GeometryNode("Ocean");
-            water.Model = Content.Load<Model>(".\\Models\\OceanWater");
-
-            TransformNode oceanTransNode = new TransformNode("Ocean Transform Node");
-
-            scene.RootNode.AddChild(oceanTransNode);
-            oceanTransNode.AddChild(water);
         }
 
         /// <summary>
@@ -103,32 +108,30 @@ namespace AR_Battle_Boats
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            if (SignedInGamer.SignedInGamers.Count < 1)
+            if (gameState == GameState.Main_Menu)
             {
-                if (!Guide.IsVisible)
+                //Check to see if the Gamer is Signed In
+                if (SignedInGamer.SignedInGamers.Count < 1)
                 {
-                    Guide.ShowSignIn(1, true);
-                }
-            }
-            else
-            {
-                if (playerInfo1 == null)
-                {
-                    playerInfo1 = new PlayerInfo();
-                    bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
-                    if (!result)
+                    if (!Guide.IsVisible)
                     {
-                        playerInfo1 = new PlayerInfo();
-                        playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
-                        playerInfo1.Ammo_Level = 0;
-                        playerInfo1.Armour_Level = 0;
-                        playerInfo1.Money = 0;
-                        playerInfo1.Speed_Level = 0;
-                        playerInfo1.Ship_Model_Name = "Base";
-                        Console.WriteLine("Creating new profile");
-                        Console.Write(playerInfo1.ToString());
+                        Guide.ShowSignIn(1, true);
                     }
                 }
+                else
+                {
+                    GetPlayerInfo();
+                }
+            }
+
+            if (gameMode == GameMode.Menu)
+            {
+                gameMode = GameMode.Local_Multiplayer;
+            }
+
+            if (gameMode == GameMode.Local_Multiplayer)
+            {
+
             }
 
             base.Update(gameTime);
@@ -145,6 +148,139 @@ namespace AR_Battle_Boats
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
+        }
+
+        /// <summary>
+        /// Display the main menu
+        /// </summary>
+        private void DisplayMainMenu()
+        {
+            Console.WriteLine("Displaing Main Menu");
+        }
+
+        /// <summary>
+        /// Hide the main menu
+        /// </summary>
+        private void HideMainMenu()
+        {
+            Console.WriteLine("Hiding Main Menu");
+        }
+
+        /// <summary>
+        /// Get the player info from the Server
+        /// </summary>
+        private void GetPlayerInfo()
+        {
+            if (playerInfo1 == null)
+            {
+                playerInfo1 = new PlayerInfo();
+                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
+                if (!result)
+                {
+                    playerInfo1 = new PlayerInfo();
+                    playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                    playerInfo1.Ammo_Level = 0;
+                    playerInfo1.Armour_Level = 0;
+                    playerInfo1.Money = 0;
+                    playerInfo1.Speed_Level = 0;
+                    playerInfo1.Player_Ship = AvailableShips[0];
+                    Console.WriteLine("Creating new profile");
+                    Console.Write(playerInfo1.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create the different types of ships available in the game
+        /// </summary>
+        private void CreateShips()
+        {
+            AvailableShips = new List<Ship>();
+
+            Ship sailBoat = new Ship();
+            sailBoat.Ammo = 0;
+            sailBoat.Armour = 0;
+            sailBoat.Boat_Name = "Sailboat";
+            sailBoat.Health = 100;
+            sailBoat.Speed = 0;
+            sailBoat.Position = Vector3.Zero;
+
+            AvailableShips.Add(sailBoat);
+
+        }
+
+        /// <summary>
+        /// Setup everything to start a game
+        /// </summary>
+        private void StartNetworkSession()
+        {
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                //Network stuff
+                packetWriter = new PacketWriter();
+            }
+
+            if (gameState == GameState.Hosting)
+            {
+                Console.WriteLine("Creating a new match");
+                session = NetworkSession.Create(NetworkSessionType.Local, 2, 2);
+            }
+            else if (gameState == GameState.Joining)
+            {
+                Console.WriteLine("Looking for a game to join...");
+                AvailableNetworkSessionCollection availableSessions;
+                availableSessions = NetworkSession.Find(NetworkSessionType.PlayerMatch, 2,null);
+                Console.WriteLine("Found " + availableSessions.Count + " available sessions");
+                if (availableSessions.Count > 0)
+                {
+                    session = NetworkSession.Join(availableSessions[0]);
+                }
+                Console.WriteLine("Session Joined!");
+            }
+
+            session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
+            session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
+
+        }
+
+        /// <summary>
+        /// Called when a Game has ended
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void session_GameEnded(object sender, GameEndedEventArgs e)
+        {
+            Console.WriteLine("Game has ended...");
+        }
+
+        /// <summary>
+        /// Called when a game has started
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void session_GameStarted(object sender, GameStartedEventArgs e)
+        {
+            Console.WriteLine("Game has started...");
+        }
+
+        /// <summary>
+        /// Read and write all the network data stuff
+        /// </summary>
+        private void UpdateNetwork()
+        {
+            foreach (LocalNetworkGamer gamer in session.LocalGamers)
+            {
+                // Get the tank associated with this player.
+                Ship myShip = gamer.Tag as Ship;
+                // Write the data.
+                packetWriter.Write(myShip.Position);
+                packetWriter.Write(myShip.Health);
+                packetWriter.Write(myShip.Firing);
+
+                // Send it to everyone.
+                gamer.SendData(packetWriter, SendDataOptions.None);
+
+            } 
         }
     }
 }
