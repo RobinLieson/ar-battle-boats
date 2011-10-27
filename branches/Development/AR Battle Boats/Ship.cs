@@ -2,21 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace AR_Battle_Boats
 {
-    public class Player_Ship
+    public class Ship
     {
         private string name;
         private int armour;
         private int health;
         private int ammo;
         private int speed;
+        private Vector3 position;
+        private bool firing;
+
 
         /// <summary>
         /// Creates a new Player Ship Class
         /// </summary>
-        public Player_Ship()
+        public Ship()
         {
         }
 
@@ -26,11 +30,11 @@ namespace AR_Battle_Boats
         public string Boat_Name{
             get
             {
-                return boatname;
+                return name;
             }
             set
             {
-                boatname = value;
+                name = value;
             }
         }
 
@@ -93,7 +97,37 @@ namespace AR_Battle_Boats
                 speed = value;
             }
         }
-        
+
+        /// <summary>
+        /// Gets or Sets the position of the ship
+        /// </summary>
+        public Vector3 Position
+        {
+            get
+            {
+                return position;
+            }
+            set
+            {
+                position = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or Sets if the ship is shooting
+        /// </summary>
+        public bool Firing
+        {
+            get
+            {
+                return firing;
+            }
+            set
+            {
+                firing = value;
+            }
+        }
+
         /// <summary>
         /// Creates this object from a string
         /// </summary>
@@ -106,16 +140,15 @@ namespace AR_Battle_Boats
             {
                 string[] items = label.Split(":".ToCharArray());
                 if (items[0] == "Boatname")
-                    Boatname = items[1];
+                    name = items[1];
                 if (items[0] == "Boathealth")
-                    Boathealth = int.Parse(items[1]);
+                    health = int.Parse(items[1]);
                 if (items[0] == "armour")
                     armour = int.Parse(items[1]);
                 if (items[0] == "ammo")
                     ammo = int.Parse(items[1]);
                 if (items[0] == "speed")
                     speed = int.Parse(items[1]);
-
             }
         }
 
