@@ -43,6 +43,7 @@ namespace AR_Battle_Boats
         GameState gameState;
         List<Ship> AvailableShips;
         NetworkSession session;
+        List<PlayerInfo> activePlayers;
 
         PacketWriter packetWriter; //For writing to the network
 
@@ -69,9 +70,9 @@ namespace AR_Battle_Boats
 
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
+            activePlayers = new List<PlayerInfo>();
 
             CreateShips();
-
             DisplayMainMenu();
 
             
@@ -124,9 +125,11 @@ namespace AR_Battle_Boats
                 }
             }
 
-            if (gameMode == GameMode.Menu)
+            if (gameMode == GameMode.Menu && SignedInGamer.SignedInGamers.Count > 0)
             {
                 gameMode = GameMode.Local_Multiplayer;
+                gameState = GameState.Hosting;
+                StartNetworkSession();
             }
 
             if (gameMode == GameMode.Local_Multiplayer)
@@ -188,6 +191,9 @@ namespace AR_Battle_Boats
                     Console.Write(playerInfo1.ToString());
                 }
             }
+
+            playerInfo1.Player_Ship = AvailableShips[0];
+            playerInfo2 = playerInfo1;
         }
 
         /// <summary>
@@ -204,6 +210,7 @@ namespace AR_Battle_Boats
             sailBoat.Health = 100;
             sailBoat.Speed = 0;
             sailBoat.Position = Vector3.Zero;
+            //Julio set the model here
 
             AvailableShips.Add(sailBoat);
 
@@ -229,7 +236,7 @@ namespace AR_Battle_Boats
             {
                 Console.WriteLine("Looking for a game to join...");
                 AvailableNetworkSessionCollection availableSessions;
-                availableSessions = NetworkSession.Find(NetworkSessionType.PlayerMatch, 2,null);
+                availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2,null);
                 Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                 if (availableSessions.Count > 0)
                 {
@@ -240,6 +247,8 @@ namespace AR_Battle_Boats
 
             session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
             session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
+
+            session.StartGame();
 
         }
 
@@ -261,6 +270,12 @@ namespace AR_Battle_Boats
         void session_GameStarted(object sender, GameStartedEventArgs e)
         {
             Console.WriteLine("Game has started...");
+
+            foreach (PlayerInfo player in activePlayers)
+            {
+                //Julio, add the models to the scene here
+                //player.Player_Ship.Player_Ship_Model;
+            }
         }
 
         /// <summary>

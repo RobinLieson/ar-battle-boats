@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using GoblinXNA.Graphics;
 
 namespace AR_Battle_Boats
 {
@@ -15,7 +16,7 @@ namespace AR_Battle_Boats
         private int speed;
         private Vector3 position;
         private bool firing;
-
+        private Model ship_model;
 
         /// <summary>
         /// Creates a new Player Ship Class
@@ -125,6 +126,21 @@ namespace AR_Battle_Boats
             set
             {
                 firing = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or Sets the Model for the player's ship
+        /// </summary>
+        public Model Player_Ship_Model
+        {
+            get
+            {
+                return ship_model;
+            }
+            set
+            {
+                ship_model = value;
             }
         }
 
