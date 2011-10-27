@@ -1,0 +1,13 @@
+﻿Main Menu
+
+
+Local Play ->
+	Start Game ->
+
+Network Play ->
+	Host Game ->
+	Join Game ->
+
+Store ->
+	Buy upgrades->
+		
