@@ -21,7 +21,6 @@ C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Nuclex.Fonts.dll
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.exe
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb
-C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\OceanWater.FBX
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\GoblinXNA.dll
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\DShowNET.dll
 C:\Users\David Gorena\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\DirectX.Capture.dll
