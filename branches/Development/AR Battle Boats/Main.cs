@@ -46,6 +46,8 @@ namespace AR_Battle_Boats
         List<PlayerInfo> activePlayers;
 
         PacketWriter packetWriter; //For writing to the network
+        PacketReader packetReader; //For reading from the network
+
 
         public Main()
         {
@@ -130,11 +132,14 @@ namespace AR_Battle_Boats
                 gameMode = GameMode.Local_Multiplayer;
                 gameState = GameState.Hosting;
                 StartNetworkSession();
+                session.StartGame();
+                session.Update();
             }
 
-            if (gameMode == GameMode.Local_Multiplayer)
+            if (gameMode == GameMode.Local_Multiplayer && gameState == GameState.In_Game)
             {
-
+                //Code for actually playing a match
+                UpdateNetwork();
             }
 
             base.Update(gameTime);
@@ -221,10 +226,13 @@ namespace AR_Battle_Boats
         /// </summary>
         private void StartNetworkSession()
         {
+
+            packetReader = new PacketReader();
+            packetWriter = new PacketWriter();
+
             if (gameMode == GameMode.Network_Multiplayer)
             {
-                //Network stuff
-                packetWriter = new PacketWriter();
+
             }
 
             if (gameState == GameState.Hosting)
@@ -248,8 +256,6 @@ namespace AR_Battle_Boats
             session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
             session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
 
-            session.StartGame();
-
         }
 
         /// <summary>
@@ -271,11 +277,16 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Game has started...");
 
+            activePlayers.Add(playerInfo1);
+            activePlayers.Add(playerInfo2);
+
             foreach (PlayerInfo player in activePlayers)
             {
                 //Julio, add the models to the scene here
                 //player.Player_Ship.Player_Ship_Model;
             }
+
+            gameState = GameState.In_Game;
         }
 
         /// <summary>
@@ -286,16 +297,30 @@ namespace AR_Battle_Boats
             foreach (LocalNetworkGamer gamer in session.LocalGamers)
             {
                 // Get the tank associated with this player.
-                Ship myShip = gamer.Tag as Ship;
+                Ship myShip = activePlayers[0].Player_Ship;
                 // Write the data.
                 packetWriter.Write(myShip.Position);
                 packetWriter.Write(myShip.Health);
                 packetWriter.Write(myShip.Firing);
 
                 // Send it to everyone.
-                gamer.SendData(packetWriter, SendDataOptions.None);
+                gamer.SendData(packetWriter, SendDataOptions.None,gamer);
+            }
 
-            } 
+            NetworkGamer remoteGamer;
+
+            foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
+            {
+                while (localPlayer.IsDataAvailable)
+                {
+                    localPlayer.ReceiveData(packetReader, out remoteGamer);
+                    if (remoteGamer.IsLocal)
+                    {
+                        string message = packetReader.ReadString();
+                        Console.WriteLine(message);
+                    }
+                }
+            }            
         }
     }
 }
