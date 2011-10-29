@@ -7,7 +7,7 @@
       <Importer>FontDescriptionImporter</Importer>
       <Processor>FontDescriptionProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\DebugFont.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\DebugFont.xnb</Output>
       <Time>2011-10-28T18:58:23.5110378-05:00</Time>
     </Item>
     <Item>
@@ -16,7 +16,7 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\PostScreenShadowBlur.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\PostScreenShadowBlur.xnb</Output>
       <Time>2011-10-28T18:58:58.4930386-05:00</Time>
     </Item>
     <Item>
@@ -25,7 +25,7 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\ShadowMap.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\ShadowMap.xnb</Output>
       <Time>2011-10-28T18:59:08.1775925-05:00</Time>
     </Item>
     <Item>
@@ -34,7 +34,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\ShadowDistanceFadeoutMap.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\ShadowDistanceFadeoutMap.xnb</Output>
       <Time>2011-10-28T18:59:56.7103685-05:00</Time>
     </Item>
     <Item>
@@ -43,7 +43,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\black-transparent.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\black-transparent.xnb</Output>
       <Time>2011-10-28T19:44:07.3679774-05:00</Time>
     </Item>
     <Item>
@@ -52,7 +52,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\seabattle.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\seabattle.xnb</Output>
       <Time>2011-10-29T04:05:29.3777943-05:00</Time>
     </Item>
     <Item>
@@ -61,7 +61,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\sea2.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\sea2.xnb</Output>
       <Time>2011-10-29T04:10:52.2180484-05:00</Time>
     </Item>
     <Item>
@@ -70,7 +70,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\sea3.xnb</Output>
+      <Output>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\sea3.xnb</Output>
       <Time>2011-10-29T04:11:34.6283145-05:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
@@ -78,10 +78,10 @@
       <TargetPlatform>Windows</TargetPlatform>
       <BuildConfiguration>Debug</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\Content\</RootDirectory>
-      <LoggerRootDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\Content\obj\x86\Debug\</IntermediateDirectory>
-      <OutputDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\</OutputDirectory>
+      <RootDirectory>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Users\Ayman\Desktop\ar-battle\final_proj\final_proj\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>
