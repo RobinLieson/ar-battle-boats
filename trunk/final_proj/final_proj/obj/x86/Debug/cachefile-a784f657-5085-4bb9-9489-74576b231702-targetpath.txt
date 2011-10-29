@@ -1,0 +1,9 @@
+Content\DebugFont.xnb
+Content\PostScreenShadowBlur.xnb
+Content\ShadowMap.xnb
+Content\ShadowDistanceFadeoutMap.xnb
+Content\black-transparent.xnb
+Content\seabattle.xnb
+Content\sea2.xnb
+Content\sea3.xnb
+Content\black-transparent.png
