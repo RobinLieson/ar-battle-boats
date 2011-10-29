@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<XnaContent xmlns:Pipeline="Microsoft.Xna.Framework.Content.Pipeline">
+  <Asset Type="Pipeline:BuildItemCollection">
+    <Item>
+      <Source>DebugFont.spritefont</Source>
+      <Name>DebugFont</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\DebugFont.xnb</Output>
+      <Time>2011-10-28T18:58:23.5110378-05:00</Time>
+    </Item>
+    <Item>
+      <Source>PostScreenShadowBlur.fx</Source>
+      <Name>PostScreenShadowBlur</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\PostScreenShadowBlur.xnb</Output>
+      <Time>2011-10-28T18:58:58.4930386-05:00</Time>
+    </Item>
+    <Item>
+      <Source>ShadowMap.fx</Source>
+      <Name>ShadowMap</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\ShadowMap.xnb</Output>
+      <Time>2011-10-28T18:59:08.1775925-05:00</Time>
+    </Item>
+    <Item>
+      <Source>ShadowDistanceFadeoutMap.dds</Source>
+      <Name>ShadowDistanceFadeoutMap</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\ShadowDistanceFadeoutMap.xnb</Output>
+      <Time>2011-10-28T18:59:56.7103685-05:00</Time>
+    </Item>
+    <Item>
+      <Source>black-transparent.png</Source>
+      <Name>black-transparent</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\black-transparent.xnb</Output>
+      <Time>2011-10-28T19:44:07.3679774-05:00</Time>
+    </Item>
+    <Item>
+      <Source>seabattle.png</Source>
+      <Name>seabattle</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\seabattle.xnb</Output>
+      <Time>2011-10-29T04:05:29.3777943-05:00</Time>
+    </Item>
+    <Item>
+      <Source>sea2.png</Source>
+      <Name>sea2</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\sea2.xnb</Output>
+      <Time>2011-10-29T04:10:52.2180484-05:00</Time>
+    </Item>
+    <Item>
+      <Source>sea3.png</Source>
+      <Name>sea3</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\sea3.xnb</Output>
+      <Time>2011-10-29T04:11:34.6283145-05:00</Time>
+    </Item>
+    <BuildSuccessful>true</BuildSuccessful>
+    <Settings>
+      <TargetPlatform>Windows</TargetPlatform>
+      <BuildConfiguration>Debug</BuildConfiguration>
+      <CompressContent>false</CompressContent>
+      <RootDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\Content\</RootDirectory>
+      <LoggerRootDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\Content\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Users\Ayman\Documents\Visual Studio 2008\Projects\final_proj\final_proj\bin\x86\Debug\Content\</OutputDirectory>
+    </Settings>
+    <Assemblies>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.XImporter.dll</Key>
+        <Value>2009-05-28T00:16:14-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.VideoImporters.dll</Key>
+        <Value>2009-05-28T00:16:06-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.TextureImporter.dll</Key>
+        <Value>2009-05-28T00:16:16-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.FBXImporter.dll</Key>
+        <Value>2009-05-28T00:16:26-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.EffectImporter.dll</Key>
+        <Value>2009-05-28T00:16:12-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v3.1\References\Windows\x86\Microsoft.Xna.Framework.Content.Pipeline.AudioImporters.dll</Key>
+        <Value>2009-05-28T00:16:06-05:00</Value>
+      </Assembly>
+      <Assembly>
+        <Key>C:\Windows\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\3.1.0.0__6d5c3888ef60e27d\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
+        <Value>2011-09-01T14:06:06.7814674-05:00</Value>
+      </Assembly>
+    </Assemblies>
+  </Asset>
+</XnaContent>

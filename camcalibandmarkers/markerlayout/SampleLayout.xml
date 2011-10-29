@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<MarkerLayout width="800" height="800" pixelPerInch="20" center="60, 60">
+  <Coordframe name="" >
+    <Marker id="80" image="raw_markers/ALVAR/MarkerData_80.png" upperLeftCorner="60,60" />
+    <Marker id="81" image="raw_markers/ALVAR/MarkerData_81.png" upperLeftCorner="60,232" />
+    <Marker id="82" image="raw_markers/ALVAR/MarkerData_82.png" upperLeftCorner="232,60" />
+    <Marker id="83" image="raw_markers/ALVAR/MarkerData_83.png" upperLeftCorner="232,232" />
+  </Coordframe>
+  <OutputImage name="ALVARArrayFromXML.gif" />
+  <OutputConfig name="ALVARConfigFromXML.xml" type="ALVAR"/>
+</MarkerLayout>
