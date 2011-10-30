@@ -194,7 +194,7 @@ namespace AR_Battle_Boats
                 Console.Write("Sending data to server...");
                 //Write the GamerTag to the server
 
-                String tag = "thenewzerov";
+                String tag = PlayerName;
                 stream = client.GetStream();
                 stream.Write(encoder.GetBytes(tag), 0, encoder.GetByteCount(tag));
                 stream.Flush();
