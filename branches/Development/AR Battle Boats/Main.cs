@@ -44,7 +44,6 @@ namespace AR_Battle_Boats
         List<Ship> AvailableShips;
         NetworkSession session;
         List<PlayerInfo> activePlayers;
-
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
 
@@ -132,11 +131,12 @@ namespace AR_Battle_Boats
                 gameMode = GameMode.Local_Multiplayer;
                 gameState = GameState.Hosting;
                 StartNetworkSession();
-                session.StartGame();
-                session.Update();
             }
 
-            if (gameMode == GameMode.Local_Multiplayer && gameState == GameState.In_Game)
+            if (session != null)
+                session.Update();
+
+            if (gameState == GameState.In_Game)
             {
                 //Code for actually playing a match
                 UpdateNetwork();
@@ -182,7 +182,7 @@ namespace AR_Battle_Boats
             if (playerInfo1 == null)
             {
                 playerInfo1 = new PlayerInfo();
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "127.0.0.1", 3550);
+                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.198.1.112", 3550);
                 if (!result)
                 {
                     playerInfo1 = new PlayerInfo();
@@ -238,12 +238,14 @@ namespace AR_Battle_Boats
             if (gameState == GameState.Hosting)
             {
                 Console.WriteLine("Creating a new match");
-                session = NetworkSession.Create(NetworkSessionType.Local, 2, 2);
+                session = NetworkSession.Create(NetworkSessionType.SystemLink,1,10);
+                session.AllowJoinInProgress = true;
             }
             else if (gameState == GameState.Joining)
             {
                 Console.WriteLine("Looking for a game to join...");
                 AvailableNetworkSessionCollection availableSessions;
+                
                 availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2,null);
                 Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                 if (availableSessions.Count > 0)
@@ -253,9 +255,28 @@ namespace AR_Battle_Boats
                 Console.WriteLine("Session Joined!");
             }
 
-            session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
-            session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
+            if (session != null)
+            {
+                session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
+                session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
+                session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
+            }
 
+        }
+
+        /// <summary>
+        /// Called when a gamer joins the game
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void session_GamerJoined(object sender, GamerJoinedEventArgs e)
+        {
+            Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
+            if (session.AllGamers.Count > 1)
+            {
+                session.StartGame();
+                session.Update();
+            }
         }
 
         /// <summary>
