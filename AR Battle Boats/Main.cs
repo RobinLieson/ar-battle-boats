@@ -126,15 +126,26 @@ namespace AR_Battle_Boats
                 }
             }
 
-            if (gameMode == GameMode.Menu && SignedInGamer.SignedInGamers.Count > 0)
+            if (session == null)
             {
-                gameMode = GameMode.Local_Multiplayer;
-                gameState = GameState.Hosting;
-                StartNetworkSession();
+                KeyboardState state = Keyboard.GetState();
+                if (state.IsKeyDown(Keys.H))
+                {
+                    gameMode = GameMode.Local_Multiplayer;
+                    gameState = GameState.Hosting;
+                    StartNetworkSession();
+                }
+                else if (state.IsKeyDown(Keys.J))
+                {
+                    gameMode = GameMode.Local_Multiplayer;
+                    gameState = GameState.Joining;
+                    StartNetworkSession();
+                }
             }
-
-            if (session != null)
+            else
+            {
                 session.Update();
+            }
 
             if (gameState == GameState.In_Game)
             {
@@ -251,8 +262,9 @@ namespace AR_Battle_Boats
                 if (availableSessions.Count > 0)
                 {
                     session = NetworkSession.Join(availableSessions[0]);
+                    Console.WriteLine("Session Joined!");
                 }
-                Console.WriteLine("Session Joined!");
+
             }
 
             if (session != null)
