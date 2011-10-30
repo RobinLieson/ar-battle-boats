@@ -142,16 +142,15 @@ namespace AR_Battle_Boats
                     StartNetworkSession();
                 }
             }
-            else
-            {
-                session.Update();
-            }
 
             if (gameState == GameState.In_Game)
             {
                 //Code for actually playing a match
                 UpdateNetwork();
             }
+
+            if(session != null)
+                session.Update();
 
             base.Update(gameTime);
         }
@@ -193,7 +192,7 @@ namespace AR_Battle_Boats
             if (playerInfo1 == null)
             {
                 playerInfo1 = new PlayerInfo();
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.198.1.112", 3550);
+                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.1.112", 3550);
                 if (!result)
                 {
                     playerInfo1 = new PlayerInfo();
@@ -284,7 +283,7 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
-            if (session.AllGamers.Count > 1)
+            if (session.AllGamers.Count > 1 && session.IsHost)
             {
                 session.StartGame();
                 session.Update();
@@ -337,7 +336,7 @@ namespace AR_Battle_Boats
                 packetWriter.Write(myShip.Firing);
 
                 // Send it to everyone.
-                gamer.SendData(packetWriter, SendDataOptions.None,gamer);
+                gamer.SendData(packetWriter, SendDataOptions.None);
             }
 
             NetworkGamer remoteGamer;
@@ -347,10 +346,15 @@ namespace AR_Battle_Boats
                 while (localPlayer.IsDataAvailable)
                 {
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
-                    if (remoteGamer.IsLocal)
+                    if (!remoteGamer.IsLocal)
                     {
-                        string message = packetReader.ReadString();
-                        Console.WriteLine(message);
+                        Vector3 vect = packetReader.ReadVector3();
+                        int health = packetReader.ReadInt32();
+                        bool shooting = packetReader.ReadBoolean();
+                        Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
+                        Console.WriteLine("Pos = " + vect.ToString());
+                        Console.WriteLine("Health = " + health.ToString());
+                        Console.WriteLine("Shooting = " + shooting.ToString());
                     }
                 }
             }            
