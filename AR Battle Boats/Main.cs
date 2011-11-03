@@ -128,6 +128,12 @@ namespace AR_Battle_Boats
 
             if (session == null)
             {
+<<<<<<< .mine
+                //gameMode = GameMode.Local_Multiplayer;
+                //gameState = GameState.Hosting;
+                gameState = GameState.Joining;
+                StartNetworkSession();
+=======
                 KeyboardState state = Keyboard.GetState();
                 if (state.IsKeyDown(Keys.H))
                 {
@@ -141,6 +147,7 @@ namespace AR_Battle_Boats
                     gameState = GameState.Joining;
                     StartNetworkSession();
                 }
+>>>>>>> .r33
             }
 
             if (gameState == GameState.In_Game)
@@ -192,7 +199,11 @@ namespace AR_Battle_Boats
             if (playerInfo1 == null)
             {
                 playerInfo1 = new PlayerInfo();
+<<<<<<< .mine
+                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.2.187", 3550);
+=======
                 bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.1.112", 3550);
+>>>>>>> .r33
                 if (!result)
                 {
                     playerInfo1 = new PlayerInfo();
@@ -250,6 +261,8 @@ namespace AR_Battle_Boats
                 Console.WriteLine("Creating a new match");
                 session = NetworkSession.Create(NetworkSessionType.SystemLink,1,10);
                 session.AllowJoinInProgress = true;
+                session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
+                session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
             }
             else if (gameState == GameState.Joining)
             {
@@ -261,17 +274,33 @@ namespace AR_Battle_Boats
                 if (availableSessions.Count > 0)
                 {
                     session = NetworkSession.Join(availableSessions[0]);
+<<<<<<< .mine
+                    session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
+                    session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
+                    gameState = GameState.In_Game;
+                    gameMode = GameMode.Local_Multiplayer;
                     Console.WriteLine("Session Joined!");
+=======
+                    Console.WriteLine("Session Joined!");
+>>>>>>> .r33
                 }
+<<<<<<< .mine
+                
+=======
 
+>>>>>>> .r33
             }
 
+<<<<<<< .mine
+=======
             if (session != null)
             {
                 session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
                 session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
                 session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
             }
+>>>>>>> .r33
+
 
         }
 
