@@ -17,7 +17,6 @@ C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\GoblinXNA.dll
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\DShowNET.dll
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\DirectX.Capture.dll
-C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\NewtonWrapper.dll
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Nuclex.Fonts.dll
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.exe
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb
@@ -49,3 +48,16 @@ C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bi
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Nuclex.Fonts.dll
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.exe
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\UIFont.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\Ship.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\Chemney_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\Black_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\CONSCUBI_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\Spejl_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\CONCWHIT_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\BRONZE_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\SplitFlag_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\OLDWOOD_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\ASHSEN_2_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\FregatteBody_0.xnb
+C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\Ship.FBX
