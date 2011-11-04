@@ -47,19 +47,7 @@ namespace AR_Battle_Boats
         List<PlayerInfo> activePlayers;
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
-        /*------------------------------*/
-        GeometryNode boxNode;//creates object
-        GeometryNode sphereNode;
-        GeometryNode cylinderNode;
-        TransformNode boxTransNode;
-        TransformNode sphereTransNode;
-        TransformNode cylinderTransNode;
-        Material boxMat;
-        Material sphereMat;
-        Material cylinderMat;
-
-
-
+        Microsoft.Xna.Framework.Graphics.Model shipModel;
 
         public Main()
         {
@@ -92,57 +80,18 @@ namespace AR_Battle_Boats
             //scene.PhysicsEngine = new NewtonPhysics();
             CreateLights();
             CreateCamera();
-            CreateShips();
             base.Initialize();
         }
 
-        private void CreateLights()
-        {
-            // Create a directional light source
-            LightSource lightSource = new LightSource();
-            lightSource.Direction = new Vector3(1, -1, -1);
-            lightSource.Diffuse = Color.White.ToVector4();
-            lightSource.Specular = new Vector4(0.6f, 0.6f, 0.6f, 1);
-
-            // Create a light node to hold the light source
-            LightNode lightNode = new LightNode();
-            lightNode.LightSource = lightSource;
-
-            // Add this light node to the root node
-            scene.RootNode.AddChild(lightNode);
-        }
-
-
-
-        private void CreateCamera()
-        {
-            // Create a camera
-            Camera camera = new Camera();
-            // Put the camera at (0, 0, 10)
-            camera.Translation = new Vector3(0, 4, 10);
-            // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(0));
-            // Set the vertical field of view to be 45 degrees
-            camera.FieldOfViewY = MathHelper.ToRadians(90);
-            // Set the near clipping plane to be 0.1f unit away from the camera
-            camera.ZNearPlane = 0.1f;
-            // Set the far clipping plane to be 1000 units away from the camera
-            camera.ZFarPlane = 1000;
-
-            // Now assign this camera to a camera node, and add this camera node to our scene graph
-            CameraNode cameraNode = new CameraNode(camera);
-            scene.RootNode.AddChild(cameraNode);
-
-            // Assign the camera node to be our scene graph's current camera node
-            scene.CameraNode = cameraNode;
-        }
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
         /// </summary>
         protected override void LoadContent()
         {
-            textFont = Content.Load<SpriteFont>("SpriteFont1");
+            textFont = Content.Load<SpriteFont>("UIFont");
+            CreateShips();
+
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
         }
@@ -271,6 +220,51 @@ namespace AR_Battle_Boats
         }
 
         /// <summary>
+        /// Create the Lights for the scene
+        /// </summary>
+        private void CreateLights()
+        {
+            // Create a directional light source
+            LightSource lightSource = new LightSource();
+            lightSource.Direction = new Vector3(1, -1, -1);
+            lightSource.Diffuse = Color.White.ToVector4();
+            lightSource.Specular = new Vector4(0.6f, 0.6f, 0.6f, 1);
+
+            // Create a light node to hold the light source
+            LightNode lightNode = new LightNode();
+            lightNode.LightSource = lightSource;
+
+            // Add this light node to the root node
+            scene.RootNode.AddChild(lightNode);
+        }
+
+        /// <summary>
+        /// Setup the Camera
+        /// </summary>
+        private void CreateCamera()
+        {
+            // Create a camera
+            Camera camera = new Camera();
+            // Put the camera at (0, 0, 10)
+            camera.Translation = new Vector3(0, 4, 10);
+            // Rotate the camera -20 degrees about the X axis
+            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(0));
+            // Set the vertical field of view to be 45 degrees
+            camera.FieldOfViewY = MathHelper.ToRadians(90);
+            // Set the near clipping plane to be 0.1f unit away from the camera
+            camera.ZNearPlane = 0.1f;
+            // Set the far clipping plane to be 1000 units away from the camera
+            camera.ZFarPlane = 1000;
+
+            // Now assign this camera to a camera node, and add this camera node to our scene graph
+            CameraNode cameraNode = new CameraNode(camera);
+            scene.RootNode.AddChild(cameraNode);
+
+            // Assign the camera node to be our scene graph's current camera node
+            scene.CameraNode = cameraNode;
+        }
+
+        /// <summary>
         /// Create the different types of ships available in the game
         /// </summary>
         private void CreateShips()
@@ -284,56 +278,34 @@ namespace AR_Battle_Boats
             sailBoat.Health = 100;
             sailBoat.Speed = 0;
             sailBoat.Position = Vector3.Zero;
-            //Julio set the model here
-            boxNode = new GeometryNode("Box");
-            boxNode.Model = new Box(Vector3.One * 4);
-            boxMat = new Material();
-            boxMat.Diffuse = Color.Red.ToVector4();
-            boxMat.Specular = Color.White.ToVector4();
-            boxMat.SpecularPower = 5;
-            boxNode.Material = boxMat;
-            boxTransNode = new TransformNode();
-            boxTransNode.Translation = new Vector3(-5, 0, -6);
-            boxNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
-            boxNode.Physics.Pickable = true;// Set this box model to be pickable
-            boxNode.AddToPhysicsEngine = true;// Add this box model to the physics engine
-            scene.RootNode.AddChild(boxTransNode);
-            boxTransNode.AddChild(boxNode);
 
-
-            sphereNode = new GeometryNode("Sphere");
-            sphereNode.Model = new Sphere(2, 20, 20);
-            sphereMat = new Material();
-            sphereMat.Diffuse = Color.Blue.ToVector4();
-            sphereMat.Specular = Color.White.ToVector4();
-            sphereMat.SpecularPower = 10;
-            sphereNode.Material = sphereMat;
-            sphereTransNode = new TransformNode();
-            sphereTransNode.Translation = new Vector3(0, 0, -6);
-            sphereNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Sphere;
-            sphereNode.Physics.Pickable = true;
-            sphereNode.AddToPhysicsEngine = true;
-            scene.RootNode.AddChild(sphereTransNode);
-            sphereTransNode.AddChild(sphereNode);
-
-            cylinderNode = new GeometryNode("Cylinder");
-            cylinderNode.Model = new Cylinder(.5f, .5f, 1f, 20);
-            cylinderMat = new Material();
-            cylinderMat.Diffuse = Color.Green.ToVector4();
-            cylinderMat.Specular = Color.White.ToVector4();
-            cylinderMat.SpecularPower = 5;
-            cylinderNode.Material = cylinderMat;
-            cylinderTransNode = new TransformNode();
-            cylinderTransNode.Translation = new Vector3(5, 0, -6);
-            cylinderNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
-            cylinderNode.Physics.Pickable = true;
-            cylinderNode.AddToPhysicsEngine = true;
-            scene.RootNode.AddChild(cylinderTransNode);
-            cylinderTransNode.AddChild(cylinderNode);
-
+            ModelLoader loader = new ModelLoader();
+            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
 
 
             AvailableShips.Add(sailBoat);
+
+        }
+
+        /// <summary>
+        /// Add the ship objects to the screen
+        /// </summary>
+        private void AddShipsToScene()
+        {
+            GeometryNode playerGeometryNode;
+            TransformNode playerTransformNode;
+
+            foreach (PlayerInfo player in activePlayers)
+            {
+                playerGeometryNode = new GeometryNode(player.PlayerName);
+                playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
+                playerTransformNode = new TransformNode();
+                playerTransformNode.Translation = new Vector3(-5, 0, -6);
+                playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
+                playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
+                scene.RootNode.AddChild(playerGeometryNode);
+                playerGeometryNode.AddChild(playerTransformNode);
+            }
 
         }
 
@@ -420,9 +392,11 @@ namespace AR_Battle_Boats
 
             foreach (PlayerInfo player in activePlayers)
             {
-                //Julio, add the models to the scene here
-                //scene.RootNode.AddChild(cylinderNode);
-                //player.Player_Ship.Player_Ship_Model;
+                player.Player_Ship = AvailableShips[0];
+
+                CreateCamera();
+                CreateLights();
+                AddShipsToScene();
             }
 
             gameState = GameState.In_Game;
