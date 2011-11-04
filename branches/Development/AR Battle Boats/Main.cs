@@ -57,7 +57,7 @@ namespace AR_Battle_Boats
         Material boxMat;
         Material sphereMat;
         Material cylinderMat;
-       
+
 
 
 
@@ -86,7 +86,7 @@ namespace AR_Battle_Boats
             gameMode = GameMode.Menu;
             activePlayers = new List<PlayerInfo>();
 
-           
+
             DisplayMainMenu();
 
             //scene.PhysicsEngine = new NewtonPhysics();
@@ -185,12 +185,6 @@ namespace AR_Battle_Boats
 
             if (session == null)
             {
-<<<<<<< .mine
-                //gameMode = GameMode.Local_Multiplayer;
-                //gameState = GameState.Hosting;
-                gameState = GameState.Joining;
-                StartNetworkSession();
-=======
                 KeyboardState state = Keyboard.GetState();
                 if (state.IsKeyDown(Keys.F1))
                 {
@@ -204,7 +198,6 @@ namespace AR_Battle_Boats
                     gameState = GameState.Joining;
                     StartNetworkSession();
                 }
->>>>>>> .r33
             }
 
             if (gameState == GameState.In_Game)
@@ -213,7 +206,7 @@ namespace AR_Battle_Boats
                 UpdateNetwork();
             }
 
-            if(session != null)
+            if (session != null)
                 session.Update();
 
             base.Update(gameTime);
@@ -230,8 +223,8 @@ namespace AR_Battle_Boats
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
-           // UI2DRenderer.WriteText(Vector2.Zero, Color.Black,
-             // textFont, GoblinEnums.HorizontalAlignment.Center, GoblinEnums.VerticalAlignment.Top);
+            // UI2DRenderer.WriteText(Vector2.Zero, Color.Black,
+            // textFont, GoblinEnums.HorizontalAlignment.Center, GoblinEnums.VerticalAlignment.Top);
         }
 
         /// <summary>
@@ -258,11 +251,7 @@ namespace AR_Battle_Boats
             if (playerInfo1 == null)
             {
                 playerInfo1 = new PlayerInfo();
-<<<<<<< .mine
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.2.187", 3550);
-=======
                 bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.1.112", 3550);
->>>>>>> .r33
                 if (!result)
                 {
                     playerInfo1 = new PlayerInfo();
@@ -305,7 +294,7 @@ namespace AR_Battle_Boats
             boxNode.Material = boxMat;
             boxTransNode = new TransformNode();
             boxTransNode.Translation = new Vector3(-5, 0, -6);
-            boxNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;          
+            boxNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
             boxNode.Physics.Pickable = true;// Set this box model to be pickable
             boxNode.AddToPhysicsEngine = true;// Add this box model to the physics engine
             scene.RootNode.AddChild(boxTransNode);
@@ -342,7 +331,7 @@ namespace AR_Battle_Boats
             scene.RootNode.AddChild(cylinderTransNode);
             cylinderTransNode.AddChild(cylinderNode);
 
-          
+
 
             AvailableShips.Add(sailBoat);
 
@@ -365,48 +354,30 @@ namespace AR_Battle_Boats
             if (gameState == GameState.Hosting)
             {
                 Console.WriteLine("Creating a new match");
-                session = NetworkSession.Create(NetworkSessionType.SystemLink,1,10);
+                session = NetworkSession.Create(NetworkSessionType.SystemLink, 1, 10);
                 session.AllowJoinInProgress = true;
-                session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
-                session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
             }
             else if (gameState == GameState.Joining)
             {
                 Console.WriteLine("Looking for a game to join...");
                 AvailableNetworkSessionCollection availableSessions;
-                
-                availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2,null);
+
+                availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2, null);
                 Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                 if (availableSessions.Count > 0)
                 {
                     session = NetworkSession.Join(availableSessions[0]);
-<<<<<<< .mine
-                    session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
-                    session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
-                    gameState = GameState.In_Game;
-                    gameMode = GameMode.Local_Multiplayer;
                     Console.WriteLine("Session Joined!");
-=======
-                    Console.WriteLine("Session Joined!");
->>>>>>> .r33
                 }
-<<<<<<< .mine
-                
-=======
 
->>>>>>> .r33
             }
 
-<<<<<<< .mine
-=======
             if (session != null)
             {
                 session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
                 session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
                 session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
             }
->>>>>>> .r33
-
 
         }
 
@@ -493,7 +464,7 @@ namespace AR_Battle_Boats
                         Console.WriteLine("Shooting = " + shooting.ToString());
                     }
                 }
-            }            
+            }
         }
     }
 }
