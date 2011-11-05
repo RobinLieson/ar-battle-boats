@@ -38,7 +38,6 @@ C:\Users\Ayman\Desktop\New folder\branches\Development\AR Battle Boats\obj\x86\D
 C:\Users\Ayman\Desktop\New folder\branches\Development\AR Battle Boats\obj\x86\Debug\AR Battle Boats.pdb
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\obj\x86\Debug\ResolveAssemblyReference.cache
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
-C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\SpriteFont1.xnb
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\AR Battle Boats.exe
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\AR Battle Boats.pdb
 C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\GoblinXNA.dll
@@ -61,3 +60,16 @@ C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\ASHSEN_2_0.xnb
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\EA6B3682\Ship.fbm\FregatteBody_0.xnb
 C:\Users\David\Documents\School\CS 4393 - User Interfaces\AR Battle Boats\Source\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\Ship.FBX
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\BRONZE_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\SplitFlag_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\Spejl_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\CONCWHIT_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\OLDWOOD_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\CONSCUBI_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\FregatteBody_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\Black_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\Ship.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\UIFont.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\ASHSEN_2_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\FBX\1E362899\Ship.fbm\Chemney_0.xnb
+C:\Users\JBUTRON\Downloads\Ar-battleship\branches\Development\AR Battle Boats\bin\x86\Debug\Content\Models\Ship.FBX

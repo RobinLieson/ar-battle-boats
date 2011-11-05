@@ -49,6 +49,9 @@ namespace AR_Battle_Boats
         PacketReader packetReader; //For reading from the network
         Microsoft.Xna.Framework.Graphics.Model shipModel;
 
+        GeometryNode playerGeometryNode;
+        TransformNode playerTransformNode;
+
         public Main()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -226,9 +229,10 @@ namespace AR_Battle_Boats
         {
             // Create a directional light source
             LightSource lightSource = new LightSource();
-            lightSource.Direction = new Vector3(1, -1, -1);
+            //lightSource.Direction = new Vector3(1, -1, -1);
+            lightSource.Direction = new Vector3(1, -20, -100);
             lightSource.Diffuse = Color.White.ToVector4();
-            lightSource.Specular = new Vector4(0.6f, 0.6f, 0.6f, 1);
+            lightSource.Specular = new Vector4(0.6f, .6f, .6f, 1);
 
             // Create a light node to hold the light source
             LightNode lightNode = new LightNode();
@@ -246,13 +250,15 @@ namespace AR_Battle_Boats
             // Create a camera
             Camera camera = new Camera();
             // Put the camera at (0, 0, 10)
-            camera.Translation = new Vector3(0, 4, 10);
+            camera.Translation = new Vector3(1, 20, 400);
             // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(0));
+            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1/2,0,0), MathHelper.ToRadians(180));
+           // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
             // Set the vertical field of view to be 45 degrees
             camera.FieldOfViewY = MathHelper.ToRadians(90);
             // Set the near clipping plane to be 0.1f unit away from the camera
-            camera.ZNearPlane = 0.1f;
+           // camera.ZNearPlane = 0.1f;
+            camera.ZNearPlane = 10f;
             // Set the far clipping plane to be 1000 units away from the camera
             camera.ZFarPlane = 1000;
 
@@ -283,6 +289,7 @@ namespace AR_Battle_Boats
             sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
 
 
+
             AvailableShips.Add(sailBoat);
 
         }
@@ -292,19 +299,25 @@ namespace AR_Battle_Boats
         /// </summary>
         private void AddShipsToScene()
         {
-            GeometryNode playerGeometryNode;
-            TransformNode playerTransformNode;
+          
 
             foreach (PlayerInfo player in activePlayers)
             {
                 playerGeometryNode = new GeometryNode(player.PlayerName);
                 playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerTransformNode = new TransformNode();
+                //-5,0,-6
+                playerGeometryNode.AddChild(playerTransformNode);
                 playerTransformNode.Translation = new Vector3(-5, 0, -6);
+                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(180));
                 playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
                 playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
+               
                 scene.RootNode.AddChild(playerGeometryNode);
-                playerGeometryNode.AddChild(playerTransformNode);
+                
+           //   playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(-30))
+            
+            
             }
 
         }
@@ -361,7 +374,7 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
-            if (session.AllGamers.Count > 1 && session.IsHost)
+            if (session.AllGamers.Count >= 1 && session.IsHost)
             {
                 session.StartGame();
                 session.Update();
