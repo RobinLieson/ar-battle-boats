@@ -250,9 +250,9 @@ namespace AR_Battle_Boats
             // Create a camera
             Camera camera = new Camera();
             // Put the camera at (0, 0, 10)
-            camera.Translation = new Vector3(1, 20, 400);
+            camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1/2,0,0), MathHelper.ToRadians(180));
+            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0,1,0), MathHelper.ToRadians(180));
            // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
             // Set the vertical field of view to be 45 degrees
             camera.FieldOfViewY = MathHelper.ToRadians(90);
@@ -307,14 +307,20 @@ namespace AR_Battle_Boats
                 playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerTransformNode = new TransformNode();
                 //-5,0,-6
-                playerGeometryNode.AddChild(playerTransformNode);
-                playerTransformNode.Translation = new Vector3(-5, 0, -6);
-                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(180));
+              
+                playerTransformNode.Translation = new Vector3(0, 0, 650);
+                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1,0,0), MathHelper.ToRadians(90));
                 playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
                 playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
+                playerTransformNode.AddChild(playerGeometryNode);
+               // scene.RootNode.AddChild(playerGeometryNode);
+                scene.RootNode.AddChild(playerTransformNode);
+                //playerGeometryNode.AddChild(playerTransformNode);
                
-                scene.RootNode.AddChild(playerGeometryNode);
-                
+            
+
+               // playerGeometryNode.AddChild(playerTransformNode);
+               
            //   playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(-30))
             
             
