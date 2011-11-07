@@ -58,16 +58,17 @@
   <ItemGroup>
     <Reference Include="DirectX.Capture, Version=1.0.3674.42904, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\camcalibandmarkers\cameracalibration\DirectX.Capture.dll</HintPath>
+      <HintPath>dlls\DirectX.Capture.dll</HintPath>
     </Reference>
     <Reference Include="DShowNET, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\camcalibandmarkers\cameracalibration\DShowNET.dll</HintPath>
+      <HintPath>dlls\DShowNET.dll</HintPath>
     </Reference>
     <Reference Include="GoblinXNA, Version=3.6.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>dlls\GoblinXNA.dll</HintPath>
     </Reference>
+    <Reference Include="Lidgren.Network, Version=2010.7.15.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86">
       <Private>False</Private>
       <SpecificVersion>True</SpecificVersion>
@@ -81,8 +82,13 @@
     </Reference>
     <Reference Include="NewtonWrapper, Version=1.1.30.2009, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\NewtonWrapper.dll</HintPath>
+      <HintPath>dlls\NewtonWrapper.dll</HintPath>
     </Reference>
+    <Reference Include="Nuclex.Fonts, Version=2.0.3554.30001, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>dlls\Nuclex.Fonts.dll</HintPath>
+    </Reference>
+    <Reference Include="Nuclex.Fonts.Content.TrueTypeImporter, Version=1.0.3554.30260, Culture=neutral, processorArchitecture=x86" />
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
@@ -111,37 +117,10 @@
     <Content Include="alvar150.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="ALVARConfigFromXML1.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML2.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML3.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML4.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML5.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML6.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARConfigFromXML7.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ALVARGroundArray.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="alvarplatform150.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ALVARWrapper.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="calib.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="cv100.dll">
@@ -167,8 +146,38 @@
     <Content Include="libguide40.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Markers\ALVARConfigFromXML1.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML2.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML3.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML4.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML5.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML6.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Markers\ALVARConfigFromXML7.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ALVARGroundArray.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="calib.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Menus.txt" />
     <Content Include="ml100.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Newton.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

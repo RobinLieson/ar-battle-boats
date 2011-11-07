@@ -2,12 +2,19 @@
 
 
 Local Play ->
-	Start Game ->
+	Single Player ->
+		Start Game->
+	Multiplayer ->
+		Start Game ->
 
 Network Play ->
 	Host Game ->
+		Start Game->
 	Join Game ->
+		Start Game->
 
 Store ->
-	Buy upgrades->
+	Open up store->
 		
+		
+All menus except the root menu should have back.
