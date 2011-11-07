@@ -1,0 +1,20 @@
+﻿Main Menu
+
+
+Local Play ->
+	Single Player ->
+		Start Game->
+	Multiplayer ->
+		Start Game ->
+
+Network Play ->
+	Host Game ->
+		Start Game->
+	Join Game ->
+		Start Game->
+
+Store ->
+	Open up store->
+		
+		
+All menus except the root menu should have back.
