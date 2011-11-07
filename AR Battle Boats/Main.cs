@@ -36,19 +36,24 @@ using GoblinXNA.Helpers;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using GoblinXNA.UI;
 
 namespace AR_Battle_Boats
 {
+
     /// <summary>
     /// This is the main type for your game
     /// </summary>
     public class Main : Microsoft.Xna.Framework.Game
     {
+        string SERVER_IP = "127.0.0.1";
+        int SERVER_PORT_NUM = 3550;
+
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont textFont;
         PlayerInfo playerInfo1; //Information for Player 1
-        PlayerInfo playerInfo2; //Information for Player 2 (Only if we're not playing online)
         Scene scene;
         GameMode gameMode;
         GameState gameState;
@@ -57,16 +62,12 @@ namespace AR_Battle_Boats
         List<PlayerInfo> activePlayers;
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
-        Microsoft.Xna.Framework.Graphics.Model shipModel;
-
         GeometryNode playerGeometryNode;
         TransformNode playerTransformNode;
-
+        G2DPanel frame;
 
         //Markers initialization starts here
-
         MarkerNode groundMarkerNode, toolbarMarkerNode;
-
         MarkerNode MarkerNode1;
         MarkerNode MarkerNode2;
         MarkerNode MarkerNode3;
@@ -81,9 +82,6 @@ namespace AR_Battle_Boats
         GeometryNode cylinderNode2;
         GeometryNode cylinderNode3;
         GeometryNode cylinderNode4;
-        GeometryNode cylinderNode5;
-        GeometryNode cylinderNode6;
-        GeometryNode cylinderNode7;
 
         GeometryNode sphereNode;
 
@@ -103,7 +101,6 @@ namespace AR_Battle_Boats
         
         // Markers ini ends here
 
-
         public Main()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -120,60 +117,26 @@ namespace AR_Battle_Boats
         {
             Components.Add(new GamerServicesComponent(this));
 
-            State.InitGoblin(graphics, Content, ""); //Start Goblin XNA
-            scene = new Scene(this); //Create a new Scene
+            //Init Goblin, Create and setup scene
+            State.InitGoblin(graphics, Content, "");          
+            scene = new Scene(this);
 
-            this.IsMouseVisible = true; //Set Mouse Visible         
+            scene.BackgroundColor = Color.DarkBlue;
 
-            gameState = GameState.Main_Menu;
-            gameMode = GameMode.Menu;
-            activePlayers = new List<PlayerInfo>();
-
-
-
-            DisplayMainMenu();
-
-
-            // Use the newton physics engine to perform collision detection
             scene.PhysicsEngine = new NewtonPhysics();
-
-            // Multi-thread the marker tracking process
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
-
-
-
-
-            // Set up optical marker tracking
-            // Note that we don't create our own camera when we use optical marker
-            // tracking. It'll be created automatically
-            SetupMarkerTracking();
-
-          
-            //scene.PhysicsEngine = new NewtonPhysics();
-            CreateLights();
-            // Create 3D objects
-            CreateObjects();
-            // Create the ground that represents the physical ground marker array
-            CreateGround();
-
-            //CreateCamera();
-
-
-
-            // Use per pixel lighting for better quality (If you using non NVidia graphics card,
-            // setting this to true may reduce the performance significantly)
             scene.PreferPerPixelLighting = true;
 
-            // Enable shadow mapping
-            // NOTE: In order to use shadow mapping, you will need to add 'PostScreenShadowBlur.fx'
-            // and 'ShadowMap.fx' shader files as well as 'ShadowDistanceFadeoutMap.dds' texture file
-            // to your 'Content' directory
-            scene.EnableShadowMapping = true;
+            this.IsMouseVisible = true; //Set Mouse Visible   
 
-            // Show Frames-Per-Second on the screen for debugging
-            State.ShowFPS = true;
-
+            CreateCamera();
+            
             base.Initialize();
+            
+            gameState = GameState.Main_Menu;
+            gameMode = GameMode.Menu;
+
+            DisplayMainMenu();
         }
 
         /// <summary>
@@ -182,7 +145,8 @@ namespace AR_Battle_Boats
         /// </summary>
         protected override void LoadContent()
         {
-            textFont = Content.Load<SpriteFont>("UIFont");
+            textFont = Content.Load<SpriteFont>("Fonts//uiFont");
+
             CreateShips();
 
             // Create a new SpriteBatch, which can be used to draw textures.
@@ -205,56 +169,29 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            // Allows the game to exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
-
-            if (gameState == GameState.Main_Menu)
+            //Check to see if the Gamer is Signed In
+            if (SignedInGamer.SignedInGamers.Count < 1)
             {
-                //Check to see if the Gamer is Signed In
-                if (SignedInGamer.SignedInGamers.Count < 1)
+                if (!Guide.IsVisible)
                 {
-                    if (!Guide.IsVisible)
-                    {
-                        //Guide.ShowSignIn(1, true);
-                    }
-                }
-                else
-                {
-                    GetPlayerInfo();
+                    Guide.ShowSignIn(1, true);
                 }
             }
-
-            if (session == null)
+            else
             {
-                KeyboardState state = Keyboard.GetState();
-                if (state.IsKeyDown(Keys.F1))
-                {
-                    gameMode = GameMode.Local_Multiplayer;
-                    gameState = GameState.Hosting;
-                    StartNetworkSession();
-                }
-                else if (state.IsKeyDown(Keys.F2))
-                {
-                    gameMode = GameMode.Local_Multiplayer;
-                    gameState = GameState.Joining;
-                    StartNetworkSession();
-                }
+                GetPlayerInfo();
             }
 
+            //Code for playing a match
             if (gameState == GameState.In_Game)
             {
-                //Code for actually playing a match
-                UpdateNetwork();
+                if(gameMode == GameMode.Network_Multiplayer)
+                    UpdateNetwork();
             }
 
             if (session != null)
                 session.Update();
 
-            //Marker start update
-            UpdateDirections();
-
-            //marker ends update
             base.Update(gameTime);
         }
 
@@ -264,57 +201,12 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            // TODO: Add your drawing code here
-            DrawMarkerUpdate();
-            
-            base.Draw(gameTime);
-            // UI2DRenderer.WriteText(Vector2.Zero, Color.Black,
-            // textFont, GoblinEnums.HorizontalAlignment.Center, GoblinEnums.VerticalAlignment.Top);
-        }
-
-        /// <summary>
-        /// Display the main menu
-        /// </summary>
-        private void DisplayMainMenu()
-        {
-            Console.WriteLine("Displaing Main Menu");
-        }
-
-        /// <summary>
-        /// Hide the main menu
-        /// </summary>
-        private void HideMainMenu()
-        {
-            Console.WriteLine("Hiding Main Menu");
-        }
-
-        /// <summary>
-        /// Get the player info from the Server
-        /// </summary>
-        private void GetPlayerInfo()
-        {
-            if (playerInfo1 == null)
+            if (gameState == GameState.In_Game)
             {
-                playerInfo1 = new PlayerInfo();
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, "192.168.1.112", 3550);
-                if (!result)
-                {
-                    playerInfo1 = new PlayerInfo();
-                    playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
-                    playerInfo1.Ammo_Level = 0;
-                    playerInfo1.Armour_Level = 0;
-                    playerInfo1.Money = 0;
-                    playerInfo1.Speed_Level = 0;
-                    playerInfo1.Player_Ship = AvailableShips[0];
-                    Console.WriteLine("Creating new profile");
-                    Console.Write(playerInfo1.ToString());
-                }
+                DrawMarkerUpdate();
             }
-
-            playerInfo1.Player_Ship = AvailableShips[0];
-            playerInfo2 = playerInfo1;
+                        
+            base.Draw(gameTime);
         }
 
         /// <summary>
@@ -381,7 +273,7 @@ namespace AR_Battle_Boats
             sailBoat.Position = Vector3.Zero;
 
             ModelLoader loader = new ModelLoader();
-            //sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
+            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
 
 
             AvailableShips.Add(sailBoat);
@@ -392,34 +284,51 @@ namespace AR_Battle_Boats
         /// Add the ship objects to the screen
         /// </summary>
         private void AddShipsToScene()
-        {
-          
+        {         
 
             foreach (PlayerInfo player in activePlayers)
             {
                 playerGeometryNode = new GeometryNode(player.PlayerName);
                 playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerTransformNode = new TransformNode();
-                //-5,0,-6
               
                 playerTransformNode.Translation = new Vector3(0, 0, 650);
                 playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1,0,0), MathHelper.ToRadians(90));
                 playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
                 playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
                 playerTransformNode.AddChild(playerGeometryNode);
-               // scene.RootNode.AddChild(playerGeometryNode);
-                scene.RootNode.AddChild(playerTransformNode);
-                //playerGeometryNode.AddChild(playerTransformNode);
-               
-            
-
-               // playerGeometryNode.AddChild(playerTransformNode);
-               
-           //   playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(-30))
-            
+                scene.RootNode.AddChild(playerTransformNode);            
             
             }
 
+        }
+
+        //Networking
+
+        /// <summary>
+        /// Get the player info from the Server
+        /// </summary>
+        private void GetPlayerInfo()
+        {
+            if (playerInfo1 == null)
+            {
+                playerInfo1 = new PlayerInfo();
+                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, SERVER_IP, SERVER_PORT_NUM);
+                if (!result)
+                {
+                    playerInfo1 = new PlayerInfo();
+                    playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                    playerInfo1.Ammo_Level = 0;
+                    playerInfo1.Armour_Level = 0;
+                    playerInfo1.Money = 0;
+                    playerInfo1.Speed_Level = 0;
+                    playerInfo1.Player_Ship = AvailableShips[0];
+                    Console.WriteLine("Creating new profile");
+                    Console.Write(playerInfo1.ToString());
+                }
+            }
+
+            playerInfo1.Player_Ship = AvailableShips[0];
         }
 
         /// <summary>
@@ -428,33 +337,39 @@ namespace AR_Battle_Boats
         private void StartNetworkSession()
         {
 
-            packetReader = new PacketReader();
-            packetWriter = new PacketWriter();
+            activePlayers = new List<PlayerInfo>();
 
             if (gameMode == GameMode.Network_Multiplayer)
             {
+                packetReader = new PacketReader();
+                packetWriter = new PacketWriter();
 
-            }
-
-            if (gameState == GameState.Hosting)
-            {
-                Console.WriteLine("Creating a new match");
-                session = NetworkSession.Create(NetworkSessionType.SystemLink, 1, 10);
-                session.AllowJoinInProgress = true;
-            }
-            else if (gameState == GameState.Joining)
-            {
-                Console.WriteLine("Looking for a game to join...");
-                AvailableNetworkSessionCollection availableSessions;
-
-                availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2, null);
-                Console.WriteLine("Found " + availableSessions.Count + " available sessions");
-                if (availableSessions.Count > 0)
+                if (gameState == GameState.Hosting)
                 {
-                    session = NetworkSession.Join(availableSessions[0]);
-                    Console.WriteLine("Session Joined!");
+                    Console.WriteLine("Hosting a new Network match");
+                    session = NetworkSession.Create(NetworkSessionType.SystemLink, 1, 10);
+                    session.AllowJoinInProgress = true;
                 }
+                else if (gameState == GameState.Joining)
+                {
+                    Console.WriteLine("Looking for a game to join...");
+                    AvailableNetworkSessionCollection availableSessions;
 
+                    availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2, null);
+                    Console.WriteLine("Found " + availableSessions.Count + " available sessions");
+                    if (availableSessions.Count > 0)
+                    {
+                        session = NetworkSession.Join(availableSessions[0]);
+                        Console.WriteLine("Session Joined!");
+                    }
+                }
+            }
+
+            else if (gameMode == GameMode.Local_Multiplayer || gameMode == GameMode.Single_Player)
+            {
+                Console.WriteLine("Creating a new Local match");
+                session = NetworkSession.Create(NetworkSessionType.Local, 2, 2);
+                session.AllowJoinInProgress = true;
             }
 
             if (session != null)
@@ -462,8 +377,17 @@ namespace AR_Battle_Boats
                 session.GameStarted += new EventHandler<GameStartedEventArgs>(session_GameStarted);
                 session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
                 session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
+                session.GamerLeft += new EventHandler<GamerLeftEventArgs>(session_GamerLeft);
             }
+        }
 
+        /// <summary>
+        /// Called when a gamer leaves the session
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void session_GamerLeft(object sender, GamerLeftEventArgs e)
+        {
         }
 
         /// <summary>
@@ -474,11 +398,23 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
-            if (session.AllGamers.Count >= 1 && session.IsHost)
+
+            PlayerInfo player = new PlayerInfo();
+            bool result = player.GetPlayerInfoFromServer(e.Gamer.Gamertag, SERVER_IP, SERVER_PORT_NUM);
+            if (!result)
             {
-                session.StartGame();
-                session.Update();
+                player = new PlayerInfo();
+                player.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                player.Ammo_Level = 0;
+                player.Armour_Level = 0;
+                player.Money = 0;
+                player.Speed_Level = 0;
+                Console.WriteLine("Creating new profile");
+                Console.Write(playerInfo1.ToString());
             }
+
+            player.Player_Ship = AvailableShips[0];
+            activePlayers.Add(player);
         }
 
         /// <summary>
@@ -500,39 +436,369 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Game has started...");
 
-            activePlayers.Add(playerInfo1);
-            activePlayers.Add(playerInfo2);
+            SetupMarkerTracking();
+            CreateLights();
+            CreateObjects();
+            CreateGround();
+
 
             foreach (PlayerInfo player in activePlayers)
             {
-                player.Player_Ship = AvailableShips[0];
-
-                CreateCamera();
-                CreateLights();
                 AddShipsToScene();
             }
 
             gameState = GameState.In_Game;
         }
 
+        /// <summary>
+        /// Read and write all the network data stuff
+        /// </summary>
+        private void UpdateNetwork()
+        {
+            foreach (LocalNetworkGamer gamer in session.LocalGamers)
+            {
+                // Get the tank associated with this player.
+                Ship myShip = activePlayers[0].Player_Ship;
+                // Write the data.
+                packetWriter.Write(myShip.Position);
+                packetWriter.Write(myShip.Health);
+                packetWriter.Write(myShip.Firing);
 
-        //Markers Functions Sarts 
+                // Send it to everyone.
+                gamer.SendData(packetWriter, SendDataOptions.None);
+            }
+
+            NetworkGamer remoteGamer;
+
+            foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
+            {
+                while (localPlayer.IsDataAvailable)
+                {
+                    localPlayer.ReceiveData(packetReader, out remoteGamer);
+                    if (!remoteGamer.IsLocal)
+                    {
+                        Vector3 vect = packetReader.ReadVector3();
+                        int health = packetReader.ReadInt32();
+                        bool shooting = packetReader.ReadBoolean();
+                        Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
+                        Console.WriteLine("Pos = " + vect.ToString());
+                        Console.WriteLine("Health = " + health.ToString());
+                        Console.WriteLine("Shooting = " + shooting.ToString());
+                    }
+                }
+            }
+        }
 
 
+        //Menu Functions
+
+        /// <summary>
+        /// Creates the Menus
+        /// </summary>
+        private void CreateMainMenu()
+        {
+            // Create the main panel which holds all other GUI components
+            frame = new G2DPanel();
+            frame.Bounds = new Rectangle(220, 120, 350, 210);
+            frame.Border = GoblinEnums.BorderFactory.LineBorder;
+            frame.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            G2DButton localPlay = new G2DButton("Local Play");
+            localPlay.Bounds = new Rectangle(120, 30, 100, 30);
+            localPlay.Name = "localPlay";
+            localPlay.TextFont = textFont;
+            localPlay.ActionPerformedEvent += new ActionPerformed(HandleLocalPlay);
+
+            G2DButton networkPlay = new G2DButton("Network Play");
+            networkPlay.Bounds = new Rectangle(120, 70, 100, 30);
+            networkPlay.Name = "networkPlay";
+            networkPlay.TextFont = textFont;
+            networkPlay.ActionPerformedEvent += new ActionPerformed(HandleNetworkPlay);
+
+            G2DButton store = new G2DButton("Store");
+            store.Bounds = new Rectangle(120, 110, 100, 30);
+            store.Name = "store";
+            store.TextFont = textFont;
+            store.ActionPerformedEvent += new ActionPerformed(HandleStore);
+            /////////////////////////////////////////////////////////////////////////////////
+
+            G2DButton startGame = new G2DButton("Start Game");
+            startGame.Bounds = new Rectangle(120, 30, 100, 30);
+            startGame.Name = "startGame";
+            startGame.TextFont = textFont;
+            startGame.ActionPerformedEvent += new ActionPerformed(HandleStartGame);
+
+            G2DButton hostGame = new G2DButton("Host Game");
+            hostGame.Bounds = new Rectangle(120, 30, 100, 30);
+            hostGame.Name = "hostGame";
+            hostGame.TextFont = textFont;
+            hostGame.ActionPerformedEvent += new ActionPerformed(HandleHostGame);
+
+            G2DButton joinGame = new G2DButton("Join Game");
+            joinGame.Bounds = new Rectangle(120, 70, 100, 30);
+            joinGame.Name = "joinGame";
+            joinGame.TextFont = textFont;
+            joinGame.ActionPerformedEvent += new ActionPerformed(HandleJoinGame);
+
+            G2DButton buyUpgrades = new G2DButton("Buy Upgrades");
+            buyUpgrades.Bounds = new Rectangle(120, 30, 100, 30);
+            buyUpgrades.Name = "buyUpgrades";
+            buyUpgrades.TextFont = textFont;
+            buyUpgrades.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+
+            G2DButton back = new G2DButton("Back");
+            back.Bounds = new Rectangle(120, 150, 100, 30);
+            back.Name = "back";
+            back.TextFont = textFont;
+            back.ActionPerformedEvent += new ActionPerformed(HandleBack);
+
+            
+            scene.UIRenderer.Add2DComponent(frame);
+
+
+            frame.AddChild(localPlay);
+            frame.AddChild(networkPlay);
+            frame.AddChild(store);
+            frame.AddChild(startGame);
+            frame.AddChild(joinGame);
+            frame.AddChild(hostGame);
+            frame.AddChild(buyUpgrades);
+            frame.AddChild(back);
+
+            localPlay.Enabled = true;
+            networkPlay.Enabled = true;
+            store.Enabled = true;
+            startGame.Enabled = false;
+            joinGame.Enabled = false;
+            hostGame.Enabled = false;
+            buyUpgrades.Enabled = false;
+            back.Enabled = false;
+
+            startGame.Visible = false;
+            joinGame.Visible = false;
+            hostGame.Visible = false;
+            buyUpgrades.Visible = false;
+            back.Visible = false;
+        }
+
+        /// <summary>
+        /// Display the main menu
+        /// </summary>
+        private void DisplayMainMenu()
+        {
+            Console.WriteLine("Displaing Main Menu");
+            CreateMainMenu();
+        }
+
+        /// <summary>
+        /// Hide the main menu
+        /// </summary>
+        private void HideMainMenu()
+        {
+            Console.WriteLine("Hiding Main Menu");
+            scene.UIRenderer.Remove2DComponent(frame);
+        }
+
+        /// <summary>
+        /// Menu for entering a local match
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleLocalPlay(object source)
+        {
+            G2DComponent comp = (G2DComponent)source;
+
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "startGame" && button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+
+            gameState = GameState.Hosting;
+            gameMode = GameMode.Local_Multiplayer;
+        }
+
+        /// <summary>
+        /// Handler for starting a network match
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleNetworkPlay(object source)
+        {
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "joinGame" && button.Name != "hostGame" && button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+
+            gameMode = GameMode.Network_Multiplayer;
+        }
+
+        /// <summary>
+        /// Handler for entering the store
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleStore(object source)
+        {
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "buyUpgrades" && button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Called when a game is started
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleStartGame(object source)
+        {
+            HideMainMenu();
+            StartNetworkSession();
+
+            gameState = GameState.Game_Load;
+
+            session.StartGame();
+            session.Update();
+        }
+
+        /// <summary>
+        /// Join a Network Game
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleJoinGame(object source)
+        {
+            G2DComponent comp = (G2DComponent)source;
+
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "startGame" && button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+
+            gameState = GameState.Joining;
+        }
+
+        /// <summary>
+        /// Start Hosting a Network Game
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleHostGame(object source)
+        {
+            G2DComponent comp = (G2DComponent)source;
+
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "startGame" && button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+
+            gameState = GameState.Hosting;
+        }
+
+        /// <summary>
+        /// Handler for when someone enters the store
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleBuyUpgrades(object source)
+        {
+            G2DComponent comp = (G2DComponent)source;
+
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "back")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Return to Main Menu
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleBack(object source)
+        {
+            foreach (G2DButton button in frame.Children)
+            {
+                if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store")
+                {
+                    button.Visible = false;
+                    button.Enabled = false;
+                }
+                else
+                {
+                    button.Visible = true;
+                    button.Enabled = true;
+                }
+            }
+
+            gameMode = GameMode.Menu;
+            gameState = GameState.Main_Menu;
+        }
+
+
+        //Markers Functions
+
+        /// <summary>
+        /// Creates a Ground Marker Array
+        /// </summary>
         private void CreateGround()
         {
             GeometryNode groundNode = new GeometryNode("Ground");
 
             groundNode.Model = new Box(95, 59, 0.1f);
-
             // Set this ground model to act as an occluder so that it appears transparent
             //groundNode.IsOccluder = true;
 
             // Make the ground model to receive shadow casted by other objects with
             // CastShadows set to true
             groundNode.Model.ReceiveShadows = true;
-
-
 
             Material groundMaterial = new Material();
 
@@ -547,6 +813,9 @@ namespace AR_Battle_Boats
             groundMarkerNode.AddChild(groundNode);
         }
 
+        /// <summary>
+        /// Setup the marker tracking capture devices
+        /// </summary>
         private void SetupMarkerTracking()
         {
             IVideoCapture captureDevice = null;
@@ -560,12 +829,6 @@ namespace AR_Battle_Boats
             }
             else
             {
-                // Create our video capture device that uses DirectShow library. Note that 
-                // the combinations of resolution and frame rate that are allowed depend on 
-                // the particular video capture device. Thus, setting incorrect resolution 
-                // and frame rate values may cause exceptions or simply be ignored, depending 
-                // on the device driver.  The values set here will work for a Microsoft VX 6000, 
-                // and many other webcams.
                 captureDevice = new DirectShowCapture2();
                 captureDevice.InitVideoCapture(0, FrameRate._30Hz, Resolution._640x480,
                     ImageFormat.R8G8B8_24, false);
@@ -586,7 +849,6 @@ namespace AR_Battle_Boats
             // Display the camera image in the background. Note that this parameter should
             // be set after adding at least one video capture device to the Scene class.
             scene.ShowCameraImage = true;
-            //scene.BackgroundColor = Color.CornflowerBlue;
         }
 
         /// <summary>
@@ -598,6 +860,9 @@ namespace AR_Battle_Boats
             Console.WriteLine("Box and Sphere has collided");
         }
 
+        /// <summary>
+        /// Update the directions based on the markers
+        /// </summary>
         void UpdateDirections()
         {
 
@@ -653,17 +918,13 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// ???
+        /// </summary>
         void updateAttack()
         {
-
-            //Vector3 close2Box = new Vector3(3, 3, 3);
-            //Vector3 close2Sphere = new Vector3(3, 3, 3);
-            //((NewtonPhysics)scene.PhysicsEngine).GetClosestPoint(boxNode.Physics, sphereNode.Physics, close2Box, close2Sphere);
-
-
             if (groundMarkerNode.MarkerFound)
             {
-
                 if (MarkerNode5.MarkerFound) // attack
                 {
                     allShapesNode = (GeometryNode)sphereNode.Physics.Container;
@@ -675,10 +936,7 @@ namespace AR_Battle_Boats
                     allShapesNode = (GeometryNode)sphereNode.Physics.Container;
                     ((TransformNode)allShapesNode.Parent).Translation += new Vector3(0f, .10f, 0f);
                 }
-
             }
-
-
         }
 
         /// <summary>
@@ -726,7 +984,9 @@ namespace AR_Battle_Boats
             }
         }
 
-
+        /// <summary>
+        /// Create the objects for the markers
+        /// </summary>
         private void CreateObjects()
          {
              allShapesNode = new GeometryNode();
@@ -814,7 +1074,7 @@ namespace AR_Battle_Boats
              ids1[1] = 71;
              ids1[2] = 72;
              ids1[3] = 73;
-             MarkerNode1 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML1.xml", ids1);
+             MarkerNode1 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML1.xml", ids1);
              cylinderNode1 = new GeometryNode("ENEMY's SHIP");
              cylinderNode1.Model = new Cylinder(3, 3, 6, 10);
              cylinderNode1.Material = sphereMaterial;
@@ -830,7 +1090,7 @@ namespace AR_Battle_Boats
              ids2[2] = 82;
              ids2[3] = 83;
 
-             MarkerNode2 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML2.xml", ids2);
+             MarkerNode2 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML2.xml", ids2);
 
              cylinderNode2 = new GeometryNode("PLAYER's SHIP EAST");
              cylinderNode2.Model = new Cylinder(3, 3, 6, 10);
@@ -848,7 +1108,7 @@ namespace AR_Battle_Boats
              ids3[2] = 92;
              ids3[3] = 93;
 
-             MarkerNode3 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML3.xml", ids3);
+             MarkerNode3 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML3.xml", ids3);
 
              cylinderNode3 = new GeometryNode("PLAYER's SHIP WEST");
              cylinderNode3.Model = new Cylinder(3, 3, 6, 10);
@@ -866,7 +1126,7 @@ namespace AR_Battle_Boats
              ids4[2] = 102;
              ids4[3] = 103;
 
-             MarkerNode4 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML4.xml", ids4);
+             MarkerNode4 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML4.xml", ids4);
 
              cylinderNode4 = new GeometryNode("PLAYER's NORTH");
              cylinderNode4.Model = new Cylinder(3, 3, 6, 10);
@@ -882,21 +1142,21 @@ namespace AR_Battle_Boats
              ids5[1] = 111;
              ids5[2] = 112;
              ids5[3] = 113;
-             MarkerNode5 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML5.xml", ids5);
+             MarkerNode5 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML5.xml", ids5);
 
              ids6 = new int[4];
              ids6[0] = 120;
              ids6[1] = 121;
              ids6[2] = 122;
              ids6[3] = 123;
-             MarkerNode6 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML6.xml", ids6);
+             MarkerNode6 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML6.xml", ids6);
 
              ids7 = new int[4];
              ids7[0] = 130;
              ids7[1] = 131;
              ids7[2] = 132;
              ids7[3] = 133;
-             MarkerNode7 = new MarkerNode(scene.MarkerTracker, "ALVARConfigFromXML7.xml", ids7);
+             MarkerNode7 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML7.xml", ids7);
 
              scene.RootNode.AddChild(MarkerNode5);
              scene.RootNode.AddChild(MarkerNode6);
@@ -904,46 +1164,5 @@ namespace AR_Battle_Boats
 
 
          }
-
-        // Marker Functions Ends
-
-        /// <summary>
-        /// Read and write all the network data stuff
-        /// </summary>
-        private void UpdateNetwork()
-        {
-            foreach (LocalNetworkGamer gamer in session.LocalGamers)
-            {
-                // Get the tank associated with this player.
-                Ship myShip = activePlayers[0].Player_Ship;
-                // Write the data.
-                packetWriter.Write(myShip.Position);
-                packetWriter.Write(myShip.Health);
-                packetWriter.Write(myShip.Firing);
-
-                // Send it to everyone.
-                gamer.SendData(packetWriter, SendDataOptions.None);
-            }
-
-            NetworkGamer remoteGamer;
-
-            foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
-            {
-                while (localPlayer.IsDataAvailable)
-                {
-                    localPlayer.ReceiveData(packetReader, out remoteGamer);
-                    if (!remoteGamer.IsLocal)
-                    {
-                        Vector3 vect = packetReader.ReadVector3();
-                        int health = packetReader.ReadInt32();
-                        bool shooting = packetReader.ReadBoolean();
-                        Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
-                        Console.WriteLine("Pos = " + vect.ToString());
-                        Console.WriteLine("Health = " + health.ToString());
-                        Console.WriteLine("Shooting = " + shooting.ToString());
-                    }
-                }
-            }
-        }
     }
 }
