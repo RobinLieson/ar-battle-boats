@@ -16,7 +16,7 @@ using System.Data.SqlServerCe;
 using AR_Battle_Boats;
 
 //Code hijacked from http://www.switchonthecode.com/tutorials/csharp-tutorial-simple-threaded-tcp-server
-
+//http://msdn.microsoft.com/en-us/library/system.net.sockets.tcplistener.beginaccepttcpclient.aspx
 
 namespace BattleBoatsServer
 {
@@ -26,6 +26,10 @@ namespace BattleBoatsServer
         private Thread listenerThread;
         SqlCeConnection conn;
         public bool active;
+
+        public static ManualResetEvent tcpClientConnected =
+            new ManualResetEvent(false);
+
 
         public Server()
         {
@@ -41,19 +45,44 @@ namespace BattleBoatsServer
         /// This thread listens for incoming connections
         /// </summary>
         private void ListenForClients(){
+            tcpClientConnected.Reset();
             this.tcpListener.Start();
             while (active)
-            {
+            {               
+
                 //blocks until a client has connected to the server
-                TcpClient client = this.tcpListener.AcceptTcpClient();
+                tcpListener.BeginAcceptTcpClient(new AsyncCallback(HandleConnection), tcpListener);
 
-                Console.WriteLine("Client Connected");
+                tcpClientConnected.WaitOne();
+            }
 
-                //create a thread to handle communication 
-                //with connected client
-                Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
-                clientThread.Start(client);
-            } 
+            tcpListener.Stop();
+        }
+
+        /// <summary>
+        /// Callback for tcplistener
+        /// </summary>
+        /// <param name="ar"></param>
+        private void HandleConnection(IAsyncResult ar)
+        {
+            // Get the listener that handles the client request.
+            TcpListener listener = (TcpListener)ar.AsyncState;
+
+            // End the operation and display the received data on 
+            // the console.
+            if (active == false)
+                return;
+
+            TcpClient client = listener.EndAcceptTcpClient(ar);
+
+            Console.WriteLine("Client Connected");
+
+            //create a thread to handle communication 
+            //with connected client
+            Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
+            clientThread.Start(client);
+
+            tcpClientConnected.Set();
         }
 
         /// <summary>
@@ -62,6 +91,7 @@ namespace BattleBoatsServer
         /// <param name="client"></param>
         private void HandleClientComm(object client)
         {
+
             String gamerID = "";
             String sentString = "";
             ASCIIEncoding encoder = new ASCIIEncoding();
