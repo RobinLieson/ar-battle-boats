@@ -82,7 +82,7 @@ namespace AR_Battle_Boats
         GeometryNode cylinderNode2;
         GeometryNode cylinderNode3;
         GeometryNode cylinderNode4;
-
+        TransformNode cylinderTransNode2;
         GeometryNode sphereNode;
 
         bool useStaticImage = false;
@@ -91,14 +91,11 @@ namespace AR_Battle_Boats
         TransformNode allShapesTransNode;
         Material allShapesMat;
 
-        int[] ids1;
-        int[] ids2;
-        int[] ids3;
-        int[] ids4;
-        int[] ids5;
-        int[] ids6;
-        int[] ids7;
-        
+        float pitch = 1.8f;
+        float yaw = 0f;
+        float roll = 0f;
+
+
         // Markers ini ends here
 
         public Main()
@@ -118,7 +115,7 @@ namespace AR_Battle_Boats
             Components.Add(new GamerServicesComponent(this));
 
             //Init Goblin, Create and setup scene
-            State.InitGoblin(graphics, Content, "");          
+            State.InitGoblin(graphics, Content, "");
             scene = new Scene(this);
 
             scene.BackgroundColor = Color.DarkBlue;
@@ -130,9 +127,9 @@ namespace AR_Battle_Boats
             this.IsMouseVisible = true; //Set Mouse Visible   
 
             CreateCamera();
-            
+
             base.Initialize();
-            
+
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
 
@@ -169,6 +166,8 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            KeyboardState state = Keyboard.GetState();
+
             //Check to see if the Gamer is Signed In
             if (SignedInGamer.SignedInGamers.Count < 1)
             {
@@ -185,8 +184,27 @@ namespace AR_Battle_Boats
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
-                if(gameMode == GameMode.Network_Multiplayer)
+                if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
+
+                if (state.IsKeyDown(Keys.Y))
+                {
+                    yaw += .1f;
+                    Console.WriteLine("Yaw = " + yaw.ToString());
+                }
+
+                if (state.IsKeyDown(Keys.P))
+                {
+                    pitch += .1f;
+                    Console.WriteLine("Pitch = " + pitch.ToString());
+                }
+
+                if (state.IsKeyDown(Keys.R))
+                {
+                    roll += .1f;
+                    Console.WriteLine("Roll = " + roll.ToString());
+                }
+                cylinderTransNode2.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
             }
 
             if (session != null)
@@ -205,7 +223,7 @@ namespace AR_Battle_Boats
             {
                 DrawMarkerUpdate();
             }
-                        
+
             base.Draw(gameTime);
         }
 
@@ -239,12 +257,12 @@ namespace AR_Battle_Boats
             // Put the camera at (0, 0, 10)
             camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0,1,0), MathHelper.ToRadians(180));
-           // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
+            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
+            // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
             // Set the vertical field of view to be 45 degrees
             camera.FieldOfViewY = MathHelper.ToRadians(90);
             // Set the near clipping plane to be 0.1f unit away from the camera
-           // camera.ZNearPlane = 0.1f;
+            // camera.ZNearPlane = 0.1f;
             camera.ZNearPlane = 10f;
             // Set the far clipping plane to be 1000 units away from the camera
             camera.ZFarPlane = 1000;
@@ -273,7 +291,7 @@ namespace AR_Battle_Boats
             sailBoat.Position = Vector3.Zero;
 
             ModelLoader loader = new ModelLoader();
-            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
+            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "fighter");
 
 
             AvailableShips.Add(sailBoat);
@@ -284,21 +302,21 @@ namespace AR_Battle_Boats
         /// Add the ship objects to the screen
         /// </summary>
         private void AddShipsToScene()
-        {         
+        {
 
             foreach (PlayerInfo player in activePlayers)
             {
                 playerGeometryNode = new GeometryNode(player.PlayerName);
                 playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerTransformNode = new TransformNode();
-              
+
                 playerTransformNode.Translation = new Vector3(0, 0, 650);
-                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1,0,0), MathHelper.ToRadians(90));
+                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), MathHelper.ToRadians(90));
                 playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
                 playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
                 playerTransformNode.AddChild(playerGeometryNode);
-                scene.RootNode.AddChild(playerTransformNode);            
-            
+                scene.RootNode.AddChild(playerTransformNode);
+
             }
 
         }
@@ -552,7 +570,7 @@ namespace AR_Battle_Boats
             back.TextFont = textFont;
             back.ActionPerformedEvent += new ActionPerformed(HandleBack);
 
-            
+
             scene.UIRenderer.Add2DComponent(frame);
 
 
@@ -677,6 +695,7 @@ namespace AR_Battle_Boats
         private void HandleStartGame(object source)
         {
             HideMainMenu();
+            scene.CameraNode = null;
             StartNetworkSession();
 
             gameState = GameState.Game_Load;
@@ -794,7 +813,7 @@ namespace AR_Battle_Boats
 
             groundNode.Model = new Box(95, 59, 0.1f);
             // Set this ground model to act as an occluder so that it appears transparent
-            //groundNode.IsOccluder = true;
+            groundNode.IsOccluder = true;
 
             // Make the ground model to receive shadow casted by other objects with
             // CastShadows set to true
@@ -811,6 +830,7 @@ namespace AR_Battle_Boats
             //groundMaterial.Texture = Content.Load<Texture2D>("sea3");
             groundNode.Material = groundMaterial;
             groundMarkerNode.AddChild(groundNode);
+
         }
 
         /// <summary>
@@ -857,7 +877,6 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void BoxSphereCollision(NewtonPhysics.CollisionPair pair)
         {
-            Console.WriteLine("Box and Sphere has collided");
         }
 
         /// <summary>
@@ -948,7 +967,6 @@ namespace AR_Battle_Boats
             // If ground marker array is detected
             if (groundMarkerNode.MarkerFound)
             {
-
                 // If the toolbar marker array is detected, then overlay the box model on top
                 // of the toolbar marker array; otherwise, overlay the box model on top of
                 // the ground marker array
@@ -988,181 +1006,196 @@ namespace AR_Battle_Boats
         /// Create the objects for the markers
         /// </summary>
         private void CreateObjects()
-         {
-             allShapesNode = new GeometryNode();
-             allShapesMat = new Material();
-             allShapesTransNode = new TransformNode();
+        {
+            int[] ids1;
+            int[] ids2;
+            int[] ids3;
+            int[] ids4;
+            int[] ids5;
+            int[] ids6;
+            int[] ids7;
 
-             // Create a geometry node with a model of a sphere that will be overlaid on
-             // top of the ground marker array
-             sphereNode = new GeometryNode("Sphere");
-             sphereNode.Model = new Sphere(3, 20, 20);
+            GeometryNode player1ShipNode = new GeometryNode("Player 1 Ship");
+            player1ShipNode.Model = activePlayers[0].Player_Ship.Player_Ship_Model;
+            TransformNode player1Transform = new TransformNode();
+            player1Transform.Translation = new Vector3(0, 0, -100);
+            scene.RootNode.AddChild(player1Transform);
+            player1Transform.AddChild(player1ShipNode);
 
+            allShapesNode = new GeometryNode();
+            allShapesMat = new Material();
+            allShapesTransNode = new TransformNode();
 
-             // Add this sphere model to the physics engine for collision detection
-             sphereNode.AddToPhysicsEngine = true;
-             sphereNode.Physics.Shape = ShapeType.Sphere;
-             // Make this sphere model cast and receive shadows
-             sphereNode.Model.CastShadows = true;
-             sphereNode.Model.ReceiveShadows = true;
-
-             // Create a marker node to track a ground marker array.
-             groundMarkerNode = new MarkerNode(scene.MarkerTracker, "ALVARGroundArray.xml");
-
-             // Since the ground marker's size is 80x52 ARTag units, in order to move the sphere model
-             // to the center of the ground marker, we shift it by 40x26 units and also make it
-             // float from the ground marker's center
-             TransformNode sphereTransNode = new TransformNode();
-             sphereTransNode.Translation = new Vector3(40, 26, 10);
-
-             // Create a material to apply to the sphere model
-             Material sphereMaterial = new Material();
-             sphereMaterial.Diffuse = new Vector4(0, 0.5f, 0, 1);
-             sphereMaterial.Specular = Color.White.ToVector4();
-             sphereMaterial.SpecularPower = 10;
-
-             sphereNode.Material = sphereMaterial;
-
-             // Now add the above nodes to the scene graph in the appropriate order.
-             // Note that only the nodes added below the marker node are affected by 
-             // the marker transformation.
-             scene.RootNode.AddChild(groundMarkerNode);
-             groundMarkerNode.AddChild(sphereTransNode);
-             sphereTransNode.AddChild(sphereNode);
-
-             // Create a geometry node with a model of a box that will be overlaid on
-             // top of the ground marker array initially. (When the toolbar marker array is
-             // detected, it will be overlaid on top of the toolbar marker array.)
-             boxNode = new GeometryNode("Box");
-             boxNode.Model = new Box(8);
-
-             // Add this box model to the physics engine for collision detection
-             boxNode.AddToPhysicsEngine = true;
-             boxNode.Physics.Shape = ShapeType.Box;
-             // Make this box model cast and receive shadows
-             boxNode.Model.CastShadows = true;
-             boxNode.Model.ReceiveShadows = true;
-
-             // Create a marker node to track a toolbar marker array.
-             toolbarMarkerNode = new MarkerNode(scene.MarkerTracker, "Toolbar.txt");
-
-             scene.RootNode.AddChild(toolbarMarkerNode);
-
-             // Create a material to apply to the box model
-             Material boxMaterial = new Material();
-             boxMaterial.Diffuse = new Vector4(0.5f, 0, 0, 1);
-             boxMaterial.Specular = Color.White.ToVector4();
-             boxMaterial.SpecularPower = 10;
-
-             boxNode.Material = boxMaterial;
-
-             // Add this box model node to the ground marker node
-             groundMarkerNode.AddChild(boxNode);
-
-             // Create a collision pair and add a collision callback function that will be
-             // called when the pair collides
-             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(boxNode.Physics, sphereNode.Physics);
-             ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, BoxSphereCollision);
-
-             //NewtonPhysics.CollisionPair tmp = new NewtonPhysics.CollisionPair
-
-             // NewtonMaterial.ContactBegin startWar = new NewtonMaterial.ContactBegin(boxNode.Physics, sphereNode.Physics);
+            // Create a geometry node with a model of a sphere that will be overlaid on
+            // top of the ground marker array
+            sphereNode = new GeometryNode("Sphere");
+            sphereNode.Model = new Sphere(3, 20, 20);
 
 
-             ids1 = new int[4];
-             ids1[0] = 70;
-             ids1[1] = 71;
-             ids1[2] = 72;
-             ids1[3] = 73;
-             MarkerNode1 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML1.xml", ids1);
-             cylinderNode1 = new GeometryNode("ENEMY's SHIP");
-             cylinderNode1.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode1.Material = sphereMaterial;
-             TransformNode cylinderTransNode = new TransformNode();
-             cylinderTransNode.Translation = new Vector3(0, 0, 3);
-             MarkerNode1.AddChild(cylinderTransNode);
-             cylinderTransNode.AddChild(cylinderNode1);
-             scene.RootNode.AddChild(MarkerNode1);
+            // Add this sphere model to the physics engine for collision detection
+            sphereNode.AddToPhysicsEngine = true;
+            sphereNode.Physics.Shape = ShapeType.Sphere;
+            // Make this sphere model cast and receive shadows
+            sphereNode.Model.CastShadows = true;
+            sphereNode.Model.ReceiveShadows = true;
 
-             ids2 = new int[4];
-             ids2[0] = 80;
-             ids2[1] = 81;
-             ids2[2] = 82;
-             ids2[3] = 83;
+            // Create a marker node to track a ground marker array.
+            groundMarkerNode = new MarkerNode(scene.MarkerTracker, "ALVARGroundArray.xml");
 
-             MarkerNode2 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML2.xml", ids2);
+            // Since the ground marker's size is 80x52 ARTag units, in order to move the sphere model
+            // to the center of the ground marker, we shift it by 40x26 units and also make it
+            // float from the ground marker's center
+            TransformNode sphereTransNode = new TransformNode();
+            sphereTransNode.Translation = new Vector3(40, 26, 10);
 
-             cylinderNode2 = new GeometryNode("PLAYER's SHIP EAST");
-             cylinderNode2.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode2.Material = boxMaterial;
-             TransformNode cylinderTransNode2 = new TransformNode();
-             cylinderTransNode2.Translation = new Vector3(20, 5, 10);
-             MarkerNode2.AddChild(cylinderTransNode2);
-             cylinderTransNode2.AddChild(cylinderNode2);
-             scene.RootNode.AddChild(MarkerNode2);
+            // Create a material to apply to the sphere model
+            Material sphereMaterial = new Material();
+            sphereMaterial.Diffuse = new Vector4(0, 0.5f, 0, 1);
+            sphereMaterial.Specular = Color.White.ToVector4();
+            sphereMaterial.SpecularPower = 10;
 
+            sphereNode.Material = sphereMaterial;
 
-             ids3 = new int[4];
-             ids3[0] = 90;
-             ids3[1] = 91;
-             ids3[2] = 92;
-             ids3[3] = 93;
+            // Now add the above nodes to the scene graph in the appropriate order.
+            // Note that only the nodes added below the marker node are affected by 
+            // the marker transformation.
+            scene.RootNode.AddChild(groundMarkerNode);
+            groundMarkerNode.AddChild(sphereTransNode);
+            sphereTransNode.AddChild(sphereNode);
 
-             MarkerNode3 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML3.xml", ids3);
+            // Create a geometry node with a model of a box that will be overlaid on
+            // top of the ground marker array initially. (When the toolbar marker array is
+            // detected, it will be overlaid on top of the toolbar marker array.)
+            boxNode = new GeometryNode("Box");
+            boxNode.Model = new Box(800);
 
-             cylinderNode3 = new GeometryNode("PLAYER's SHIP WEST");
-             cylinderNode3.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode3.Material = sphereMaterial;
-             TransformNode cylinderTransNode3 = new TransformNode();
-             cylinderTransNode3.Translation = new Vector3(0, 5, 0);
-             MarkerNode3.AddChild(cylinderTransNode3);
-             cylinderTransNode3.AddChild(cylinderNode3);
-             scene.RootNode.AddChild(MarkerNode3);
+            // Add this box model to the physics engine for collision detection
+            boxNode.AddToPhysicsEngine = true;
+            boxNode.Physics.Shape = ShapeType.Box;
+            // Make this box model cast and receive shadows
+            boxNode.Model.CastShadows = true;
+            boxNode.Model.ReceiveShadows = true;
 
+            // Create a marker node to track a toolbar marker array.
+            toolbarMarkerNode = new MarkerNode(scene.MarkerTracker, "Toolbar.txt");
 
-             ids4 = new int[4];
-             ids4[0] = 100;
-             ids4[1] = 101;
-             ids4[2] = 102;
-             ids4[3] = 103;
+            scene.RootNode.AddChild(toolbarMarkerNode);
 
-             MarkerNode4 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML4.xml", ids4);
+            // Create a material to apply to the box model
+            Material boxMaterial = new Material();
+            boxMaterial.Diffuse = new Vector4(0.5f, 0, 0, 1);
+            boxMaterial.Specular = Color.White.ToVector4();
+            boxMaterial.SpecularPower = 10;
 
-             cylinderNode4 = new GeometryNode("PLAYER's NORTH");
-             cylinderNode4.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode4.Material = boxMaterial;
-             TransformNode cylinderTransNode4 = new TransformNode();
-             cylinderTransNode4.Translation = new Vector3(0, 0, 0);
-             MarkerNode4.AddChild(cylinderTransNode4);
-             cylinderTransNode4.AddChild(cylinderNode4);
-             scene.RootNode.AddChild(MarkerNode4);
+            boxNode.Material = boxMaterial;
 
-             ids5 = new int[4];
-             ids5[0] = 110;
-             ids5[1] = 111;
-             ids5[2] = 112;
-             ids5[3] = 113;
-             MarkerNode5 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML5.xml", ids5);
+            // Add this box model node to the ground marker node
+            groundMarkerNode.AddChild(boxNode);
 
-             ids6 = new int[4];
-             ids6[0] = 120;
-             ids6[1] = 121;
-             ids6[2] = 122;
-             ids6[3] = 123;
-             MarkerNode6 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML6.xml", ids6);
+            // Create a collision pair and add a collision callback function that will be
+            // called when the pair collides
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(boxNode.Physics, sphereNode.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, BoxSphereCollision);
 
-             ids7 = new int[4];
-             ids7[0] = 130;
-             ids7[1] = 131;
-             ids7[2] = 132;
-             ids7[3] = 133;
-             MarkerNode7 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML7.xml", ids7);
+            //NewtonPhysics.CollisionPair tmp = new NewtonPhysics.CollisionPair
 
-             scene.RootNode.AddChild(MarkerNode5);
-             scene.RootNode.AddChild(MarkerNode6);
-             scene.RootNode.AddChild(MarkerNode7);
+            // NewtonMaterial.ContactBegin startWar = new NewtonMaterial.ContactBegin(boxNode.Physics, sphereNode.Physics);
 
 
-         }
+            ids1 = new int[4];
+            ids1[0] = 70;
+            ids1[1] = 71;
+            ids1[2] = 72;
+            ids1[3] = 73;
+            MarkerNode1 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML1.xml", ids1);
+            cylinderNode1 = new GeometryNode("ENEMY's SHIP");
+            cylinderNode1.Model = new Cylinder(3, 3, 6, 10);
+            cylinderNode1.Material = sphereMaterial;
+            TransformNode cylinderTransNode = new TransformNode();
+            cylinderTransNode.Translation = new Vector3(0, 0, 3);
+            MarkerNode1.AddChild(cylinderTransNode);
+            cylinderTransNode.AddChild(cylinderNode1);
+            scene.RootNode.AddChild(MarkerNode1);
+
+            ids2 = new int[4];
+            ids2[0] = 80;
+            ids2[1] = 81;
+            ids2[2] = 82;
+            ids2[3] = 83;
+
+            MarkerNode2 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML2.xml", ids2);
+
+            cylinderNode2 = new GeometryNode("PLAYER's SHIP EAST");
+            cylinderNode2.Model = activePlayers[0].Player_Ship.Player_Ship_Model;
+            cylinderNode2.Material = sphereMaterial;
+            cylinderTransNode2 = new TransformNode();
+            cylinderTransNode2.Rotation = Quaternion.CreateFromYawPitchRoll(0.0f, 1.8f, 0.0f);
+            cylinderTransNode2.Scale = new Vector3(1.0f, 1.0f, 1.0f);
+            MarkerNode2.AddChild(cylinderTransNode2);
+            cylinderTransNode2.AddChild(cylinderNode2);
+            scene.RootNode.AddChild(MarkerNode2);
+
+            ids3 = new int[4];
+            ids3[0] = 90;
+            ids3[1] = 91;
+            ids3[2] = 92;
+            ids3[3] = 93;
+
+            MarkerNode3 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML3.xml", ids3);
+
+            cylinderNode3 = new GeometryNode("PLAYER's SHIP WEST");
+            cylinderNode3.Model = new Cylinder(3, 3, 6, 10);
+            cylinderNode3.Material = sphereMaterial;
+            TransformNode cylinderTransNode3 = new TransformNode();
+            cylinderTransNode3.Translation = new Vector3(0, 5, 0);
+            MarkerNode3.AddChild(cylinderTransNode3);
+            cylinderTransNode3.AddChild(cylinderNode3);
+            scene.RootNode.AddChild(MarkerNode3);
+
+
+            ids4 = new int[4];
+            ids4[0] = 100;
+            ids4[1] = 101;
+            ids4[2] = 102;
+            ids4[3] = 103;
+
+            MarkerNode4 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML4.xml", ids4);
+
+            cylinderNode4 = new GeometryNode("PLAYER's NORTH");
+            cylinderNode4.Model = new Cylinder(3, 3, 6, 10);
+            cylinderNode4.Material = boxMaterial;
+            TransformNode cylinderTransNode4 = new TransformNode();
+            cylinderTransNode4.Translation = new Vector3(0, 0, 0);
+            MarkerNode4.AddChild(cylinderTransNode4);
+            cylinderTransNode4.AddChild(cylinderNode4);
+            scene.RootNode.AddChild(MarkerNode4);
+
+            ids5 = new int[4];
+            ids5[0] = 110;
+            ids5[1] = 111;
+            ids5[2] = 112;
+            ids5[3] = 113;
+            MarkerNode5 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML5.xml", ids5);
+
+            ids6 = new int[4];
+            ids6[0] = 120;
+            ids6[1] = 121;
+            ids6[2] = 122;
+            ids6[3] = 123;
+            MarkerNode6 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML6.xml", ids6);
+
+            ids7 = new int[4];
+            ids7[0] = 130;
+            ids7[1] = 131;
+            ids7[2] = 132;
+            ids7[3] = 133;
+            MarkerNode7 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML7.xml", ids7);
+
+            scene.RootNode.AddChild(MarkerNode5);
+            scene.RootNode.AddChild(MarkerNode6);
+            scene.RootNode.AddChild(MarkerNode7);
+
+
+        }
     }
 }
