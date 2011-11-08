@@ -1,7 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <PublishUrlHistory>
-    </PublishUrlHistory>
+    <PublishUrlHistory>ftp://192.168.1.110/BattleBoatsServer/|ftp://www.thenewzerov.com/BattleBoatsServer/|publish\</PublishUrlHistory>
     <InstallUrlHistory>
     </InstallUrlHistory>
     <SupportUrlHistory>
