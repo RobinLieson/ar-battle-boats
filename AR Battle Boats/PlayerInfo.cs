@@ -5,6 +5,9 @@ using System;
 
 namespace AR_Battle_Boats
 {
+    /// <summary>
+    /// The info for a server, 
+    /// </summary>
     public class PlayerInfo
     {
         private string userName;
@@ -235,7 +238,7 @@ namespace AR_Battle_Boats
         /// <param name="Server_address">Address of the Remote Server</param>
         /// <param name="Port_Num">Port Number on the Remote Server</param>
         /// <returns>True if update was successful, false otherwise</returns>
-        private bool UpdateInfoOnServer(string Server_address, int Port_Num)
+        public bool UpdateInfoOnServer(string Server_address, int Port_Num)
         {
             NetworkStream stream; //Stream to write and read data to
 
