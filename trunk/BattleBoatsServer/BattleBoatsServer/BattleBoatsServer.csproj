@@ -15,11 +15,10 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <ManifestCertificateThumbprint>A55EA8F793EF12BE530F11FF7AD5B71976A26857</ManifestCertificateThumbprint>
     <ManifestKeyFile>BattleBoatsServer_TemporaryKey.pfx</ManifestKeyFile>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>true</SignManifests>
-    <PublishUrl>ftp://192.168.1.110/BattleBoatsServer/</PublishUrl>
+    <SignManifests>false</SignManifests>
+    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -117,7 +116,6 @@
     <None Include="BattleBoatsDataSet.xss">
       <DependentUpon>BattleBoatsDataSet.xsd</DependentUpon>
     </None>
-    <None Include="BattleBoatsServer_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
