@@ -29,7 +29,7 @@ namespace BattleBoatsServer
         {
             btnStart.Enabled = true;
             btnStop.Enabled = false;
-            server.active = false;
+            server.StopServer();
             Server.tcpClientConnected.Set();
         }
     }

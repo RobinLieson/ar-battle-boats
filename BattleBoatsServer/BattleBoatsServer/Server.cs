@@ -42,6 +42,15 @@ namespace BattleBoatsServer
         }
 
         /// <summary>
+        /// Stop the server
+        /// </summary>
+        public void StopServer()
+        {
+            active = false;
+            tcpListener.Stop();
+        }
+
+        /// <summary>
         /// This thread listens for incoming connections
         /// </summary>
         private void ListenForClients(){
@@ -50,13 +59,38 @@ namespace BattleBoatsServer
             while (active)
             {               
 
+<<<<<<< .mine
+                try
+                {
+                    //blocks until a client has connected to the server
+                    TcpClient client = this.tcpListener.AcceptTcpClient();
+=======
                 //blocks until a client has connected to the server
                 tcpListener.BeginAcceptTcpClient(new AsyncCallback(HandleConnection), tcpListener);
+>>>>>>> .r54
 
+<<<<<<< .mine
+                    Console.WriteLine("Client Connected");
+=======
                 tcpClientConnected.WaitOne();
             }
+>>>>>>> .r54
 
+<<<<<<< .mine
+                    //create a thread to handle communication 
+                    //with connected client
+                    Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
+                    clientThread.Start(client);
+                }
+                catch
+                {
+                    Console.WriteLine("Error in Server");
+                    Console.WriteLine("Server Shutting Down");
+                }
+            } 
+=======
             tcpListener.Stop();
+>>>>>>> .r54
         }
 
         /// <summary>
