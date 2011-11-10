@@ -46,7 +46,7 @@ namespace AR_Battle_Boats
     /// </summary>
     public class Main : Microsoft.Xna.Framework.Game
     {
-        string SERVER_IP = "127.0.0.1";
+        string SERVER_IP = "www.thenewzerov.com";
         int SERVER_PORT_NUM = 3550;
 
 
@@ -65,6 +65,8 @@ namespace AR_Battle_Boats
         GeometryNode playerGeometryNode;
         TransformNode playerTransformNode;
         G2DPanel frame;
+
+        TransformNode player1Transform;
 
         //Markers initialization starts here
         MarkerNode groundMarkerNode, toolbarMarkerNode;
@@ -181,6 +183,33 @@ namespace AR_Battle_Boats
                 GetPlayerInfo();
             }
 
+            if (gameState == GameState.Calibrating)
+            {
+                bool startGame = true;
+                if (!MarkerNode1.MarkerFound)
+                {
+                    Console.WriteLine("Missing Marker 1");
+                    startGame = false;
+                }
+                if (!MarkerNode4.MarkerFound)
+                {
+                    Console.WriteLine("Missing Marker 4");
+                    startGame = false;
+                }
+                if (!MarkerNode3.MarkerFound)
+                {
+                    Console.WriteLine("Missing Marker 3");
+                    startGame = false;
+                }
+
+                if (startGame)
+                {
+                    gameState = GameState.In_Game;
+                }
+
+            }
+
+
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
@@ -205,10 +234,27 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Roll = " + roll.ToString());
                 }
                 cylinderTransNode2.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+
+                if (MarkerNode1.MarkerFound)
+                {
+                    player1Transform.Translation = GetMovementTranslation(player1Transform.Translation, MarkerNode1.WorldTransformation.Translation,
+                        activePlayers[0].Speed_Level);
+                }
+
+                if (!MarkerNode4.MarkerFound)
+                {
+                    Console.WriteLine("Player 1 Fire Left!");
+                }
+                if (!MarkerNode3.MarkerFound)
+                {
+                    Console.WriteLine("Player 1 Fire Right!");
+                }
             }
 
             if (session != null)
                 session.Update();
+
+
 
             base.Update(gameTime);
         }
@@ -465,7 +511,7 @@ namespace AR_Battle_Boats
                 AddShipsToScene();
             }
 
-            gameState = GameState.In_Game;
+            gameState = GameState.Calibrating;
         }
 
         /// <summary>
@@ -1017,8 +1063,10 @@ namespace AR_Battle_Boats
 
             GeometryNode player1ShipNode = new GeometryNode("Player 1 Ship");
             player1ShipNode.Model = activePlayers[0].Player_Ship.Player_Ship_Model;
-            TransformNode player1Transform = new TransformNode();
+            player1Transform = new TransformNode();
             player1Transform.Translation = new Vector3(0, 0, -100);
+            player1Transform.Scale = new Vector3(0.25f, 0.25f, 0.25f);
+            player1Transform.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
             scene.RootNode.AddChild(player1Transform);
             player1Transform.AddChild(player1ShipNode);
 
@@ -1196,6 +1244,45 @@ namespace AR_Battle_Boats
             scene.RootNode.AddChild(MarkerNode7);
 
 
+        }
+
+
+        //Game Logic Functions
+
+        /// <summary>
+        /// Calculates and returns the current position for an object
+        /// based on it's position and speed
+        /// </summary>
+        /// <param name="currentPosition">Current Position of the object</param>
+        /// <param name="targetPosition">Target position for the object to move to</param>
+        /// <param name="Speed">Speed the object moves at</param>
+        /// <returns></returns>
+        private Vector3 GetMovementTranslation(Vector3 currentPosition, Vector3 targetPosition, int Speed)
+        {
+            Vector3 pos = currentPosition;
+            float speed = .5f + Speed / 10;
+
+            if (currentPosition.X < targetPosition.X)
+            {
+                pos.X += speed;
+            }
+
+            if (currentPosition.X > targetPosition.X)
+            {
+                pos.X -= speed;
+            }
+
+            if (currentPosition.Y < targetPosition.Y)
+            {
+                pos.Y += speed;
+            }
+
+            if (currentPosition.Y > targetPosition.Y)
+            {
+                pos.Y -= speed;
+            }
+            
+            return pos;
         }
     }
 }
