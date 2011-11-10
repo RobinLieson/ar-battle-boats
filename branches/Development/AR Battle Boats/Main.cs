@@ -115,12 +115,14 @@ namespace AR_Battle_Boats
             //Init Goblin, Create and setup scene
             State.InitGoblin(graphics, Content, "");
             scene = new Scene(this);
-
+            graphics.PreferredBackBufferHeight = 768;
+            graphics.PreferredBackBufferWidth = 1024;
             scene.BackgroundColor = Color.DarkBlue;
 
             scene.PhysicsEngine = new NewtonPhysics();
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
+            
 
             this.IsMouseVisible = true; //Set Mouse Visible   
 
@@ -230,24 +232,25 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Roll = " + player1.Roll.ToString());
                 }
 
-                player1.UpdateRotation();
-
                 if (MarkerNode1.MarkerFound)
                 {
                     player1.Translation = GetMovementTranslation(player1.Translation, MarkerNode1.WorldTransformation.Translation,        
                         activePlayers[0].Speed_Level);
 
-                    UpdateRotation(player1, MarkerNode1.WorldTransformation.Translation);                    
+                    UpdateRotation(player1, MarkerNode1.WorldTransformation.Translation);
+
+                    //player1.UpdateRotationByYawPitchRoll();
+                    player1.UpdateRotationByAngle();
 
                 }
 
                 if (!MarkerNode4.MarkerFound)
                 {
-                    Console.WriteLine("Player 1 Fire Left!");
+                    //Console.WriteLine("Player 1 Fire Left!");
                 }
                 if (!MarkerNode3.MarkerFound)
                 {
-                    Console.WriteLine("Player 1 Fire Right!");
+                    //Console.WriteLine("Player 1 Fire Right!");
                 }
             }
 
@@ -1070,7 +1073,10 @@ namespace AR_Battle_Boats
             player1 = new GameObject();
             player1.Translation = new Vector3(0, 0, -100);
             player1.Scale = new Vector3(0.25f, 0.25f, 0.25f);
-            player1.Rotation = Quaternion.CreateFromYawPitchRoll(0, 1.8f, 0);
+            player1.Yaw = 1.5f;
+            player1.Pitch = 0f;
+            player1.Roll = 1.5f;
+            player1.UpdateRotation();
             scene.RootNode.AddChild(player1);
             player1.AddChild(player1ShipNode);
 
@@ -1310,18 +1316,31 @@ namespace AR_Battle_Boats
             return pos;
         }
 
-
+        /// <summary>
+        /// Updates the rotation of an object based on it's target position
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="targetPosition"></param>
         private void UpdateRotation(GameObject player, Vector3 targetPosition)
         {
             double x = targetPosition.X - player.Translation.X;
             // Console.Write("X" + x);
             double y = targetPosition.Y - player.Translation.Y;
             // Console.Write("Y" + y);
-            double H = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
-            // Console.Write("H" + H);
             double currentangle = Math.Atan((y / x));
             // angle = (float) Math.Round(currentangle);
             float angle = (float)(currentangle * 180 / Math.PI);
+
+            if (angle > 0)
+            {
+                player1.Pitch += 0.001f;
+                player.Angle += 0.1f;
+            }
+            if (angle < 0)
+            {
+                player1.Pitch -= 0.001f;
+                player1.Angle -= 0.1f;
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ namespace AR_Battle_Boats
         private float yaw;
         private float pitch;
         private float roll;
+        private float angle;
 
 
         /// <summary>
@@ -102,11 +103,34 @@ namespace AR_Battle_Boats
         }
 
         /// <summary>
+        /// Gets the angle of the current game object
+        /// </summary>
+        public float Angle
+        {
+            get
+            {
+                return angle;
+            }
+            set
+            {
+                angle = value;
+            }
+        }
+
+        /// <summary>
         /// Updates the rotation of the object based on the yaw, pitch, and roll
         /// </summary>
-        public void UpdateRotation()
+        public void UpdateRotationByYawPitchRoll()
         {
             Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+        }
+
+        /// <summary>
+        /// Rotates an object around the Z axis
+        /// </summary>
+        public void UpdateRotationByAngle()
+        {
+            rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
         }
     }
 }
