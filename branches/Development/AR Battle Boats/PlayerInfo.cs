@@ -196,8 +196,16 @@ namespace AR_Battle_Boats
             }
             catch
             {
-                Console.Write("Connecting to server...");
-                client.Connect(Server_Address, Port_Num);
+                try
+                {
+                    Console.Write("Connecting to server...");
+                    client.Connect(Server_Address, Port_Num);
+                }
+                catch
+                {
+                    Console.WriteLine("ERROR:  Could not connect to server!");
+                    return false;
+                }
             }
             try
             {
