@@ -96,6 +96,7 @@ namespace AR_Battle_Boats
         float pitch = 1.8f;
         float yaw = 0f;
         float roll = 0f;
+       static float angle = 0;
 
 
         // Markers ini ends here
@@ -237,8 +238,12 @@ namespace AR_Battle_Boats
 
                 if (MarkerNode1.MarkerFound)
                 {
-                    player1Transform.Translation = GetMovementTranslation(player1Transform.Translation, MarkerNode1.WorldTransformation.Translation,
+                    player1Transform.Translation = GetMovementTranslation(player1Transform.Translation, MarkerNode1.WorldTransformation.Translation,        
                         activePlayers[0].Speed_Level);
+
+
+                    player1Transform.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(.5f,.5f,0),MathHelper.ToRadians(angle));
+
                 }
 
                 if (!MarkerNode4.MarkerFound)
@@ -303,7 +308,7 @@ namespace AR_Battle_Boats
             // Put the camera at (0, 0, 10)
             camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
+            //camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
             // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
             // Set the vertical field of view to be 45 degrees
             camera.FieldOfViewY = MathHelper.ToRadians(90);
@@ -1245,7 +1250,26 @@ namespace AR_Battle_Boats
 
 
         }
+        /// <summary>
+        /// Calculate angle of marker
+        /// </summary>
+        /// <param name="currentPosition"></param>
+        /// <param name="targetPosition"></param>
+        /// <param name="Speed"></param>
+        /// <returns></returns>
+        //private Vector3 GetAngle(Vector3 currentPosition, Vector3 targetPosition, int Speed)
+        //{
+           // Vector3 angle;
+           // double x = targetPosition.X - currentPosition.X;
 
+ //           double y = targetPosition.Y - currentPosition.Y;
+
+   //         double H = Math.Sqrt( Math.Pow(x,2) + Math.Pow(y,2));
+
+     //       double angle = Math.Asin(H / y);
+
+         //   return (float) angle;
+       // }
 
         //Game Logic Functions
 
@@ -1260,7 +1284,7 @@ namespace AR_Battle_Boats
         private Vector3 GetMovementTranslation(Vector3 currentPosition, Vector3 targetPosition, int Speed)
         {
             Vector3 pos = currentPosition;
-            float speed = .5f + Speed / 10;
+            float speed = .1f + Speed / 10;
 
             if (currentPosition.X < targetPosition.X)
             {
@@ -1281,7 +1305,21 @@ namespace AR_Battle_Boats
             {
                 pos.Y -= speed;
             }
+
+
+            double x = targetPosition.X - currentPosition.X;
+           // Console.Write("X" + x);
+            double y = targetPosition.Y - currentPosition.Y;
+           // Console.Write("Y" + y);
+            double H = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
+           // Console.Write("H" + H);
+            double currentangle =   Math.Atan((y / x));
+           // angle = (float) Math.Round(currentangle);
+            angle = (float)(currentangle * 180 / Math.PI);
             
+           // Console.Write("angle" + angle );
+
+
             return pos;
         }
     }
