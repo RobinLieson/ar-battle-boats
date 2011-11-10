@@ -62,11 +62,10 @@ namespace AR_Battle_Boats
         List<PlayerInfo> activePlayers;
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
-        GeometryNode playerGeometryNode;
-        TransformNode playerTransformNode;
-        G2DPanel frame;
 
-        TransformNode player1Transform;
+        GameObject player1;
+
+        G2DPanel frame;
 
         //Markers initialization starts here
         MarkerNode groundMarkerNode, toolbarMarkerNode;
@@ -93,10 +92,6 @@ namespace AR_Battle_Boats
         TransformNode allShapesTransNode;
         Material allShapesMat;
 
-        float pitch = 1.8f;
-        float yaw = 0f;
-        float roll = 0f;
-       static float angle = 0;
 
 
         // Markers ini ends here
@@ -219,30 +214,30 @@ namespace AR_Battle_Boats
 
                 if (state.IsKeyDown(Keys.Y))
                 {
-                    yaw += .1f;
-                    Console.WriteLine("Yaw = " + yaw.ToString());
+                    player1.Yaw += .1f;
+                    Console.WriteLine("Yaw = " + player1.Yaw.ToString());
                 }
 
                 if (state.IsKeyDown(Keys.P))
                 {
-                    pitch += .1f;
-                    Console.WriteLine("Pitch = " + pitch.ToString());
+                    player1.Pitch += .1f;
+                    Console.WriteLine("Pitch = " + player1.Pitch.ToString());
                 }
 
                 if (state.IsKeyDown(Keys.R))
                 {
-                    roll += .1f;
-                    Console.WriteLine("Roll = " + roll.ToString());
+                    player1.Roll += .1f;
+                    Console.WriteLine("Roll = " + player1.Roll.ToString());
                 }
-                cylinderTransNode2.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+
+                player1.UpdateRotation();
 
                 if (MarkerNode1.MarkerFound)
                 {
-                    player1Transform.Translation = GetMovementTranslation(player1Transform.Translation, MarkerNode1.WorldTransformation.Translation,        
+                    player1.Translation = GetMovementTranslation(player1.Translation, MarkerNode1.WorldTransformation.Translation,        
                         activePlayers[0].Speed_Level);
 
-
-                    player1Transform.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(.5f,.5f,0),MathHelper.ToRadians(angle));
+                    UpdateRotation(player1, MarkerNode1.WorldTransformation.Translation);                    
 
                 }
 
@@ -357,6 +352,9 @@ namespace AR_Battle_Boats
 
             foreach (PlayerInfo player in activePlayers)
             {
+                GeometryNode playerGeometryNode;
+                TransformNode playerTransformNode;
+
                 playerGeometryNode = new GeometryNode(player.PlayerName);
                 playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerTransformNode = new TransformNode();
@@ -1066,14 +1064,15 @@ namespace AR_Battle_Boats
             int[] ids6;
             int[] ids7;
 
+
             GeometryNode player1ShipNode = new GeometryNode("Player 1 Ship");
             player1ShipNode.Model = activePlayers[0].Player_Ship.Player_Ship_Model;
-            player1Transform = new TransformNode();
-            player1Transform.Translation = new Vector3(0, 0, -100);
-            player1Transform.Scale = new Vector3(0.25f, 0.25f, 0.25f);
-            player1Transform.Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
-            scene.RootNode.AddChild(player1Transform);
-            player1Transform.AddChild(player1ShipNode);
+            player1 = new GameObject();
+            player1.Translation = new Vector3(0, 0, -100);
+            player1.Scale = new Vector3(0.25f, 0.25f, 0.25f);
+            player1.Rotation = Quaternion.CreateFromYawPitchRoll(0, 1.8f, 0);
+            scene.RootNode.AddChild(player1);
+            player1.AddChild(player1ShipNode);
 
             allShapesNode = new GeometryNode();
             allShapesMat = new Material();
@@ -1283,6 +1282,7 @@ namespace AR_Battle_Boats
         /// <returns></returns>
         private Vector3 GetMovementTranslation(Vector3 currentPosition, Vector3 targetPosition, int Speed)
         {
+
             Vector3 pos = currentPosition;
             float speed = .1f + Speed / 10;
 
@@ -1307,20 +1307,21 @@ namespace AR_Battle_Boats
             }
 
 
-            double x = targetPosition.X - currentPosition.X;
-           // Console.Write("X" + x);
-            double y = targetPosition.Y - currentPosition.Y;
-           // Console.Write("Y" + y);
-            double H = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
-           // Console.Write("H" + H);
-            double currentangle =   Math.Atan((y / x));
-           // angle = (float) Math.Round(currentangle);
-            angle = (float)(currentangle * 180 / Math.PI);
-            
-           // Console.Write("angle" + angle );
-
-            //what
             return pos;
+        }
+
+
+        private void UpdateRotation(GameObject player, Vector3 targetPosition)
+        {
+            double x = targetPosition.X - player.Translation.X;
+            // Console.Write("X" + x);
+            double y = targetPosition.Y - player.Translation.Y;
+            // Console.Write("Y" + y);
+            double H = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
+            // Console.Write("H" + H);
+            double currentangle = Math.Atan((y / x));
+            // angle = (float) Math.Round(currentangle);
+            float angle = (float)(currentangle * 180 / Math.PI);
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Microsoft.Xna.Framework;
+
 //Goblin XNA
 using GoblinXNA;
 using GoblinXNA.Graphics;
@@ -19,6 +21,9 @@ namespace AR_Battle_Boats
     {
         private PlayerInfo info;
         private NetworkGamer netPlayer;
+        private float yaw;
+        private float pitch;
+        private float roll;
 
 
         /// <summary>
@@ -51,6 +56,57 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Get the Yaw of the rotation of this object
+        /// </summary>
+        public float Yaw
+        {
+            get
+            {
+                return yaw;
+            }
+            set
+            {
+                yaw = value;
+            }
+        }
 
+        /// <summary>
+        /// Get the Pitch of the rotation of this object
+        /// </summary>
+        public float Pitch
+        {
+            get
+            {
+                return pitch;
+            }
+            set
+            {
+                pitch = value;
+            }
+        }
+
+        /// <summary>
+        /// Get the Yaw of the rotation of this object
+        /// </summary>
+        public float Roll
+        {
+            get
+            {
+                return roll;
+            }
+            set
+            {
+                roll = value;
+            }
+        }
+
+        /// <summary>
+        /// Updates the rotation of the object based on the yaw, pitch, and roll
+        /// </summary>
+        public void UpdateRotation()
+        {
+            Rotation = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+        }
     }
 }
