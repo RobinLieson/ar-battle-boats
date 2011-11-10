@@ -239,8 +239,8 @@ namespace AR_Battle_Boats
 
                     UpdateRotation(player1, MarkerNode1.WorldTransformation.Translation);
 
-                    //player1.UpdateRotationByYawPitchRoll();
-                    player1.UpdateRotationByAngle();
+                    player1.UpdateRotationByYawPitchRoll();
+                    //player1.UpdateRotationByAngle();
 
                 }
 
@@ -1076,7 +1076,7 @@ namespace AR_Battle_Boats
             player1.Yaw = 1.5f;
             player1.Pitch = 0f;
             player1.Roll = 1.5f;
-            player1.UpdateRotation();
+            player1.UpdateRotationByYawPitchRoll();
             scene.RootNode.AddChild(player1);
             player1.AddChild(player1ShipNode);
 
@@ -1312,7 +1312,6 @@ namespace AR_Battle_Boats
                 pos.Y -= speed;
             }
 
-
             return pos;
         }
 
@@ -1327,19 +1326,21 @@ namespace AR_Battle_Boats
             // Console.Write("X" + x);
             double y = targetPosition.Y - player.Translation.Y;
             // Console.Write("Y" + y);
-            double currentangle = Math.Atan((y / x));
+            double currentangle = Math.Atan((x / y));
             // angle = (float) Math.Round(currentangle);
             float angle = (float)(currentangle * 180 / Math.PI);
 
-            if (angle > 0)
+            Console.WriteLine("Angle = " + angle.ToString());
+
+            if (angle - player.Angle > 0)
             {
-                player1.Pitch += 0.001f;
-                player.Angle += 0.1f;
+                player1.Pitch += 0.02f;
+                player.Angle -= 1f;
             }
-            if (angle < 0)
+            if (angle - player.Angle < 0)
             {
-                player1.Pitch -= 0.001f;
-                player1.Angle -= 0.1f;
+                player1.Pitch -= 0.02f;
+                player1.Angle += 1f;
             }
         }
     }
