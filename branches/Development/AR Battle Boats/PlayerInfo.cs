@@ -185,12 +185,22 @@ namespace AR_Battle_Boats
             ASCIIEncoding encoder = new ASCIIEncoding();
 
             TcpClient client = new TcpClient();
-            IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(Server_Address), Port_Num);
+            IPEndPoint serverEndPoint;
+
 
             try
             {
+                serverEndPoint = new IPEndPoint(IPAddress.Parse(Server_Address), Port_Num);
                 Console.Write("Connecting to server...");
                 client.Connect(serverEndPoint);
+            }
+            catch
+            {
+                Console.Write("Connecting to server...");
+                client.Connect(Server_Address, Port_Num);
+            }
+            try
+            {
 
                 Console.WriteLine("Connected!");
 
