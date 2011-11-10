@@ -1319,7 +1319,7 @@ namespace AR_Battle_Boats
             
            // Console.Write("angle" + angle );
 
-
+            //what
             return pos;
         }
     }
