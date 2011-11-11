@@ -168,9 +168,9 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Missing Marker 1");
                     startGame = false;
                 }
-                if (!MarkerNode4.MarkerFound)
+                if (!MarkerNode2.MarkerFound)
                 {
-                    Console.WriteLine("Missing Marker 4");
+                    Console.WriteLine("Missing Marker 2");
                     startGame = false;
                 }
                 if (!MarkerNode3.MarkerFound)
@@ -181,9 +181,14 @@ namespace AR_Battle_Boats
 
                 if (startGame)
                 {
-                    gameState = GameState.In_Game;
+                    session.LocalGamers[0].IsReady = true;
                 }
+            }
 
+            if (gameState == GameState.Calibrating && session.IsHost)
+            {
+                if (session.IsEveryoneReady)
+                    session.StartGame();
             }
 
 
@@ -210,8 +215,9 @@ namespace AR_Battle_Boats
                     ActiveGameObjects[0].Roll += .1f;
                     Console.WriteLine("Roll = " + ActiveGameObjects[0].Roll.ToString());
                 }
-
+                ActiveGameObjects[0].Pitch += 0.02f;
                 ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
+                ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
 
                 if (MarkerNode1.MarkerFound)
                 {
@@ -224,10 +230,9 @@ namespace AR_Battle_Boats
 
                     ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
                     //ActiveGameObjects[0].UpdateRotationByAngle();
-
                 }
 
-                if (!MarkerNode4.MarkerFound)
+                if (!MarkerNode2.MarkerFound)
                 {
                     //Console.WriteLine("Player 1 Fire Left!");
                 }
@@ -322,7 +327,6 @@ namespace AR_Battle_Boats
             AvailableShips.Add(sailBoat);
 
         }
-
 
         /// <summary>
         /// Add the ship objects to the screen
@@ -962,6 +966,7 @@ namespace AR_Battle_Boats
                 playerShip.UpdateRotationByYawPitchRoll();
                 scene.RootNode.AddChild(playerShip);
                 playerShip.AddChild(playerShipNode);
+                playerShip.Player_Information = player;
 
                 ActiveGameObjects.Add(playerShip);
             }

@@ -134,8 +134,15 @@ namespace AR_Battle_Boats
             Matrix rotate;
             //Vector3 up = Vector3.foward;
             rotate = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
-           rotation= Quaternion.CreateFromRotationMatrix(rotate);
+            rotation= Quaternion.CreateFromRotationMatrix(rotate);
         //    rotation = Quaternion.CreateFromRotationMatrix(rotate.foward);
+        }
+
+        //Move the ship forward
+        public void MoveObjectForward(int speed)
+        {
+            Matrix rotate = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+            Translation += rotate.Backward * (speed * 0.05f);
         }
     }
 }
