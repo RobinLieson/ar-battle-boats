@@ -130,7 +130,12 @@ namespace AR_Battle_Boats
         /// </summary>
         public void UpdateRotationByAngle()
         {
-            rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
+            //rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, angle);
+            Matrix rotate;
+            //Vector3 up = Vector3.foward;
+            rotate = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+           rotation= Quaternion.CreateFromRotationMatrix(rotate);
+        //    rotation = Quaternion.CreateFromRotationMatrix(rotate.foward);
         }
     }
 }

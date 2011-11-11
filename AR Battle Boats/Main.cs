@@ -63,7 +63,7 @@ namespace AR_Battle_Boats
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
         G2DPanel frame;
-        List<GameObject> ActiveGameObjects;        
+        List<GameObject> ActiveGameObjects;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -100,7 +100,7 @@ namespace AR_Battle_Boats
             scene.PhysicsEngine = new NewtonPhysics();
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
-            
+
 
             this.IsMouseVisible = true; //Set Mouse Visible   
 
@@ -198,7 +198,7 @@ namespace AR_Battle_Boats
                     ActiveGameObjects[0].Yaw += .1f;
                     Console.WriteLine("Yaw = " + ActiveGameObjects[0].Yaw.ToString());
                 }
-                 
+
                 if (state.IsKeyDown(Keys.P))
                 {
                     ActiveGameObjects[0].Pitch += .1f;
@@ -215,7 +215,10 @@ namespace AR_Battle_Boats
 
                 if (MarkerNode1.MarkerFound)
                 {
-                    ActiveGameObjects[0].Translation = GetMovementTranslation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
+
+                    //  player1.Translation = GetMovementTranslation(player1.Translation, MarkerNode1.WorldTransformation.Translation,        
+                    //    activePlayers[0].Speed_Level);
+
 
                     UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
 
@@ -964,7 +967,7 @@ namespace AR_Battle_Boats
             }
 
         }
-        
+
         /// <summary>
         /// Calculate angle of marker
         /// </summary>
@@ -984,7 +987,7 @@ namespace AR_Battle_Boats
         private Vector3 GetMovementTranslation(GameObject player, Vector3 targetPosition)
         {
 
-            Vector3 pos = player.Translation; 
+            Vector3 pos = player.Translation;
             int Speed = player.Player_Information.Speed_Level;
 
             float speed = .1f + Speed / 10;
@@ -1023,21 +1026,40 @@ namespace AR_Battle_Boats
             // Console.Write("X" + x);
             double y = targetPosition.Y - player.Translation.Y;
             // Console.Write("Y" + y);
-            double currentangle = Math.Atan((x / y));
+            double currentangle = Math.Atan((y / x));
             // angle = (float) Math.Round(currentangle);
             float angle = (float)(currentangle * 180 / Math.PI);
 
             Console.WriteLine("Angle = " + angle.ToString());
 
+            // if (angle - player.Angle >= 0)
+            //{
+            //  player1.Pitch += 0.005f;
+            // player.Angle += .1f;
+
+            //}
+            // if (angle - player.Angle<= 0)
+            //{
+            //  player1.Pitch -= 0.005f;
+            // player1.Angle -= .1f;
+            //}
+
             if (angle - player.Angle > 0)
             {
-                player.Pitch += 0.02f;
-                player.Angle -= 1f;
+
+                player.Pitch += 0.005f;
+                player.Angle += .1f;
+
+
             }
             if (angle - player.Angle < 0)
             {
-                player.Pitch -= 0.02f;
-                player.Angle += 1f;
+
+                player.Pitch -= 0.005f;
+                player.Angle -= .1f;
+
+
+
             }
         }
     }
