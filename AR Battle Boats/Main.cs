@@ -215,25 +215,29 @@ namespace AR_Battle_Boats
                     ActiveGameObjects[0].Roll += .1f;
                     Console.WriteLine("Roll = " + ActiveGameObjects[0].Roll.ToString());
                 }
-                ActiveGameObjects[0].Pitch += 0.02f;
-                ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
-                ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
+               // ActiveGameObjects[0].Pitch += 0.0175f;
+               // ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
+               // ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
+               ActiveGameObjects[0].Translation =  GetMovementTranslation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
 
                 if (MarkerNode1.MarkerFound)
                 {
 
-                    //  player1.Translation = GetMovementTranslation(player1.Translation, MarkerNode1.WorldTransformation.Translation,        
-                    //    activePlayers[0].Speed_Level);
-
-
+                        //ActiveGameObjects[0].Translation = GetMovementTranslation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation,        
+                        //activePlayers[0].Speed_Level);
+                    
+                    //GetMovementTranslation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
+                   
+                    ActiveGameObjects[0].MoveObjectForward(1);
                     UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
-
-                    ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
-                    //ActiveGameObjects[0].UpdateRotationByAngle();
+                   // ActiveGameObjects[0].UpdateRotationByYawPitchRoll();
+                    
+                    ActiveGameObjects[0].UpdateRotationByAngle();
                 }
 
                 if (!MarkerNode2.MarkerFound)
                 {
+
                     //Console.WriteLine("Player 1 Fire Left!");
                 }
                 if (!MarkerNode3.MarkerFound)
@@ -1027,15 +1031,18 @@ namespace AR_Battle_Boats
         /// <param name="targetPosition"></param>
         private void UpdateRotation(GameObject player, Vector3 targetPosition)
         {
-            double x = targetPosition.X - player.Translation.X;
+            double oldAngle = 0;
+            double x = targetPosition.X - ActiveGameObjects[0].Translation.X;
             // Console.Write("X" + x);
-            double y = targetPosition.Y - player.Translation.Y;
+            double y = targetPosition.Y - ActiveGameObjects[0].Translation.Y;
             // Console.Write("Y" + y);
-            double currentangle = Math.Atan((y / x));
+            double currentangle = Math.Tan(1/(x / y));
             // angle = (float) Math.Round(currentangle);
-            float angle = (float)(currentangle * 180 / Math.PI);
+            double angle = (double)Math.Round((currentangle * (180 / Math.PI)));
+            
 
             Console.WriteLine("Angle = " + angle.ToString());
+           
 
             // if (angle - player.Angle >= 0)
             //{
@@ -1049,23 +1056,30 @@ namespace AR_Battle_Boats
             // player1.Angle -= .1f;
             //}
 
-            if (angle - player.Angle > 0)
+            if (Math.Abs(oldAngle) - Math.Abs(angle) > 0)
             {
 
-                player.Pitch += 0.005f;
-                player.Angle += .1f;
+                ActiveGameObjects[0].Pitch -= 0.0175f;
+               // angle+= 1f;
 
 
             }
-            if (angle - player.Angle < 0)
+            if (Math.Abs(oldAngle) - Math.Abs(angle) < 0)
             {
 
-                player.Pitch -= 0.005f;
-                player.Angle -= .1f;
+                ActiveGameObjects[0].Pitch += 0.0175f;
+                //angle -= 1f;
 
 
 
             }
+            if(Math.Abs(oldAngle) - Math.Abs(angle) == 0)
+            {
+                ActiveGameObjects[0].Pitch += 0;
+                angle += 0;
+            }
+            oldAngle = angle;
+            Console.WriteLine("old Angle = " + oldAngle);
         }
     }
 }
