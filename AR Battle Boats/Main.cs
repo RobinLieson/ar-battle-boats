@@ -64,6 +64,7 @@ namespace AR_Battle_Boats
         G2DPanel frame;
         lobby lob = new lobby();
         List<GameObject> ActiveGameObjects;
+        GamerJoinedEventArgs e ;
         int turnCounter = 0;
 
         //Marker Node
@@ -327,8 +328,11 @@ namespace AR_Battle_Boats
         /// </summary>
         private void StartNetworkSession()
         {
-            //GamerJoinedEventArgs e;
-     
+          //object person = session.GamerJoined;
+         
+            
+            
+            
             if (gameMode == GameMode.Network_Multiplayer)
             {
                 packetReader = new PacketReader();
@@ -337,24 +341,41 @@ namespace AR_Battle_Boats
                 if (gameState == GameState.Hosting)
                 {
                     
-                    /* Need to get gamertag
-                    AddLobbyToScene();
-                    lob.createLabel("Players");
+                    /* Need to get gamertag*/
+                    
+                         AddLobbyToScene();
+                lob.createLabel("Players");
+                lob.gamerList.TextFont = textFont;
+                lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
+/*
+                foreach (PlayerInfo players in activePlayers)
+                {
+                    
+                    lob.createLabel(e.Gamer.Gamertag);
                     lob.gamerList.TextFont = textFont;
                     lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    foreach(PlayerInfo player in activePlayers)  {
-                        
-                    lob.createLabel(j.Gamer.Gamertag);
-                    lob.gamerList.TextFont = textFont;
-                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    }
-                     */
+                }
+  */               
+                    
                     Console.WriteLine("Hosting a new Network match");
                     session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
                 }
                 else if (gameState == GameState.Joining)
                 {
+
+                    AddLobbyToScene();
+                    lob.createLabel("Players");
+                    lob.gamerList.TextFont = textFont;
+                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
+                    /*
+                    foreach (PlayerInfo players in activePlayers)
+                    {                    
+                         lob.createLabel(e.Gamer.Gamertag);
+                         lob.gamerList.TextFont = textFont;
+                         lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
+                    } 
+                     */
                     Console.WriteLine("Looking for a game to join...");
                     AvailableNetworkSessionCollection availableSessions;
 
@@ -420,6 +441,7 @@ namespace AR_Battle_Boats
             {
                 if (info.PlayerName == e.Gamer.Gamertag)
                     return;
+              
             }
 
             PlayerInfo player = new PlayerInfo();
