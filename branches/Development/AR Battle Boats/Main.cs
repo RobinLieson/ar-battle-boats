@@ -160,38 +160,11 @@ namespace AR_Battle_Boats
                 GetPlayerInfo();
             }
 
+            //If joining a game, make sure you have all your markers
             if (gameState == GameState.Calibrating)
             {
-                gameState = GameState.In_Game;
-                bool startGame = true;
-                if (!MarkerNode1.MarkerFound)
-                {
-                    Console.WriteLine("Missing Marker 1");
-                    startGame = false;
-                }
-                if (!MarkerNode2.MarkerFound)
-                {
-                    Console.WriteLine("Missing Marker 2");
-                    startGame = false;
-                }
-                if (!MarkerNode3.MarkerFound)
-                {
-                    Console.WriteLine("Missing Marker 3");
-                    startGame = false;
-                }
-
-                if (startGame)
-                {
-                    session.LocalGamers[0].IsReady = true;
-                }
+                CheckReady();
             }
-
-            if (gameState == GameState.Calibrating && session.IsHost)
-            {
-                if (session.IsEveryoneReady)
-                    session.StartGame();
-            }
-
 
             //Code for playing a match
             if (gameState == GameState.In_Game)
@@ -393,7 +366,7 @@ namespace AR_Battle_Boats
                 if (gameState == GameState.Hosting)
                 {
                     Console.WriteLine("Hosting a new Network match");
-                    session = NetworkSession.Create(NetworkSessionType.SystemLink, 1, 10);
+                    session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
                 }
                 else if (gameState == GameState.Joining)
@@ -401,7 +374,7 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Looking for a game to join...");
                     AvailableNetworkSessionCollection availableSessions;
 
-                    availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2, null);
+                    availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 1, null);
                     Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                     if (availableSessions.Count > 0)
                     {
@@ -424,6 +397,11 @@ namespace AR_Battle_Boats
                 session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
                 session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
                 session.GamerLeft += new EventHandler<GamerLeftEventArgs>(session_GamerLeft);
+
+                scene.CameraNode = null;
+                SetupMarkerTracking();
+                CreateMarkers();
+                gameState = GameState.Calibrating;
             }
         }
 
@@ -434,6 +412,15 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GamerLeft(object sender, GamerLeftEventArgs e)
         {
+            foreach (PlayerInfo player in activePlayers)
+            {
+                if (player.PlayerName == e.Gamer.Gamertag)
+                {
+                    Console.WriteLine(e.Gamer.Gamertag + " has left the match");
+                    activePlayers.Remove(player);
+                    return;
+                }
+            }
         }
 
         /// <summary>
@@ -450,13 +437,13 @@ namespace AR_Battle_Boats
             if (!result)
             {
                 player = new PlayerInfo();
-                player.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                player.PlayerName = e.Gamer.Gamertag;
                 player.Ammo_Level = 0;
                 player.Armour_Level = 0;
                 player.Money = 0;
                 player.Speed_Level = 0;
                 Console.WriteLine("Creating new profile");
-                Console.Write(playerInfo1.ToString());
+                Console.WriteLine(player.ToString());
             }
 
             player.Player_Ship = AvailableShips[0];
@@ -482,12 +469,10 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Game has started...");
 
-            SetupMarkerTracking();
             CreateLights();
-            CreateMarkers();
             CreateGameObjects();
 
-            gameState = GameState.Calibrating;
+            gameState = GameState.In_Game;
         }
 
         /// <summary>
@@ -663,6 +648,7 @@ namespace AR_Battle_Boats
 
             gameState = GameState.Hosting;
             gameMode = GameMode.Local_Multiplayer;
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -717,13 +703,23 @@ namespace AR_Battle_Boats
         private void HandleStartGame(object source)
         {
             HideMainMenu();
-            scene.CameraNode = null;
-            StartNetworkSession();
 
             gameState = GameState.Game_Load;
 
-            session.StartGame();
-            session.Update();
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                if (session.IsEveryoneReady)
+                {
+                    session.StartGame();
+                    session.Update();
+                }
+            }
+            else
+            {
+                session.StartGame();
+                session.Update();
+            }
+
         }
 
         /// <summary>
@@ -736,7 +732,7 @@ namespace AR_Battle_Boats
 
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "startGame" && button.Name != "back")
+                if (button.Name != "back")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -749,6 +745,7 @@ namespace AR_Battle_Boats
             }
 
             gameState = GameState.Joining;
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -774,6 +771,7 @@ namespace AR_Battle_Boats
             }
 
             gameState = GameState.Hosting;
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -821,6 +819,13 @@ namespace AR_Battle_Boats
 
             gameMode = GameMode.Menu;
             gameState = GameState.Main_Menu;
+
+
+            if (session != null)
+            {
+                session.Dispose();
+                session = null;
+            }
         }
 
 
@@ -1059,6 +1064,33 @@ namespace AR_Battle_Boats
                 return 0;
 
             return (y) / (x);
+        }
+
+        private void CheckReady()
+        {
+            bool startGame = true;
+            if (!MarkerNode1.MarkerFound)
+            {
+                Console.WriteLine("Missing Marker 1");
+                startGame = false;
+            }
+            if (!MarkerNode2.MarkerFound)
+            {
+                Console.WriteLine("Missing Marker 2");
+                startGame = false;
+            }
+            if (!MarkerNode3.MarkerFound)
+            {
+                Console.WriteLine("Missing Marker 3");
+                startGame = false;
+            }
+
+            if (startGame)
+            {
+                Console.WriteLine("All markers found, gamer ready.");
+                gameState = GameState.Game_Load;
+                session.LocalGamers[0].IsReady = true;
+            }
         }
     }
 }

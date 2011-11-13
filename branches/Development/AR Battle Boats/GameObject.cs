@@ -17,6 +17,8 @@ using Microsoft.Xna.Framework.Net;
 
 namespace AR_Battle_Boats
 {
+    public enum GameObjectType { PlayerShip, Missle}
+
     public class GameObject : TransformNode
     {
         private PlayerInfo info;
@@ -25,7 +27,7 @@ namespace AR_Battle_Boats
         private float pitch;
         private float roll;
         private float angle;
-
+        public GameObjectType Type;
 
         /// <summary>
         /// Get the Player info associated with this GameObject
