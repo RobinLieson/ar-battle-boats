@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Net;
 using System;
+using System.Collections.Generic;
 
 namespace AR_Battle_Boats
 {
@@ -308,5 +309,58 @@ namespace AR_Battle_Boats
 
             return true;
         }
+    }
+
+    /// <summary>
+    /// Class used to compare two player info together
+    /// </summary>
+    public class PlayerInfoEqualityComprarer : IEqualityComparer<PlayerInfo>
+    {
+        /// <summary>
+        /// Returns true if two PlayerInfo objects are the same
+        /// </summary>
+        /// <param name="p1">PlayerInfo 1</param>
+        /// <param name="p2">PlayerInfo 2</param>
+        /// <returns></returns>
+        public bool Equals(PlayerInfo p1, PlayerInfo p2)
+        {
+            if (p1.PlayerName == p2.PlayerName && p1.Ammo_Level == p2.Ammo_Level && p1.Armour_Level == p2.Armour_Level &&
+                p1.Money == p2.Money && p1.Player_Ship == p2.Player_Ship && p1.PlayerLocation == p2.PlayerLocation &&
+                p1.Speed_Level == p2.Speed_Level)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the two playerInfo's have the same name
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        public bool HasName(PlayerInfo p1, PlayerInfo p2)
+        {
+            if (p1.PlayerName == p2.PlayerName)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        #region IEqualityComparer<PlayerInfo> Members
+        
+        public int GetHashCode(PlayerInfo obj)
+        {
+            return obj.PlayerName.GetHashCode();
+        }
+
+        #endregion
     }
 }
