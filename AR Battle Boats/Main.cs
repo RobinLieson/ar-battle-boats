@@ -62,6 +62,7 @@ namespace AR_Battle_Boats
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
         G2DPanel frame;
+        lobby lob = new lobby();
         List<GameObject> ActiveGameObjects;
         int turnCounter = 0;
 
@@ -114,7 +115,7 @@ namespace AR_Battle_Boats
 
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
-
+            
             DisplayMainMenu();
         }
 
@@ -326,6 +327,7 @@ namespace AR_Battle_Boats
         /// </summary>
         private void StartNetworkSession()
         {
+            
             if (gameMode == GameMode.Network_Multiplayer)
             {
                 packetReader = new PacketReader();
@@ -333,6 +335,17 @@ namespace AR_Battle_Boats
 
                 if (gameState == GameState.Hosting)
                 {
+                    AddLobbyToScene();
+                    lob.createLabel("Players");
+                    lob.gamerList.TextFont = textFont;
+                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
+                    //need to finish this tom
+                    //foreach(activePlayers.  {
+                
+                    //lob.createLabel(e.Gamer.Gamertag);
+                    lob.gamerList.TextFont = textFont;
+                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
+                    //}
                     Console.WriteLine("Hosting a new Network match");
                     session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
@@ -578,6 +591,16 @@ namespace AR_Battle_Boats
             back.Visible = false;
         }
 
+        /// <summary>
+        /// Creates lobby
+        /// </summary>
+        private void AddLobbyToScene()
+        {
+            lob = new lobby();
+            lob.createlobbyframe();
+            scene.UIRenderer.Add2DComponent(lob.framelobby);
+            
+        }
         /// <summary>
         /// Display the main menu
         /// </summary>

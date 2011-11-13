@@ -34,7 +34,7 @@ using GoblinXNA.Helpers;
 
 
 //Networking
-using System.Text;
+
 using System.Net;
 using System.Net.Sockets;
 using GoblinXNA.UI;
@@ -43,8 +43,7 @@ namespace AR_Battle_Boats
 {
     public class lobby 
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+     
         
        public G2DLabel gamerList;
        public G2DPanel framelobby;
