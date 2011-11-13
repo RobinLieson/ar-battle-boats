@@ -92,9 +92,12 @@ namespace AR_Battle_Boats
 
             //Init Goblin, Create and setup scene
             State.InitGoblin(graphics, Content, "");
-            scene = new Scene(this);
-            graphics.PreferredBackBufferHeight = 768;
+            scene = new Scene(this); 
+
             graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
+            graphics.ApplyChanges();
+
             scene.BackgroundColor = Color.DarkBlue;
 
             scene.PhysicsEngine = new NewtonPhysics();
@@ -168,24 +171,6 @@ namespace AR_Battle_Boats
                 if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
 
-                if (state.IsKeyDown(Keys.Y))
-                {
-                    ActiveGameObjects[0].Yaw += .1f;
-                    Console.WriteLine("Yaw = " + ActiveGameObjects[0].Yaw.ToString());
-                }
-
-                if (state.IsKeyDown(Keys.P))
-                {
-                    ActiveGameObjects[0].Pitch += .1f;
-                    Console.WriteLine("Pitch = " + ActiveGameObjects[0].Pitch.ToString());
-                }
-
-                if (state.IsKeyDown(Keys.R))
-                {
-                    ActiveGameObjects[0].Roll += .1f;
-                    Console.WriteLine("Roll = " + ActiveGameObjects[0].Roll.ToString());
-                }
-
                 if (MarkerNode1.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
@@ -199,6 +184,24 @@ namespace AR_Battle_Boats
                 if (!MarkerNode3.MarkerFound)
                 {
                     //Console.WriteLine("Player 1 Fire Right!");
+                }
+
+                if (gameMode == GameMode.Local_Multiplayer)
+                {
+                    if (MarkerNode4.MarkerFound)
+                    {
+                        UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
+                        ActiveGameObjects[1].MoveObjectForward(4);
+                    }
+
+                    if (!MarkerNode5.MarkerFound)
+                    {
+                        //Console.WriteLine("Player 1 Fire Left!");
+                    }
+                    if (!MarkerNode6.MarkerFound)
+                    {
+                        //Console.WriteLine("Player 1 Fire Right!");
+                    }
                 }
             }
 
@@ -397,24 +400,27 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
 
-            LocalNetworkGamer localPlayer = session.LocalGamers[0];
-            //Send your info to whoever joined
             foreach (PlayerInfo info in activePlayers)
             {
-                if (info.PlayerLocation == Player_Location.Local)
-                {
-                    packetWriter.Write(info.ToString());
-                    localPlayer.SendData(packetWriter, SendDataOptions.Reliable, e.Gamer);
-                }
+                if (info.PlayerName == e.Gamer.Gamertag)
+                    return;
             }
-            
-            NetworkGamer remoteGamer;
-            localPlayer.ReceiveData(packetReader, out remoteGamer);
-            string infoString = packetReader.ReadString();
-            PlayerInfo player = new PlayerInfo(info);
+
+            PlayerInfo player = new PlayerInfo();
+            bool result = player.GetPlayerInfoFromServer(e.Gamer.Gamertag, SERVER_IP, SERVER_PORT_NUM);
+            if (!result)
+            {
+                player = new PlayerInfo();
+                player.PlayerName = e.Gamer.Gamertag;
+                player.Ammo_Level = 0;
+                player.Armour_Level = 0;
+                player.Money = 0;
+                player.Speed_Level = 0;
+                Console.WriteLine("Creating new profile");
+                Console.WriteLine(player.ToString());
+            }
+            player.Player_Ship = AvailableShips[0];
             activePlayers.Add(player);
-            Console.WriteLine("Recieved player info for " + remoteGamer.Gamertag);
-            Console.WriteLine(player.ToString());
         }
 
         /// <summary>
@@ -461,7 +467,6 @@ namespace AR_Battle_Boats
             }
 
             NetworkGamer remoteGamer;
-
             foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
             {
                 while (localPlayer.IsDataAvailable)
@@ -681,11 +686,13 @@ namespace AR_Battle_Boats
             }
             else
             {
+                PlayerInfo info = activePlayers[0];
+                info.PlayerName = info.PlayerName + " Guest";
+                activePlayers.Add(info);
                 session.StartGame();
                 session.Update();
                 HideMainMenu();
             }
-
         }
 
         /// <summary>
@@ -912,6 +919,7 @@ namespace AR_Battle_Boats
         private void CreateGameObjects()
         {
             ActiveGameObjects = new List<GameObject>();
+            int index = 0;
 
             foreach (PlayerInfo player in activePlayers)
             {
@@ -920,7 +928,6 @@ namespace AR_Battle_Boats
                 GeometryNode playerShipNode = new GeometryNode("Player Ship");
                 playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerShip = new GameObject();
-                playerShip.Translation = new Vector3(0, 0, -100);
                 playerShip.Scale = new Vector3(0.25f, 0.25f, 0.25f);
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
@@ -929,8 +936,20 @@ namespace AR_Battle_Boats
                 scene.RootNode.AddChild(playerShip);
                 playerShip.AddChild(playerShipNode);
                 playerShip.Player_Information = player;
-
                 ActiveGameObjects.Add(playerShip);
+
+                if (index == 0)
+                {
+                    playerShip.Translation = new Vector3(-25, 20, -100);
+                }
+                else if (index == 1)
+                {
+                    playerShip.Translation = new Vector3(25,-25, -100);
+                    playerShip.Pitch = 9.5f;
+                    playerShip.UpdateRotationByYawPitchRoll();
+                }
+
+                index++;
             }
 
         }
