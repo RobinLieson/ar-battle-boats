@@ -38,4 +38,13 @@ namespace AR_Battle_Boats
         Grape_Shot,
         Chain_Shot
     }
+
+    /// <summary>
+    /// The network locatin of a player
+    /// </summary>
+    public enum Player_Location
+    {
+        Local,
+        Remote
+    }
 }
