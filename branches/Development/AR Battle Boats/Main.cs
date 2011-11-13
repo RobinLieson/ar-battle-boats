@@ -397,22 +397,24 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
 
-            PlayerInfo player = new PlayerInfo();
-            bool result = player.GetPlayerInfoFromServer(e.Gamer.Gamertag, SERVER_IP, SERVER_PORT_NUM);
-            if (!result)
+            LocalNetworkGamer localPlayer = session.LocalGamers[0];
+            //Send your info to whoever joined
+            foreach (PlayerInfo info in activePlayers)
             {
-                player = new PlayerInfo();
-                player.PlayerName = e.Gamer.Gamertag;
-                player.Ammo_Level = 0;
-                player.Armour_Level = 0;
-                player.Money = 0;
-                player.Speed_Level = 0;
-                Console.WriteLine("Creating new profile");
-                Console.WriteLine(player.ToString());
+                if (info.PlayerLocation == Player_Location.Local)
+                {
+                    packetWriter.Write(info.ToString());
+                    localPlayer.SendData(packetWriter, SendDataOptions.Reliable, e.Gamer);
+                }
             }
-
-            player.Player_Ship = AvailableShips[0];
+            
+            NetworkGamer remoteGamer;
+            localPlayer.ReceiveData(packetReader, out remoteGamer);
+            string infoString = packetReader.ReadString();
+            PlayerInfo player = new PlayerInfo(info);
             activePlayers.Add(player);
+            Console.WriteLine("Recieved player info for " + remoteGamer.Gamertag);
+            Console.WriteLine(player.ToString());
         }
 
         /// <summary>
