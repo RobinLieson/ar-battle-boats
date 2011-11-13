@@ -16,6 +16,7 @@ namespace AR_Battle_Boats
         private int ammo;
         private int speed;
         private Ship ship;
+        public Player_Location PlayerLocation;
 
         /// <summary>
         /// Create a new PlayerInfo class

@@ -53,7 +53,6 @@ namespace AR_Battle_Boats
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont textFont;
-        PlayerInfo playerInfo1; //Information for Player 1
         Scene scene;
         GameMode gameMode;
         GameState gameState;
@@ -102,6 +101,7 @@ namespace AR_Battle_Boats
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
 
+            activePlayers = new List<PlayerInfo>();
 
             this.IsMouseVisible = true; //Set Mouse Visible   
 
@@ -151,14 +151,10 @@ namespace AR_Battle_Boats
             if (SignedInGamer.SignedInGamers.Count < 1)
             {
                 if (!Guide.IsVisible)
-                {
                     Guide.ShowSignIn(1, true);
-                }
             }
-            else
-            {
+            else if(activePlayers.Count < 1)
                 GetPlayerInfo();
-            }
 
             //If joining a game, make sure you have all your markers
             if (gameState == GameState.Calibrating)
@@ -279,7 +275,7 @@ namespace AR_Battle_Boats
             Ship sailBoat = new Ship();
             sailBoat.Ammo = 0;
             sailBoat.Armour = 0;
-            sailBoat.Boat_Name = "Sailboat";
+            sailBoat.Boat_Name = "Fighter";
             sailBoat.Health = 100;
             sailBoat.Speed = 0;
             sailBoat.Position = Vector3.Zero;
@@ -292,35 +288,6 @@ namespace AR_Battle_Boats
 
         }
 
-        /// <summary>
-        /// Add the ship objects to the screen
-        /// </summary>
-        private void AddShipsToScene()
-        {
-
-            foreach (PlayerInfo player in activePlayers)
-            {
-
-                PlayerInfo info = new PlayerInfo();
-
-
-                GeometryNode playerGeometryNode;
-                TransformNode playerTransformNode;
-
-                playerGeometryNode = new GeometryNode(player.PlayerName);
-                playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
-                playerTransformNode = new TransformNode();
-
-                playerTransformNode.Translation = new Vector3(0, 0, 650);
-                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1, 0, 0), MathHelper.ToRadians(90));
-                playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
-                playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
-                playerTransformNode.AddChild(playerGeometryNode);
-                scene.RootNode.AddChild(playerTransformNode);
-
-            }
-
-        }
 
         //Networking
 
@@ -329,25 +296,26 @@ namespace AR_Battle_Boats
         /// </summary>
         private void GetPlayerInfo()
         {
-            if (playerInfo1 == null)
+            PlayerInfo playerInfo1; //Information for Player 1
+
+            playerInfo1 = new PlayerInfo();
+            bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, SERVER_IP, SERVER_PORT_NUM);
+            if (!result)
             {
                 playerInfo1 = new PlayerInfo();
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, SERVER_IP, SERVER_PORT_NUM);
-                if (!result)
-                {
-                    playerInfo1 = new PlayerInfo();
-                    playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
-                    playerInfo1.Ammo_Level = 0;
-                    playerInfo1.Armour_Level = 0;
-                    playerInfo1.Money = 0;
-                    playerInfo1.Speed_Level = 0;
-                    playerInfo1.Player_Ship = AvailableShips[0];
-                    Console.WriteLine("Creating new profile");
-                    Console.Write(playerInfo1.ToString());
-                }
+                playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                playerInfo1.Ammo_Level = 0;
+                playerInfo1.Armour_Level = 0;
+                playerInfo1.Money = 0;
+                playerInfo1.Speed_Level = 0;
+                playerInfo1.Player_Ship = AvailableShips[0];
+                playerInfo1.PlayerLocation = Player_Location.Local;
+                Console.WriteLine("Creating new profile");
+                Console.Write(playerInfo1.ToString());
             }
 
             playerInfo1.Player_Ship = AvailableShips[0];
+            activePlayers.Add(playerInfo1);
         }
 
         /// <summary>
@@ -355,9 +323,6 @@ namespace AR_Battle_Boats
         /// </summary>
         private void StartNetworkSession()
         {
-
-            activePlayers = new List<PlayerInfo>();
-
             if (gameMode == GameMode.Network_Multiplayer)
             {
                 packetReader = new PacketReader();
@@ -702,9 +667,6 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleStartGame(object source)
         {
-            HideMainMenu();
-
-            gameState = GameState.Game_Load;
 
             if (gameMode == GameMode.Network_Multiplayer)
             {
@@ -712,12 +674,14 @@ namespace AR_Battle_Boats
                 {
                     session.StartGame();
                     session.Update();
+                    HideMainMenu();
                 }
             }
             else
             {
                 session.StartGame();
                 session.Update();
+                HideMainMenu();
             }
 
         }
@@ -1066,22 +1030,25 @@ namespace AR_Battle_Boats
             return (y) / (x);
         }
 
+        /// <summary>
+        /// Checks to see if a player has all their markers
+        /// </summary>
         private void CheckReady()
         {
             bool startGame = true;
             if (!MarkerNode1.MarkerFound)
             {
-                Console.WriteLine("Missing Marker 1");
+                //Console.WriteLine("Missing Marker 1");
                 startGame = false;
             }
             if (!MarkerNode2.MarkerFound)
             {
-                Console.WriteLine("Missing Marker 2");
+                //Console.WriteLine("Missing Marker 2");
                 startGame = false;
             }
             if (!MarkerNode3.MarkerFound)
             {
-                Console.WriteLine("Missing Marker 3");
+                //Console.WriteLine("Missing Marker 3");
                 startGame = false;
             }
 
