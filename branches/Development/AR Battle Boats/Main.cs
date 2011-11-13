@@ -327,7 +327,8 @@ namespace AR_Battle_Boats
         /// </summary>
         private void StartNetworkSession()
         {
-            
+            //GamerJoinedEventArgs e;
+     
             if (gameMode == GameMode.Network_Multiplayer)
             {
                 packetReader = new PacketReader();
@@ -335,17 +336,19 @@ namespace AR_Battle_Boats
 
                 if (gameState == GameState.Hosting)
                 {
+                    
+                    /* Need to get gamertag
                     AddLobbyToScene();
                     lob.createLabel("Players");
                     lob.gamerList.TextFont = textFont;
                     lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    //need to finish this tom
-                    //foreach(activePlayers.  {
-                
-                    //lob.createLabel(e.Gamer.Gamertag);
+                    foreach(PlayerInfo player in activePlayers)  {
+                        
+                    lob.createLabel(j.Gamer.Gamertag);
                     lob.gamerList.TextFont = textFont;
                     lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    //}
+                    }
+                     */
                     Console.WriteLine("Hosting a new Network match");
                     session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
