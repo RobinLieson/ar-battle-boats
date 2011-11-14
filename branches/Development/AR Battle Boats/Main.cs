@@ -65,6 +65,8 @@ namespace AR_Battle_Boats
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         int turnCounter = 0;
+        /*bounds of screen*/
+        bool outbounds = false;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -388,8 +390,11 @@ namespace AR_Battle_Boats
                 if (player.PlayerName == e.Gamer.Gamertag)
                 {
                     Console.WriteLine(e.Gamer.Gamertag + " has left the match");
-                    lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
-                    activePlayers.Remove(player);
+                    if (gameMode == GameMode.Network_Multiplayer)
+                    {
+                        lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
+                        activePlayers.Remove(player);
+                    }
                     return;
                 }
             }
@@ -404,8 +409,10 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
-            lob.AddPlayerToLobby(e.Gamer.Gamertag);
-
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                lob.AddPlayerToLobby(e.Gamer.Gamertag);
+            }
             foreach (PlayerInfo info in activePlayers)
             {
                 if (info.PlayerName == e.Gamer.Gamertag)
@@ -930,7 +937,36 @@ namespace AR_Battle_Boats
 
 
         //********************Game Logic Functions********************************//
+        /// <summary>
+        /// checks if ship is out of bounds 
+        /// added boolean value just in case you need it somewhere else
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="targetPosition"></param>
+        /// <returns></returns>
+        private bool outofbounds(GameObject player, Vector3 targetPosition)
+        {
+            if (ActiveGameObjects[0].Translation.X > 40 || ActiveGameObjects[0].Translation.X < -40)
+            {
+                Console.WriteLine("out of bounds");
+                outbounds = true;
+                return true;
+            }
 
+            if (ActiveGameObjects[0].Translation.Y > 24 || ActiveGameObjects[0].Translation.Y < -36)
+            {
+                Console.WriteLine("out of bounds");
+                outbounds = true;
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("In bounds");
+                outbounds = false;
+                return false;
+
+            }
+        }
         /// <summary>
         /// Creates all the initial game objects
         /// </summary>
@@ -979,7 +1015,7 @@ namespace AR_Battle_Boats
         /// <param name="targetPosition"></param>
         private void UpdateRotation(GameObject player, Vector3 targetPosition)
         {
-
+            outofbounds(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation );
             Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
             Vector3 pos = player.Translation + rotation.Backward;
 
@@ -993,7 +1029,8 @@ namespace AR_Battle_Boats
             float angleTarget = (float)Math.Atan(slopeDiff);
             angleTarget = MathHelper.ToDegrees(angleTarget);
 
-
+            Console.WriteLine("x = "+ player.Translation.X);
+            Console.WriteLine("y = "+ player.Translation.Y);
 
             if (pos.X < player.Translation.X && pos.Y > player.Translation.Y)
                 angleDirection += 180;
