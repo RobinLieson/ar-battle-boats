@@ -62,7 +62,7 @@ namespace AR_Battle_Boats
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
         G2DPanel frame;
-        lobby lob = new lobby();
+        Lobby lob;
         List<GameObject> ActiveGameObjects;
         int turnCounter = 0;
 
@@ -326,55 +326,22 @@ namespace AR_Battle_Boats
         /// Setup everything to start a game
         /// </summary>
         private void StartNetworkSession()
-        {
-          //object person = session.GamerJoined;
-         
-            
-            
-            
+        {            
             if (gameMode == GameMode.Network_Multiplayer)
             {
+                AddLobbyToScene();
+
                 packetReader = new PacketReader();
                 packetWriter = new PacketWriter();
 
                 if (gameState == GameState.Hosting)
-                {
-                    
-                    /* Need to get gamertag*/
-                    
-                    AddLobbyToScene();
-                    lob.createLabel("Players");
-                    lob.gamerList.TextFont = textFont;
-                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);                   
-/*
-                    foreach (PlayerInfo players in activePlayers)
-                    {
-                    
-                        lob.createLabel(e.Gamer.Gamertag);
-                        lob.gamerList.TextFont = textFont;
-                        lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    }
-  */               
-                    
+                {                    
                     Console.WriteLine("Hosting a new Network match");
                     session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
                 }
                 else if (gameState == GameState.Joining)
                 {
-                    /*need gamer tag to work*/
-                    AddLobbyToScene();
-                    lob.createLabel("Players");
-                    lob.gamerList.TextFont = textFont;
-                    lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                    /*
-                        foreach (PlayerInfo players in activePlayers)
-                        {                    
-                             lob.createLabel(e.Gamer.Gamertag);
-                            lob.gamerList.TextFont = textFont;
-                            lob.gamerList.Bounds = new Rectangle(0, lob.spacing, 25, 25);
-                        } 
-                     */
                     Console.WriteLine("Looking for a game to join...");
                     AvailableNetworkSessionCollection availableSessions;
 
@@ -421,10 +388,12 @@ namespace AR_Battle_Boats
                 if (player.PlayerName == e.Gamer.Gamertag)
                 {
                     Console.WriteLine(e.Gamer.Gamertag + " has left the match");
+                    lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
                     activePlayers.Remove(player);
                     return;
                 }
             }
+            
         }
 
         /// <summary>
@@ -435,6 +404,7 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
+            lob.AddPlayerToLobby(e.Gamer.Gamertag);
 
             foreach (PlayerInfo info in activePlayers)
             {
@@ -620,24 +590,12 @@ namespace AR_Battle_Boats
         /// </summary>
         private void AddLobbyToScene()
         {
-            lob = new lobby();
-            lob.createlobbyframe();
-
-            lob.createbutton("Add");
-            lob.button.Bounds = new Rectangle(lob.xspacing, 145, 50, 30);
-            lob.button.Name = "Add";
-            lob.button.TextFont = textFont;
-            //lob.button.ActionPerformedEvent += new ActionPerformed();
-
-            lob.createbutton("Remove");
-            lob.button.Bounds = new Rectangle(lob.xspacing, 145, 50, 30);
-            lob.button.Name = "remove";
-            lob.button.TextFont = textFont;
-            //lob.button.ActionPerformedEvent += new ActionPerformed();
-
-            scene.UIRenderer.Add2DComponent(lob.framelobby);
-            
+            lob = new Lobby();
+            lob.Bounds = new Rectangle(120, 70, 100, 70);
+            lob.TextFont = textFont;
+            frame.AddChild(lob);            
         }
+
         /// <summary>
         /// Display the main menu
         /// </summary>
