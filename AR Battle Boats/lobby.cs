@@ -47,7 +47,9 @@ namespace AR_Battle_Boats
         
        public G2DLabel gamerList;
        public G2DPanel framelobby;
+       public G2DButton button;
        public int spacing = 0;
+       public int xspacing = 50;
 
 
         public lobby()
@@ -72,12 +74,17 @@ namespace AR_Battle_Boats
         /// <param name="str">name of label</param>
         public void createLabel(string str)
         {
-            
             gamerList = new G2DLabel(str);
-
-            spacing += 15;
             framelobby.AddChild(gamerList);
-           
+            spacing += 25;
+        }
+
+        public void createbutton(string str)
+        {
+            button = new G2DButton(str);
+            framelobby.AddChild(button);
+            xspacing += 55;
+
         }
     }
 
