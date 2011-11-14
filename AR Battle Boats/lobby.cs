@@ -41,50 +41,38 @@ using GoblinXNA.UI;
 
 namespace AR_Battle_Boats
 {
-    public class lobby 
+    public class Lobby : G2DPanel
     {
-     
-        
-       public G2DLabel gamerList;
-       public G2DPanel framelobby;
-       public G2DButton button;
-       public int spacing = 0;
-       public int xspacing = 50;
+        public G2DButton button;
+        int count;
 
-
-        public lobby()
+        public Lobby()
         {
-          
-        }
-       
-  
-        public void createlobbyframe()
-        {
-            framelobby = new G2DPanel();
-            framelobby.Bounds = new Rectangle(220, 0, 350, 175);
-            framelobby.Border = GoblinEnums.BorderFactory.LineBorder;
-            framelobby.Transparency = 0.7f;
-
-           
-            
-        }
-        /// <summary>
-        /// Creates labels
-        /// </summary>
-        /// <param name="str">name of label</param>
-        public void createLabel(string str)
-        {
-            gamerList = new G2DLabel(str);
-            framelobby.AddChild(gamerList);
-            spacing += 25;
+            Border = GoblinEnums.BorderFactory.LineBorder;
+            Transparency = 0.7f;
+            count = 0;
         }
 
-        public void createbutton(string str)
+        public void AddPlayerToLobby(string Player)
         {
-            button = new G2DButton(str);
-            framelobby.AddChild(button);
-            xspacing += 55;
+            G2DLabel label = new G2DLabel(Player);
+            label.Text = Player;
+            label.TextFont = textFont;
+            label.Bounds = new Rectangle(10, (count * 15 + 5), 100, 15);
+            this.AddChild(label);
+            count++;
+        }
 
+        public void RemovePlayerFromLobby(string Gamertag)
+        {
+            foreach (G2DLabel label in this.Children)
+            {
+                if (label.Text == Gamertag)
+                {
+                    this.RemoveChild(label);
+                    return;
+                }
+            }
         }
     }
 
