@@ -28,6 +28,8 @@ namespace AR_Battle_Boats
         private float roll;
         private float angle;
         private GeometryNode geometry;
+        private int coolDown;
+        private int health;
         
         public GameObjectType Type;
 
@@ -171,6 +173,50 @@ namespace AR_Battle_Boats
                 {
                     AddChild(geometry);
                 }                
+            }
+        }
+
+        /// <summary>
+        /// Gets if object is available to fire
+        /// </summary>
+        public bool CanFire
+        {
+            get
+            {
+                if (coolDown > 0)
+                    return false;
+                else
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the cycles remaining before this ship can fire again
+        /// </summary>
+        public int Cool_Down
+        {
+            get
+            {
+                return coolDown;
+            }
+            set
+            {
+                coolDown = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the health of the current game object
+        /// </summary>
+        public int Health
+        {
+            get
+            {
+                return health;
+            }
+            set
+            {
+                health = value;
             }
         }
     }
