@@ -946,14 +946,15 @@ namespace AR_Battle_Boats
         /// <returns></returns>
         private bool outofbounds(GameObject player, Vector3 targetPosition)
         {
-            if (ActiveGameObjects[0].Translation.X > 40 || ActiveGameObjects[0].Translation.X < -40)
+
+            if (player.Translation.X > 40 || player.Translation.X < -40)
             {
                 Console.WriteLine("out of bounds");
                 outbounds = true;
                 return true;
             }
 
-            if (ActiveGameObjects[0].Translation.Y > 24 || ActiveGameObjects[0].Translation.Y < -36)
+            if (player.Translation.Y > 24 || player.Translation.Y < -36)
             {
                 Console.WriteLine("out of bounds");
                 outbounds = true;
@@ -986,11 +987,17 @@ namespace AR_Battle_Boats
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
                 playerShip.Roll = 1.5f;
+                playerShipNode.AddToPhysicsEngine = true;//physics
+                
                 playerShip.UpdateRotationByYawPitchRoll();
                 scene.RootNode.AddChild(playerShip);
                 playerShip.AddChild(playerShipNode);
                 playerShip.Player_Information = player;
                 ActiveGameObjects.Add(playerShip);
+                //NewtonPhysics.CollisionPair pair = new
+                NewtonPhysics.CollisionCallback(playerShipNode.Physics);
+                //((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, shipCollision);
+
 
                 if (index == 0)
                 {
@@ -1135,5 +1142,11 @@ namespace AR_Battle_Boats
                 session.LocalGamers[0].IsReady = true;
             }
         }
+
+        private void shipCollision(NewtonPhysics.CollisionPair pair)
+        {
+            Console.WriteLine("ships have collided");
+        }
+
     }
 }
