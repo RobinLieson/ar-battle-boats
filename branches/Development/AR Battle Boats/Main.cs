@@ -499,32 +499,59 @@ namespace AR_Battle_Boats
         {
             foreach (LocalNetworkGamer gamer in session.LocalGamers)
             {
-                // Get the tank associated with this player.
-                Ship myShip = activePlayers[0].Player_Ship;
-                // Write the data.
-                packetWriter.Write(myShip.Position);
-                packetWriter.Write(myShip.Health);
-                packetWriter.Write(myShip.Firing);
-
+                foreach (GameObject obj in ActiveGameObjects)
+                {
+                    if (obj.Name != "Missile")
+                    {
+                        if (obj.Player_Information.PlayerLocation == Player_Location.Local)
+                        {
+                            packetWriter.Write(obj.Rotation);
+                            packetWriter.Write(obj.Translation);
+                            packetWriter.Write(obj.Player_Information.Player_Ship.Firing);
+                        }
+                    }
+                }
                 // Send it to everyone.
                 gamer.SendData(packetWriter, SendDataOptions.None);
             }
+
 
             NetworkGamer remoteGamer;
             foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
             {
                 while (localPlayer.IsDataAvailable)
                 {
+                    Quaternion rotation = new Quaternion(); ;
+                    Vector3 translation = new Vector3(); ;
+                    bool firing = false;
+
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
                     {
-                        Vector3 vect = packetReader.ReadVector3();
-                        int health = packetReader.ReadInt32();
-                        bool shooting = packetReader.ReadBoolean();
+                        rotation = packetReader.ReadQuaternion();
+                        translation = packetReader.ReadVector3();
+                        firing = packetReader.ReadBoolean();
+
                         Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
-                        Console.WriteLine("Pos = " + vect.ToString());
-                        Console.WriteLine("Health = " + health.ToString());
-                        Console.WriteLine("Shooting = " + shooting.ToString());
+                        Console.WriteLine("Position = " + translation.ToString());
+                        Console.WriteLine("Rotation = " + rotation.ToString());
+                        Console.WriteLine("isFiring = " + firing.ToString());
+                    }
+
+                    foreach (GameObject obj in ActiveGameObjects)
+                    {
+                        if (obj.Name != "Missile")
+                        {
+                            if (obj.Player_Information.PlayerName == remoteGamer.Gamertag)
+                            {
+                                obj.Rotation = rotation;
+                                obj.Translation = translation;
+                                if (firing)
+                                {
+                                    Shoot(obj);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1290,6 +1317,7 @@ namespace AR_Battle_Boats
             scene.RootNode.AddChild(missile);
             ActiveGameObjects.Add(missile);
         }
+
         private void rotateAnimation(GameObject player)
         {
             Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
