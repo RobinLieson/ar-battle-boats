@@ -66,6 +66,7 @@ namespace AR_Battle_Boats
         List<GameObject> ActiveGameObjects;
         int turnCounter = 0;
         Model missileModel;
+        int cooldown = 0;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -151,6 +152,7 @@ namespace AR_Battle_Boats
         protected override void Update(GameTime gameTime)
         {
             KeyboardState state = Keyboard.GetState();
+            cooldown--;
 
             //Check to see if the Gamer is Signed In
             if (SignedInGamer.SignedInGamers.Count < 1)
@@ -170,24 +172,31 @@ namespace AR_Battle_Boats
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
-                if (gameMode == GameMode.Network_Multiplayer)
-                    UpdateNetwork();
+
+                //ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
+                //ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
+
+                foreach (GameObject obj in ActiveGameObjects)
+                {
+                    if(obj.Name == "Missile")
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level);
+                }
 
                 if (MarkerNode1.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
-                    ActiveGameObjects[0].MoveObjectForward(4);
                 }
 
                 if (!MarkerNode2.MarkerFound)
                 {
-                    //Console.WriteLine("Player 1 Fire Left!");
+                    if (cooldown <= 0)
+                    {
+                        Shoot(ActiveGameObjects[0]);
+                        Console.WriteLine("Player 1 Fire!");
+                        cooldown = 200;
+                    }
+                    
                 }
-                if (!MarkerNode3.MarkerFound)
-                {
-                    //Console.WriteLine("Player 1 Fire Right!");
-                }
-
                 if (gameMode == GameMode.Local_Multiplayer)
                 {
                     if (MarkerNode4.MarkerFound)
@@ -205,6 +214,9 @@ namespace AR_Battle_Boats
                         //Console.WriteLine("Player 1 Fire Right!");
                     }
                 }
+
+                if (gameMode == GameMode.Network_Multiplayer)
+                    UpdateNetwork();
             }
 
             if (session != null)
@@ -457,6 +469,7 @@ namespace AR_Battle_Boats
 
             CreateLights();
             CreateGameObjects();
+            AddCollisionCallback(ActiveGameObjects[0], ActiveGameObjects[1]);
 
             gameState = GameState.In_Game;
         }
@@ -934,24 +947,43 @@ namespace AR_Battle_Boats
             scene.RootNode.AddChild(MarkerNode7);
         }
 
+        //Physics Functions
+
+        /// <summary>
+        /// Called whenever a collision occurs
+        /// </summary>
+        /// <param name="pair"></param>
+        private void CollisionOccured(NewtonPhysics.CollisionPair pair)
+        {
+            Console.WriteLine("Collission betwen objects!");
+        }
+
+        /// <summary>
+        /// Adds a collision callback to a pair of GameObjects
+        /// </summary>
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallback(GameObject ob1, GameObject ob2)
+        {
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccured);
+        }
+
 
         //********************Game Logic Functions********************************//
+
         /// <summary>
-        /// checks if ship is out of bounds 
-        /// added boolean value just in case you need it somewhere else
+        /// Checks to see if a GameObject is out of bounds
         /// </summary>
-        /// <param name="player"></param>
-        /// <param name="targetPosition"></param>
-        /// <returns></returns>
-        private bool OutOfBounds(GameObject player, Vector3 targetPosition)
+        /// <param name="player">The GameObjecct to be checked</param>
+        /// <returns>True if the object is out of bounds, false otherwise</returns>
+        private bool OutOfBounds(GameObject player)
         {
 
             if (player.Translation.X > 40 || player.Translation.X < -40)
             {
                 return true;
-            }
-
-            if (player.Translation.Y > 24 || player.Translation.Y < -36)
+            }else if (player.Translation.Y > 24 || player.Translation.Y < -36)
             {
                 return true;
             }
@@ -984,6 +1016,9 @@ namespace AR_Battle_Boats
                 GeometryNode playerShipNode = new GeometryNode("Player Ship");
                 playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerShip.Geometry = playerShipNode;
+
+                playerShipNode.AddToPhysicsEngine = true;
+                playerShipNode.Physics.Shape = ShapeType.Box;
 
                 scene.RootNode.AddChild(playerShip);                
                 ActiveGameObjects.Add(playerShip);
@@ -1024,9 +1059,6 @@ namespace AR_Battle_Boats
             
             float angleTarget = (float)Math.Atan(slopeDiff);
             angleTarget = MathHelper.ToDegrees(angleTarget);
-
-            Console.WriteLine("x = "+ player.Translation.X);
-            Console.WriteLine("y = "+ player.Translation.Y);
 
             if (pos.X < player.Translation.X && pos.Y > player.Translation.Y)
                 angleDirection += 180;
@@ -1132,24 +1164,44 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Creates a new missle in front of owner with their rotation
+        /// </summary>
+        /// <param name="owner">The owner of the object</param>
         private void Shoot(GameObject owner)
         {
             GameObject missile = new GameObject();
             missile.Rotation = owner.Rotation;
-            missile.Name = "Missle";
+            missile.Name = "Missile";
 
             Matrix rotation = Matrix.CreateFromYawPitchRoll(owner.Yaw, owner.Pitch, owner.Roll);
-            missile.Translation = rotation.Translation + (rotation.Backward * 0.3f);
+            missile.Translation = owner.Translation + (rotation.Backward * 6f);
+            missile.Scale = new Vector3(0.025f, 0.025f, 0.025f);
+            missile.Yaw = owner.Yaw;
+            missile.Pitch = owner.Pitch;
+            missile.Roll = owner.Roll;
 
             missile.Player_Information = owner.Player_Information;
-            missile.Player_Information.Speed_Level = 5;
+            missile.Player_Information.Speed_Level = 7;
 
-            GeometryNode missileNode = new GeometryNode("Missle");
+            GeometryNode missileNode = new GeometryNode("Missile");
             missileNode.Model = missileModel;
 
-            missile.AddChild(missileNode);
+            missile.Geometry = missileNode;
 
+            missile.Geometry.AddToPhysicsEngine = true;
+            missile.Geometry.Physics.Shape = ShapeType.Box;
+
+
+            foreach (GameObject obj in ActiveGameObjects)
+            {
+                if(obj.Name != "Missile")
+                    AddCollisionCallback(missile, obj);
+            }
+                
+            scene.RootNode.AddChild(missile);
             ActiveGameObjects.Add(missile);
         }
+
     }
 }
