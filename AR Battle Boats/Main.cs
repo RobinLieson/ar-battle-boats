@@ -65,8 +65,7 @@ namespace AR_Battle_Boats
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         int turnCounter = 0;
-        /*bounds of screen*/
-        bool outbounds = false;
+        Model missileModel;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -288,7 +287,7 @@ namespace AR_Battle_Boats
 
             ModelLoader loader = new ModelLoader();
             sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "fighter");
-
+            missileModel = (Model)loader.Load("Models//", "missile");
 
             AvailableShips.Add(sailBoat);
 
@@ -944,30 +943,24 @@ namespace AR_Battle_Boats
         /// <param name="player"></param>
         /// <param name="targetPosition"></param>
         /// <returns></returns>
-        private bool outofbounds(GameObject player, Vector3 targetPosition)
+        private bool OutOfBounds(GameObject player, Vector3 targetPosition)
         {
 
             if (player.Translation.X > 40 || player.Translation.X < -40)
             {
-                Console.WriteLine("out of bounds");
-                outbounds = true;
                 return true;
             }
 
             if (player.Translation.Y > 24 || player.Translation.Y < -36)
             {
-                Console.WriteLine("out of bounds");
-                outbounds = true;
                 return true;
             }
             else
             {
-                Console.WriteLine("In bounds");
-                outbounds = false;
                 return false;
-
             }
         }
+        
         /// <summary>
         /// Creates all the initial game objects
         /// </summary>
@@ -980,23 +973,20 @@ namespace AR_Battle_Boats
             {
                 //Create a Game Object for every active player
                 GameObject playerShip;
-                GeometryNode playerShipNode = new GeometryNode("Player Ship");
-                playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
                 playerShip = new GameObject();
                 playerShip.Scale = new Vector3(0.25f, 0.25f, 0.25f);
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
-                playerShip.Roll = 1.5f;
-                playerShipNode.AddToPhysicsEngine = true;//physics
-                
+                playerShip.Roll = 1.5f;                
                 playerShip.UpdateRotationByYawPitchRoll();
-                scene.RootNode.AddChild(playerShip);
-                playerShip.AddChild(playerShipNode);
                 playerShip.Player_Information = player;
+
+                GeometryNode playerShipNode = new GeometryNode("Player Ship");
+                playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
+                playerShip.Geometry = playerShipNode;
+
+                scene.RootNode.AddChild(playerShip);                
                 ActiveGameObjects.Add(playerShip);
-                //NewtonPhysics.CollisionPair pair = new
-                NewtonPhysics.CollisionCallback(playerShipNode.Physics);
-                //((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, shipCollision);
 
 
                 if (index == 0)
@@ -1022,7 +1012,6 @@ namespace AR_Battle_Boats
         /// <param name="targetPosition"></param>
         private void UpdateRotation(GameObject player, Vector3 targetPosition)
         {
-            outofbounds(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation );
             Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
             Vector3 pos = player.Translation + rotation.Backward;
 
@@ -1143,10 +1132,24 @@ namespace AR_Battle_Boats
             }
         }
 
-        private void shipCollision(NewtonPhysics.CollisionPair pair)
+        private void Shoot(GameObject owner)
         {
-            Console.WriteLine("ships have collided");
-        }
+            GameObject missile = new GameObject();
+            missile.Rotation = owner.Rotation;
+            missile.Name = "Missle";
 
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(owner.Yaw, owner.Pitch, owner.Roll);
+            missile.Translation = rotation.Translation + (rotation.Backward * 0.3f);
+
+            missile.Player_Information = owner.Player_Information;
+            missile.Player_Information.Speed_Level = 5;
+
+            GeometryNode missileNode = new GeometryNode("Missle");
+            missileNode.Model = missileModel;
+
+            missile.AddChild(missileNode);
+
+            ActiveGameObjects.Add(missile);
+        }
     }
 }
