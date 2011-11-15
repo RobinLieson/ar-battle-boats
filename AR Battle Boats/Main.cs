@@ -175,8 +175,26 @@ namespace AR_Battle_Boats
                 ActiveGameObjects[0].Cool_Down--;
                 ActiveGameObjects[1].Cool_Down--;
 
-                //ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
-                //ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
+                if (OutOfBounds(ActiveGameObjects[0]) == true)
+                {
+                    rotateAnimation(ActiveGameObjects[0]);
+                    ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
+                }
+                else
+                {
+                    ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
+                }
+
+                if (OutOfBounds(ActiveGameObjects[1]) == true)
+                {
+                    rotateAnimation(ActiveGameObjects[1]);
+                    ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
+                }
+                else
+                {
+                    ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
+                }
+               // ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
 
                 foreach (GameObject obj in ActiveGameObjects)
                 {
@@ -1271,6 +1289,30 @@ namespace AR_Battle_Boats
                 
             scene.RootNode.AddChild(missile);
             ActiveGameObjects.Add(missile);
+        }
+        private void rotateAnimation(GameObject player)
+        {
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
+            Vector3 pos = player.Translation + rotation.Backward;
+            double slope = findSlope(player.Translation.X, player.Translation.Y, pos.X, pos.Y);
+           // double slopeDiff = findSlope(player.Translation.X, player.Translation.Y, targetPosition.X, targetPosition.Y);
+
+
+            float angleDirection = (float)Math.Atan(slope);
+            angleDirection = MathHelper.ToDegrees(angleDirection);
+
+           // float angleTarget = (float)Math.Atan(slopeDiff);
+           // angleTarget = MathHelper.ToDegrees(angleTarget);
+
+            if (OutOfBounds(player) == true)
+            {
+                angleDirection += 180;
+                player.Pitch += .1f;
+
+                player.UpdateRotationByYawPitchRoll();
+              //  return true;
+            }
+        
         }
 
     }
