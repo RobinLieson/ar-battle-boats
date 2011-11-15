@@ -27,6 +27,8 @@ namespace AR_Battle_Boats
         private float pitch;
         private float roll;
         private float angle;
+        private GeometryNode geometry;
+        
         public GameObjectType Type;
 
         /// <summary>
@@ -140,7 +142,10 @@ namespace AR_Battle_Boats
         //    rotation = Quaternion.CreateFromRotationMatrix(rotate.foward);
         }
 
-        //Move the ship forward
+        /// <summary>
+        /// Moves the game object forward by a factor of the given speed
+        /// </summary>
+        /// <param name="speed"></param>
         public void MoveObjectForward(int speed)
         {
             Vector3 up = Vector3.Backward;
@@ -148,6 +153,25 @@ namespace AR_Battle_Boats
             Matrix rotate = Matrix.CreateFromYawPitchRoll(yaw,pitch, roll);
             Translation += (rotate.Backward * (speed * 0.05f));
           
+        }
+
+        /// <summary>
+        /// Gets the geometry node associated with this game object
+        /// </summary>
+        public GeometryNode Geometry
+        {
+            get
+            {
+                return geometry;
+            }
+            set
+            {
+                geometry = value;
+                if (this.children.Count <= 0)
+                {
+                    AddChild(geometry);
+                }                
+            }
         }
     }
 }
