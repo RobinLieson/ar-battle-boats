@@ -172,6 +172,8 @@ namespace AR_Battle_Boats
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
+                ActiveGameObjects[0].Cool_Down--;
+                ActiveGameObjects[1].Cool_Down--;
 
                 //ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
                 //ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
@@ -189,11 +191,10 @@ namespace AR_Battle_Boats
 
                 if (!MarkerNode2.MarkerFound)
                 {
-                    if (cooldown <= 0)
+                    if (ActiveGameObjects[0].CanFire)
                     {
                         Shoot(ActiveGameObjects[0]);
-                        Console.WriteLine("Player 1 Fire!");
-                        cooldown = 200;
+                        ActiveGameObjects[0].Cool_Down = 200;
                     }
                     
                 }
@@ -202,16 +203,15 @@ namespace AR_Battle_Boats
                     if (MarkerNode4.MarkerFound)
                     {
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
-                        ActiveGameObjects[1].MoveObjectForward(4);
                     }
 
                     if (!MarkerNode5.MarkerFound)
                     {
-                        //Console.WriteLine("Player 1 Fire Left!");
-                    }
-                    if (!MarkerNode6.MarkerFound)
-                    {
-                        //Console.WriteLine("Player 1 Fire Right!");
+                        if (ActiveGameObjects[1].CanFire)
+                        {
+                            Shoot(ActiveGameObjects[1]);
+                            ActiveGameObjects[1].Cool_Down = 200;
+                        }
                     }
                 }
 
@@ -469,7 +469,7 @@ namespace AR_Battle_Boats
 
             CreateLights();
             CreateGameObjects();
-            AddCollisionCallback(ActiveGameObjects[0], ActiveGameObjects[1]);
+            AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
 
             gameState = GameState.In_Game;
         }
@@ -723,8 +723,9 @@ namespace AR_Battle_Boats
             }
             else
             {
-                PlayerInfo info = activePlayers[0];
+                PlayerInfo info = new PlayerInfo(activePlayers[0].ToString());
                 info.PlayerName = info.PlayerName + " Guest";
+                info.Player_Ship = AvailableShips[0];
                 activePlayers.Add(info);
                 session.StartGame();
                 session.Update();
@@ -953,8 +954,10 @@ namespace AR_Battle_Boats
         /// Called whenever a collision occurs
         /// </summary>
         /// <param name="pair"></param>
-        private void CollisionOccured(NewtonPhysics.CollisionPair pair)
+        private void CollisionOccuredShips(NewtonPhysics.CollisionPair pair)
         {
+            ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+            ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             Console.WriteLine("Collission betwen objects!");
         }
 
@@ -963,10 +966,62 @@ namespace AR_Battle_Boats
         /// </summary>
         /// <param name="ob1">The first object to add to the collision</param>
         /// <param name="ob2">The second object to add to the collision</param>
-        private void AddCollisionCallback(GameObject ob1, GameObject ob2)
+        private void AddCollisionCallbackShips(GameObject ob1, GameObject ob2)
         {
             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
-            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccured);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredShips);
+        }
+
+        /// <summary>
+        /// Called whenever a collision occurs
+        /// </summary>
+        /// <param name="pair"></param>
+        private void CollisionOccuredPlayer1(NewtonPhysics.CollisionPair pair)
+        {
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
+            ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+            if (ActiveGameObjects[0].Health <= 0)
+            {
+                Exit();
+            }
+            Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
+        }
+
+        /// <summary>
+        /// Adds a collision callback to a pair of GameObjects
+        /// </summary>
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallbackPlayer1(GameObject ob1, GameObject ob2)
+        {
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer1);
+        }
+
+        /// <summary>
+        /// Called whenever a collision occurs
+        /// </summary>
+        /// <param name="pair"></param>
+        private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
+        {
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
+            ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
+            if (ActiveGameObjects[1].Health <= 0)
+            {
+                Exit();
+            }
+            Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
+        }
+
+        /// <summary>
+        /// Adds a collision callback to a pair of GameObjects
+        /// </summary>
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallbackPlayer2(GameObject ob1, GameObject ob2)
+        {
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer2);
         }
 
 
@@ -1009,7 +1064,8 @@ namespace AR_Battle_Boats
                 playerShip.Scale = new Vector3(0.25f, 0.25f, 0.25f);
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
-                playerShip.Roll = 1.5f;                
+                playerShip.Roll = 1.5f;
+                playerShip.Health = 100;
                 playerShip.UpdateRotationByYawPitchRoll();
                 playerShip.Player_Information = player;
 
@@ -1195,8 +1251,22 @@ namespace AR_Battle_Boats
 
             foreach (GameObject obj in ActiveGameObjects)
             {
-                if(obj.Name != "Missile")
-                    AddCollisionCallback(missile, obj);
+                if (obj.Name != "Missile")
+                {
+                    if (owner.Player_Information.PlayerName != obj.Player_Information.PlayerName)
+                    {
+                        if (ActiveGameObjects[0].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        {
+                            Console.WriteLine("Added collision callback player 1");
+                            AddCollisionCallbackPlayer1(obj, missile);
+                        }
+                        else if (ActiveGameObjects[1].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        {
+                            Console.WriteLine("Added collision callback player 2");
+                            AddCollisionCallbackPlayer2(obj, missile);
+                        }
+                    }
+                }
             }
                 
             scene.RootNode.AddChild(missile);
