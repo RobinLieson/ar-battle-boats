@@ -70,6 +70,7 @@ namespace AR_Battle_Boats
                 if (label.Text == Gamertag)
                 {
                     this.RemoveChild(label);
+                    count--;
                     return;
                 }
             }
