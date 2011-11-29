@@ -64,9 +64,7 @@ namespace AR_Battle_Boats
         G2DPanel frame;
         Lobby lob;
         List<GameObject> ActiveGameObjects;
-        int turnCounter = 0;
         Model missileModel;
-        int cooldown = 0;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -152,7 +150,6 @@ namespace AR_Battle_Boats
         protected override void Update(GameTime gameTime)
         {
             KeyboardState state = Keyboard.GetState();
-            cooldown--;
 
             //Check to see if the Gamer is Signed In
             if (SignedInGamer.SignedInGamers.Count < 1)
@@ -172,36 +169,34 @@ namespace AR_Battle_Boats
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
-                ActiveGameObjects[0].Cool_Down--;
-                ActiveGameObjects[1].Cool_Down--;
-
-                if (OutOfBounds(ActiveGameObjects[0]) == true)
-                {
-                    rotateAnimation(ActiveGameObjects[0]);
-                    ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
-                }
-                else
-                {
-                    ActiveGameObjects[0].MoveObjectForward(ActiveGameObjects[0].Player_Information.Speed_Level);
-                }
-
-                if (OutOfBounds(ActiveGameObjects[1]) == true)
-                {
-                    rotateAnimation(ActiveGameObjects[1]);
-                    ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
-                }
-                else
-                {
-                    ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
-                }
-               // ActiveGameObjects[1].MoveObjectForward(ActiveGameObjects[1].Player_Information.Speed_Level);
-
                 foreach (GameObject obj in ActiveGameObjects)
                 {
-                    if(obj.Name == "Missile")
-                        obj.MoveObjectForward(obj.Player_Information.Speed_Level);
+                    //Update missle positions, remove any out of bounds ones
+                    if (obj.Name == "Missile")
+                    {
+                        if(OutOfBounds(obj)){
+                            obj.flagForRemoval = true;
+                        }                    
+                    }
+
+                    //Update the player ships
+                    if (obj.Name == "Player Ship")
+                    {
+                        obj.Cool_Down--;
+
+                        if (OutOfBounds(obj) == true)
+                        {
+                            RotateAnimation(obj);
+                        }
+                    }
+
+                    obj.MoveObjectForward(obj.Player_Information.Speed_Level);
                 }
 
+                RemoveInactiveObjects();
+
+
+                //Update for the local player, his shooting, moving, etc...
                 if (MarkerNode1.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
@@ -213,9 +208,10 @@ namespace AR_Battle_Boats
                     {
                         Shoot(ActiveGameObjects[0]);
                         ActiveGameObjects[0].Cool_Down = 200;
-                    }
-                    
+                    }                    
                 }
+
+                //If this is a local game, update for player 2
                 if (gameMode == GameMode.Local_Multiplayer)
                 {
                     if (MarkerNode4.MarkerFound)
@@ -233,6 +229,7 @@ namespace AR_Battle_Boats
                     }
                 }
 
+                //Update the network if this is a network game
                 if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
             }
@@ -1003,7 +1000,7 @@ namespace AR_Battle_Boats
         {
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
-            Console.WriteLine("Collission betwen objects!");
+            Console.WriteLine("Collission betwen the Ships!");
         }
 
         /// <summary>
@@ -1079,11 +1076,12 @@ namespace AR_Battle_Boats
         /// <returns>True if the object is out of bounds, false otherwise</returns>
         private bool OutOfBounds(GameObject player)
         {
-
+            
             if (player.Translation.X > 40 || player.Translation.X < -40)
             {
                 return true;
-            }else if (player.Translation.Y > 24 || player.Translation.Y < -36)
+            }
+            else if (player.Translation.Y > 24 || player.Translation.Y < -36)
             {
                 return true;
             }
@@ -1113,13 +1111,27 @@ namespace AR_Battle_Boats
                 playerShip.Health = 100;
                 playerShip.UpdateRotationByYawPitchRoll();
                 playerShip.Player_Information = player;
+                playerShip.Name = "Player Ship";
+
+                Material shipMaterial = new Material();
+                shipMaterial.Diffuse = new Vector4(0, 0, 0, 1);
+                shipMaterial.SpecularPower = 10;
+                if (index == 0)
+                {
+                    shipMaterial.Specular = Color.Red.ToVector4();
+                }
+                else
+                {
+                    shipMaterial.Specular = Color.Green.ToVector4();
+                }
 
                 GeometryNode playerShipNode = new GeometryNode("Player Ship");
                 playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
+                playerShipNode.Material = shipMaterial;
                 playerShip.Geometry = playerShipNode;
 
                 playerShipNode.AddToPhysicsEngine = true;
-                playerShipNode.Physics.Shape = ShapeType.Box;
+                playerShipNode.Physics.Shape = ShapeType.TriangleMesh;
 
                 scene.RootNode.AddChild(playerShip);                
                 ActiveGameObjects.Add(playerShip);
@@ -1184,34 +1196,35 @@ namespace AR_Battle_Boats
 
             if ( Math.Abs(angleDirection - angleTarget) < 5)
             {
-                turnCounter = 0;
+                player.turnCounter = 0;
                 return;
             }
             else
             {
-                if (turnCounter == 60 || turnCounter == -60)
+                if (player.turnCounter == 60 || player.turnCounter == -60)
                 {
-                    turnCounter = 0;
+                    player.turnCounter = 0;
                 }
 
-                if (turnCounter > 0)
+                if (player.turnCounter > 0)
                 {
                     player.Pitch += 0.1f;
-                    turnCounter++;
+                    player.turnCounter++;
                 }
-                else if ( turnCounter < 0)
+                else if ( player.turnCounter < 0)
                 {
                     player.Pitch -= 0.1f;
-                    turnCounter--;
+                    player.turnCounter--;
                 }
                 else if ( Math.Abs(angleDirection - angleTarget) <= 180.0f)
-                {   player.Pitch += 0.1f;
-                    turnCounter++;
+                {   
+                    player.Pitch += 0.1f;
+                    player.turnCounter++;
                 }
                 else
                 {
                     player.Pitch -= 0.1f;
-                    turnCounter--;
+                    player.turnCounter--;
                 }
             }
 
@@ -1318,19 +1331,43 @@ namespace AR_Battle_Boats
             ActiveGameObjects.Add(missile);
         }
 
-        private void rotateAnimation(GameObject player)
+        /// <summary>
+        /// Removes all inactive objects from ActiveGameObjects
+        /// </summary>
+        private void RemoveInactiveObjects()
         {
+            bool objRemoved;
+
+            do
+            {
+                objRemoved = false;
+                foreach (GameObject obj in ActiveGameObjects)
+                {
+                    if (obj.flagForRemoval)
+                    {
+                        Console.WriteLine("Object " + obj.Name + " removed");
+                        scene.RootNode.RemoveChild(obj);
+                        ActiveGameObjects.Remove(obj);
+                        objRemoved = true;
+                        break;
+                    }
+                }
+            } while (objRemoved == true);
+        }
+
+        /// <summary>
+        /// Rotates the ship when it goes out of bounds
+        /// </summary>
+        /// <param name="player"></param>
+        private void RotateAnimation(GameObject player)
+        {
+
             Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
             Vector3 pos = player.Translation + rotation.Backward;
             double slope = findSlope(player.Translation.X, player.Translation.Y, pos.X, pos.Y);
-           // double slopeDiff = findSlope(player.Translation.X, player.Translation.Y, targetPosition.X, targetPosition.Y);
-
 
             float angleDirection = (float)Math.Atan(slope);
             angleDirection = MathHelper.ToDegrees(angleDirection);
-
-           // float angleTarget = (float)Math.Atan(slopeDiff);
-           // angleTarget = MathHelper.ToDegrees(angleTarget);
 
             if (OutOfBounds(player) == true)
             {
@@ -1338,9 +1375,7 @@ namespace AR_Battle_Boats
                 player.Pitch += .1f;
 
                 player.UpdateRotationByYawPitchRoll();
-              //  return true;
-            }
-        
+            }        
         }
 
     }
