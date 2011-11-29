@@ -65,6 +65,8 @@ namespace AR_Battle_Boats
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         Model missileModel;
+        int playerIndex = 0;
+        int packetBuffer = 0;
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -199,15 +201,15 @@ namespace AR_Battle_Boats
                 //Update for the local player, his shooting, moving, etc...
                 if (MarkerNode1.MarkerFound)
                 {                   
-                    UpdateRotation(ActiveGameObjects[0], MarkerNode1.WorldTransformation.Translation);
+                    UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
                 if (!MarkerNode2.MarkerFound)
                 {
-                    if (ActiveGameObjects[0].CanFire)
+                    if (ActiveGameObjects[playerIndex].CanFire)
                     {
-                        Shoot(ActiveGameObjects[0]);
-                        ActiveGameObjects[0].Cool_Down = 200;
+                        Shoot(ActiveGameObjects[playerIndex]);
+                        ActiveGameObjects[playerIndex].Cool_Down = 200;
                     }                    
                 }
 
@@ -442,9 +444,8 @@ namespace AR_Battle_Boats
             foreach (PlayerInfo info in activePlayers)
             {
                 if (info.PlayerName == e.Gamer.Gamertag)
-                    return;
-              
-            }
+                    return;              
+            }            
 
             PlayerInfo player = new PlayerInfo();
             bool result = player.GetPlayerInfoFromServer(e.Gamer.Gamertag, SERVER_IP, SERVER_PORT_NUM);
@@ -460,7 +461,18 @@ namespace AR_Battle_Boats
                 Console.WriteLine(player.ToString());
             }
             player.Player_Ship = AvailableShips[0];
+
+            if (gameMode == GameMode.Network_Multiplayer && e.Gamer.Gamertag != SignedInGamer.SignedInGamers[0].Gamertag)
+                player.PlayerLocation = Player_Location.Remote;
+            else
+                player.PlayerLocation = Player_Location.Local;
+
             activePlayers.Add(player);
+
+            if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
+            {
+                playerIndex = activePlayers.Count - 1;
+            }
         }
 
         /// <summary>
@@ -485,6 +497,7 @@ namespace AR_Battle_Boats
             CreateLights();
             CreateGameObjects();
             AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
+            HideMainMenu();
 
             gameState = GameState.In_Game;
         }
@@ -494,23 +507,29 @@ namespace AR_Battle_Boats
         /// </summary>
         private void UpdateNetwork()
         {
-            foreach (LocalNetworkGamer gamer in session.LocalGamers)
+            if (packetBuffer <= 0)
             {
-                foreach (GameObject obj in ActiveGameObjects)
+                foreach (LocalNetworkGamer gamer in session.LocalGamers)
                 {
-                    if (obj.Name != "Missile")
+                    foreach (GameObject obj in ActiveGameObjects)
                     {
-                        if (obj.Player_Information.PlayerLocation == Player_Location.Local)
+                        if (obj.Name != "Missile")
                         {
-                            packetWriter.Write(obj.Rotation);
-                            packetWriter.Write(obj.Translation);
-                            packetWriter.Write(obj.Player_Information.Player_Ship.Firing);
+                            if (obj.Player_Information.PlayerLocation == Player_Location.Local)
+                            {
+                                packetWriter.Write(obj.Rotation);
+                                packetWriter.Write(obj.Translation);
+                                packetWriter.Write(obj.Player_Information.Player_Ship.Firing);
+                            }
                         }
                     }
+                    // Send it to everyone.
+                    gamer.SendData(packetWriter, SendDataOptions.None);
                 }
-                // Send it to everyone.
-                gamer.SendData(packetWriter, SendDataOptions.None);
+                packetBuffer = 10;
             }
+            else
+                packetBuffer--;
 
 
             NetworkGamer remoteGamer;
@@ -535,21 +554,25 @@ namespace AR_Battle_Boats
                         Console.WriteLine("isFiring = " + firing.ToString());
                     }
 
-                    foreach (GameObject obj in ActiveGameObjects)
+                    GameObject obj = null;
+                    foreach (GameObject obj1 in ActiveGameObjects)
                     {
-                        if (obj.Name != "Missile")
+                        if (obj1.Name != "Missile")
                         {
-                            if (obj.Player_Information.PlayerName == remoteGamer.Gamertag)
+                            if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
                             {
-                                obj.Rotation = rotation;
-                                obj.Translation = translation;
-                                if (firing)
-                                {
-                                    Shoot(obj);
-                                }
+                                obj = obj1;
                             }
                         }
                     }
+
+                    obj.Rotation = rotation;
+                    obj.Translation = translation;
+                    if (firing)
+                    {
+                        Shoot(obj);
+                    }
+                    
                 }
             }
         }
@@ -753,10 +776,12 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleStartGame(object source)
         {
+            if (gameState == GameState.In_Game)
+                return;
 
             if (gameMode == GameMode.Network_Multiplayer)
             {
-                if (session.IsEveryoneReady)
+                if (session.IsEveryoneReady || !session.IsEveryoneReady)
                 {
                     session.StartGame();
                     session.Update();
@@ -782,7 +807,7 @@ namespace AR_Battle_Boats
         private void HandleJoinGame(object source)
         {
             G2DComponent comp = (G2DComponent)source;
-
+            
             foreach (G2DButton button in frame.Children)
             {
                 if (button.Name != "back")
@@ -798,6 +823,7 @@ namespace AR_Battle_Boats
             }
 
             gameState = GameState.Joining;
+            activePlayers.Clear();
             StartNetworkSession();
         }
 
@@ -856,6 +882,8 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleBack(object source)
         {
+            frame.RemoveChild(lob);
+
             foreach (G2DButton button in frame.Children)
             {
                 if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store")
@@ -897,7 +925,14 @@ namespace AR_Battle_Boats
 
             // Add this video capture device to the scene so that it can be used for
             // the marker tracker
-            scene.AddVideoCaptureDevice(captureDevice);
+            try
+            {
+                scene.AddVideoCaptureDevice(captureDevice);
+            }
+            catch
+            {
+
+            }
 
             // Create an optical marker tracker that uses ALVAR library
             ALVARMarkerTracker tracker = new ALVARMarkerTracker();
@@ -1131,7 +1166,7 @@ namespace AR_Battle_Boats
                 playerShip.Geometry = playerShipNode;
 
                 playerShipNode.AddToPhysicsEngine = true;
-                playerShipNode.Physics.Shape = ShapeType.TriangleMesh;
+                playerShipNode.Physics.Shape = ShapeType.Capsule;
 
                 scene.RootNode.AddChild(playerShip);                
                 ActiveGameObjects.Add(playerShip);
