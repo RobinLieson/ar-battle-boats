@@ -30,6 +30,8 @@ namespace AR_Battle_Boats
         private GeometryNode geometry;
         private int coolDown;
         private int health;
+        public int turnCounter;
+        public bool flagForRemoval = false;
         
         public GameObjectType Type;
 

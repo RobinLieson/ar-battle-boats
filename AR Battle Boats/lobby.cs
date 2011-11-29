@@ -75,6 +75,4 @@ namespace AR_Battle_Boats
             }
         }
     }
-
-
 }
