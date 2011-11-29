@@ -523,7 +523,7 @@ namespace AR_Battle_Boats
                 // Send it to everyone.
                 gamer.SendData(packetWriter, SendDataOptions.None);
 
-                packetBuffer = 20;
+                packetBuffer = 3;
             }
             else
                 packetBuffer--;
@@ -563,8 +563,8 @@ namespace AR_Battle_Boats
                                     if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
                                     {
                                         obj = obj1;
-                                        obj.Rotation = rotation;
-                                        obj.Translation = translation;
+                                        obj1.Rotation = rotation;
+                                        obj1.Translation = translation;
                                     }
                                 }
                             }
@@ -605,13 +605,17 @@ namespace AR_Battle_Boats
         /// </summary>
         private void SendGameOver(string winner)
         {
-            LocalNetworkGamer gamer = session.LocalGamers[0];
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                LocalNetworkGamer gamer = session.LocalGamers[0];
 
-            packetWriter.Write("Game Over");
-            packetWriter.Write("Winner");
+                packetWriter.Write("Game Over");
+                packetWriter.Write(winner);
 
-            // Send it to everyone.
-            gamer.SendData(packetWriter, SendDataOptions.None);
+                // Send it to everyone.
+                gamer.SendData(packetWriter, SendDataOptions.None);
+            }
+            Console.WriteLine(winner + " won the game!");
         }
 
 
