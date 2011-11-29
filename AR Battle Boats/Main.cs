@@ -176,6 +176,7 @@ namespace AR_Battle_Boats
                     //Update missle positions, remove any out of bounds ones
                     if (obj.Name == "Missile")
                     {
+                        obj.MoveObjectForward(10);
                         if(OutOfBounds(obj)){
                             obj.flagForRemoval = true;
                         }                    
@@ -190,9 +191,8 @@ namespace AR_Battle_Boats
                         {
                             RotateAnimation(obj);
                         }
-                    }
-
-                    obj.MoveObjectForward(obj.Player_Information.Speed_Level);
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level);
+                    }                    
                 }
 
                 RemoveInactiveObjects();
@@ -208,6 +208,8 @@ namespace AR_Battle_Boats
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
+                        if (gameMode == GameMode.Network_Multiplayer)
+                            SendAttack();
                         Shoot(ActiveGameObjects[playerIndex]);
                         ActiveGameObjects[playerIndex].Cool_Down = 200;
                     }                    
@@ -482,6 +484,7 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
+            Exit();
             Console.WriteLine("Game has ended...");
         }
 
@@ -507,74 +510,108 @@ namespace AR_Battle_Boats
         /// </summary>
         private void UpdateNetwork()
         {
+            //Write data
             if (packetBuffer <= 0)
             {
-                foreach (LocalNetworkGamer gamer in session.LocalGamers)
-                {
-                    foreach (GameObject obj in ActiveGameObjects)
-                    {
-                        if (obj.Name != "Missile")
-                        {
-                            if (obj.Player_Information.PlayerLocation == Player_Location.Local)
-                            {
-                                packetWriter.Write(obj.Rotation);
-                                packetWriter.Write(obj.Translation);
-                                packetWriter.Write(obj.Player_Information.Player_Ship.Firing);
-                            }
-                        }
-                    }
-                    // Send it to everyone.
-                    gamer.SendData(packetWriter, SendDataOptions.None);
-                }
-                packetBuffer = 10;
+                LocalNetworkGamer gamer = session.LocalGamers[0];
+                GameObject obj = ActiveGameObjects[playerIndex];
+
+                packetWriter.Write("Position");
+                packetWriter.Write(obj.Rotation);
+                packetWriter.Write(obj.Translation);
+
+                // Send it to everyone.
+                gamer.SendData(packetWriter, SendDataOptions.None);
+
+                packetBuffer = 20;
             }
             else
                 packetBuffer--;
 
 
+            //Read data
             NetworkGamer remoteGamer;
             foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
             {
                 while (localPlayer.IsDataAvailable)
                 {
-                    Quaternion rotation = new Quaternion(); ;
-                    Vector3 translation = new Vector3(); ;
-                    bool firing = false;
+                    string messageType;
+                    Quaternion rotation = new Quaternion();
+                    Vector3 translation = new Vector3();
+                    string winner;
 
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
                     {
-                        rotation = packetReader.ReadQuaternion();
-                        translation = packetReader.ReadVector3();
-                        firing = packetReader.ReadBoolean();
 
-                        Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
-                        Console.WriteLine("Position = " + translation.ToString());
-                        Console.WriteLine("Rotation = " + rotation.ToString());
-                        Console.WriteLine("isFiring = " + firing.ToString());
-                    }
+                        messageType = packetReader.ReadString();
 
-                    GameObject obj = null;
-                    foreach (GameObject obj1 in ActiveGameObjects)
-                    {
-                        if (obj1.Name != "Missile")
+                        if (messageType == "Attack" || messageType == "Position")
                         {
-                            if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
+                            rotation = packetReader.ReadQuaternion();
+                            translation = packetReader.ReadVector3();
+
+                            Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
+                            Console.WriteLine("Rotation = " + rotation.ToString());
+                            Console.WriteLine("Translation = " + translation.ToString());
+
+                            GameObject obj = null;
+                            foreach (GameObject obj1 in ActiveGameObjects)
                             {
-                                obj = obj1;
+                                if (obj1.Name != "Missile")
+                                {
+                                    if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
+                                    {
+                                        obj = obj1;
+                                        obj.Rotation = rotation;
+                                        obj.Translation = translation;
+                                    }
+                                }
+                            }
+                            if (messageType == "Attack")
+                            {
+                                Shoot(obj);
                             }
                         }
-                    }
-
-                    obj.Rotation = rotation;
-                    obj.Translation = translation;
-                    if (firing)
-                    {
-                        Shoot(obj);
-                    }
+                        else if (messageType == "Game Over")
+                        {
+                            winner = packetReader.ReadString();
+                            Console.WriteLine(winner + " won the game!");
+                        }
                     
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Sends a message to other game members that you are attacking
+        /// </summary>
+        private void SendAttack()
+        {
+            LocalNetworkGamer gamer = session.LocalGamers[0];
+            GameObject obj = ActiveGameObjects[playerIndex];
+
+            packetWriter.Write("Attack");
+            packetWriter.Write(obj.Rotation);
+            packetWriter.Write(obj.Translation);
+
+            // Send it to everyone.
+            gamer.SendData(packetWriter, SendDataOptions.None);
+        }
+
+        /// <summary>
+        /// Send a message to game clients that game is over
+        /// </summary>
+        private void SendGameOver(string winner)
+        {
+            LocalNetworkGamer gamer = session.LocalGamers[0];
+
+            packetWriter.Write("Game Over");
+            packetWriter.Write("Winner");
+
+            // Send it to everyone.
+            gamer.SendData(packetWriter, SendDataOptions.None);
         }
 
 
@@ -1059,7 +1096,11 @@ namespace AR_Battle_Boats
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             if (ActiveGameObjects[0].Health <= 0)
             {
-                Exit();
+                if (session.IsHost)
+                {
+                    SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
+                    session.EndGame();
+                }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
         }
@@ -1085,7 +1126,11 @@ namespace AR_Battle_Boats
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
             {
-                Exit();
+                if (session.IsHost)
+                {
+                    SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
+                    session.EndGame();
+                }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
         }
@@ -1166,7 +1211,7 @@ namespace AR_Battle_Boats
                 playerShip.Geometry = playerShipNode;
 
                 playerShipNode.AddToPhysicsEngine = true;
-                playerShipNode.Physics.Shape = ShapeType.Capsule;
+                playerShipNode.Physics.Shape = ShapeType.Box;
 
                 scene.RootNode.AddChild(playerShip);                
                 ActiveGameObjects.Add(playerShip);
@@ -1350,12 +1395,12 @@ namespace AR_Battle_Boats
                     {
                         if (ActiveGameObjects[0].Player_Information.PlayerName == obj.Player_Information.PlayerName)
                         {
-                            Console.WriteLine("Added collision callback player 1");
+                            //Console.WriteLine("Added collision callback player 1");
                             AddCollisionCallbackPlayer1(obj, missile);
                         }
                         else if (ActiveGameObjects[1].Player_Information.PlayerName == obj.Player_Information.PlayerName)
                         {
-                            Console.WriteLine("Added collision callback player 2");
+                            //Console.WriteLine("Added collision callback player 2");
                             AddCollisionCallbackPlayer2(obj, missile);
                         }
                     }
@@ -1380,7 +1425,7 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
-                        Console.WriteLine("Object " + obj.Name + " removed");
+                        //Console.WriteLine("Object " + obj.Name + " removed");
                         scene.RootNode.RemoveChild(obj);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
