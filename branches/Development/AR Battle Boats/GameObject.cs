@@ -14,6 +14,7 @@ using GoblinXNA.Graphics.Geometry;
 using GoblinXNA.Device.Generic;
 using GoblinXNA.UI.UI2D;
 using Microsoft.Xna.Framework.Net;
+using Microsoft.Xna.Framework.Audio;
 
 namespace AR_Battle_Boats
 {
@@ -32,6 +33,8 @@ namespace AR_Battle_Boats
         private int health;
         public int turnCounter;
         public bool flagForRemoval = false;
+        public Cue shootingSound;
+        public Cue explosionSound;
         
         public GameObjectType Type;
 

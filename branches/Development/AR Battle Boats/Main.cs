@@ -65,8 +65,17 @@ namespace AR_Battle_Boats
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         Model missileModel;
+        AudioEngine audioEngine;
+        SoundBank soundBank;
+        WaveBank waveBank;
+        Cue backgroundMusic;
+        Cue explosionSound;
+        Cue shootSound;
+
+
         int playerIndex = 0;
         int packetBuffer = 0;
+        
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -113,6 +122,13 @@ namespace AR_Battle_Boats
 
             CreateCamera();
 
+            audioEngine = new AudioEngine("Content\\Sound\\arbattleboatssounds.xgs");
+            soundBank = new SoundBank(audioEngine, "Content\\Sound\\BattleBoatsSoundBank.xsb");
+            waveBank = new WaveBank(audioEngine, "Content\\Sound\\BattleBoatsWaveBank.xwb");
+            backgroundMusic = soundBank.GetCue("Boom Music");
+            explosionSound = soundBank.GetCue("explosion");
+            shootSound = soundBank.GetCue("missile");
+
             base.Initialize();
 
             gameState = GameState.Main_Menu;
@@ -151,6 +167,7 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+
             KeyboardState state = Keyboard.GetState();
 
             //Check to see if the Gamer is Signed In
@@ -159,9 +176,10 @@ namespace AR_Battle_Boats
                 if (!Guide.IsVisible)
                     Guide.ShowSignIn(1, true);
             }
-            else if(activePlayers.Count < 1)
+            else if (activePlayers.Count < 1)
+            {
                 GetPlayerInfo();
-
+            }
             //If joining a game, make sure you have all your markers
             if (gameState == GameState.Calibrating)
             {
@@ -204,7 +222,7 @@ namespace AR_Battle_Boats
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (!MarkerNode2.MarkerFound)
+                if (MarkerNode2.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -223,7 +241,7 @@ namespace AR_Battle_Boats
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
 
-                    if (!MarkerNode5.MarkerFound)
+                    if (MarkerNode5.MarkerFound)
                     {
                         if (ActiveGameObjects[1].CanFire)
                         {
@@ -501,6 +519,8 @@ namespace AR_Battle_Boats
             CreateGameObjects();
             AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
             HideMainMenu();
+
+            backgroundMusic.Play();
 
             gameState = GameState.In_Game;
         }
@@ -1074,8 +1094,8 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredShips(NewtonPhysics.CollisionPair pair)
         {
-            ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
-            ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
+            //ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+            //ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             Console.WriteLine("Collission betwen the Ships!");
         }
 
@@ -1096,6 +1116,9 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer1(NewtonPhysics.CollisionPair pair)
         {
+            explosionSound.Play();
+            explosionSound = soundBank.GetCue("explosion");
+
             scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             if (ActiveGameObjects[0].Health <= 0)
@@ -1126,6 +1149,9 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
         {
+            explosionSound.Play();
+            explosionSound = soundBank.GetCue("explosion");
+
             scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
@@ -1196,7 +1222,8 @@ namespace AR_Battle_Boats
                 playerShip.UpdateRotationByYawPitchRoll();
                 playerShip.Player_Information = player;
                 playerShip.Name = "Player Ship";
-
+                playerShip.shootingSound = soundBank.GetCue("missile");
+                playerShip.explosionSound = soundBank.GetCue("explosion");
                 Material shipMaterial = new Material();
                 shipMaterial.Diffuse = new Vector4(0, 0, 0, 1);
                 shipMaterial.SpecularPower = 10;
@@ -1368,6 +1395,11 @@ namespace AR_Battle_Boats
         /// <param name="owner">The owner of the object</param>
         private void Shoot(GameObject owner)
         {
+            if (!owner.shootingSound.IsPlaying)
+                owner.shootingSound.Play();
+            owner.shootingSound = soundBank.GetCue("missile");
+                
+
             GameObject missile = new GameObject();
             missile.Rotation = owner.Rotation;
             missile.Name = "Missile";
