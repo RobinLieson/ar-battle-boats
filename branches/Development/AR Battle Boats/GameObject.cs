@@ -155,11 +155,8 @@ namespace AR_Battle_Boats
         /// <param name="speed"></param>
         public void MoveObjectForward(int speed)
         {
-            Vector3 up = Vector3.Backward;
-           // up.Normalize();
             Matrix rotate = Matrix.CreateFromYawPitchRoll(yaw,pitch, roll);
-            Translation += (rotate.Backward * (speed * 0.05f));
-          
+            Translation += (rotate.Backward * ((speed + 1)* 0.05f));          
         }
 
         /// <summary>
