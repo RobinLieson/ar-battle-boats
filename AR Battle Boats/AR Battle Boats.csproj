@@ -108,6 +108,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HUD.cs" />
     <Compile Include="lobby.cs" />
     <Compile Include="Enumerables.cs" />
     <Compile Include="GameObject.cs" />

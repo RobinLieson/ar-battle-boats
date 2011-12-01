@@ -62,6 +62,7 @@ namespace AR_Battle_Boats
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
         G2DPanel frame;
+        G2DPanel frame2;
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         Model missileModel;
@@ -71,7 +72,7 @@ namespace AR_Battle_Boats
         Cue backgroundMusic;
         Cue explosionSound;
         Cue shootSound;
-
+        HUD hud;
 
         int playerIndex = 0;
         int packetBuffer = 0;
@@ -85,6 +86,16 @@ namespace AR_Battle_Boats
         MarkerNode MarkerNode5;
         MarkerNode MarkerNode6;
         MarkerNode MarkerNode7;
+
+        G2DLabel armourLevel;
+        G2DLabel speedLevel;
+        G2DLabel missleLevel;
+
+        G2DLabel moneyLevel;
+
+        G2DLabel speedCost;
+        G2DLabel armourCost;
+        G2DLabel missleCost;
 
         public Main()
         {
@@ -115,6 +126,7 @@ namespace AR_Battle_Boats
             scene.PhysicsEngine = new NewtonPhysics();
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
+            scene.BackgroundTexture = Content.Load<Texture2D>("Images\\two");
 
             activePlayers = new List<PlayerInfo>();
 
@@ -195,9 +207,10 @@ namespace AR_Battle_Boats
                     if (obj.Name == "Missile")
                     {
                         obj.MoveObjectForward(10);
-                        if(OutOfBounds(obj)){
+                        if (OutOfBounds(obj))
+                        {
                             obj.flagForRemoval = true;
-                        }                    
+                        }
                     }
 
                     //Update the player ships
@@ -210,11 +223,8 @@ namespace AR_Battle_Boats
                             RotateAnimation(obj);
                         }
                         obj.MoveObjectForward(obj.Player_Information.Speed_Level);
-                    }                    
+                    }
                 }
-
-                RemoveInactiveObjects();
-
 
                 //Update for the local player, his shooting, moving, etc...
                 if (MarkerNode1.MarkerFound)
@@ -222,7 +232,7 @@ namespace AR_Battle_Boats
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (MarkerNode2.MarkerFound)
+                if (!MarkerNode2.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -241,7 +251,7 @@ namespace AR_Battle_Boats
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
 
-                    if (MarkerNode5.MarkerFound)
+                    if (!MarkerNode5.MarkerFound)
                     {
                         if (ActiveGameObjects[1].CanFire)
                         {
@@ -254,6 +264,9 @@ namespace AR_Battle_Boats
                 //Update the network if this is a network game
                 if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
+
+
+                RemoveInactiveObjects();
             }
 
             if (session != null)
@@ -517,6 +530,7 @@ namespace AR_Battle_Boats
 
             CreateLights();
             CreateGameObjects();
+            CreateHUD();
             AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
             HideMainMenu();
 
@@ -648,26 +662,38 @@ namespace AR_Battle_Boats
         {
             // Create the main panel which holds all other GUI components
             frame = new G2DPanel();
-            frame.Bounds = new Rectangle(220, 175, 350, 210);
+            frame.Bounds = new Rectangle(337, 175, 350, 210);
             frame.Border = GoblinEnums.BorderFactory.LineBorder;
             frame.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            frame2 = new G2DPanel();
+            frame2.Bounds = new Rectangle(262, 150, 500, 300);
+            frame2.Border = GoblinEnums.BorderFactory.LineBorder;
+            frame2.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
 
             G2DButton localPlay = new G2DButton("Local Play");
             localPlay.Bounds = new Rectangle(120, 30, 100, 30);
             localPlay.Name = "localPlay";
             localPlay.TextFont = textFont;
+            localPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            localPlay.HighlightColor = Color.Red;
             localPlay.ActionPerformedEvent += new ActionPerformed(HandleLocalPlay);
 
             G2DButton networkPlay = new G2DButton("Network Play");
             networkPlay.Bounds = new Rectangle(120, 70, 100, 30);
             networkPlay.Name = "networkPlay";
             networkPlay.TextFont = textFont;
+            networkPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            networkPlay.HighlightColor = Color.Red;
             networkPlay.ActionPerformedEvent += new ActionPerformed(HandleNetworkPlay);
 
             G2DButton store = new G2DButton("Store");
             store.Bounds = new Rectangle(120, 110, 100, 30);
             store.Name = "store";
             store.TextFont = textFont;
+            store.Texture = Content.Load<Texture2D>("Images\\three");
+            store.HighlightColor = Color.Red;
             store.ActionPerformedEvent += new ActionPerformed(HandleStore);
             /////////////////////////////////////////////////////////////////////////////////
 
@@ -675,35 +701,135 @@ namespace AR_Battle_Boats
             startGame.Bounds = new Rectangle(120, 30, 100, 30);
             startGame.Name = "startGame";
             startGame.TextFont = textFont;
+            startGame.Texture = Content.Load<Texture2D>("Images\\three");
+            startGame.HighlightColor = Color.Red;
             startGame.ActionPerformedEvent += new ActionPerformed(HandleStartGame);
 
             G2DButton hostGame = new G2DButton("Host Game");
             hostGame.Bounds = new Rectangle(120, 30, 100, 30);
             hostGame.Name = "hostGame";
             hostGame.TextFont = textFont;
+            hostGame.Texture = Content.Load<Texture2D>("Images\\three");
+            hostGame.HighlightColor = Color.Red;
             hostGame.ActionPerformedEvent += new ActionPerformed(HandleHostGame);
 
             G2DButton joinGame = new G2DButton("Join Game");
             joinGame.Bounds = new Rectangle(120, 70, 100, 30);
             joinGame.Name = "joinGame";
             joinGame.TextFont = textFont;
+            joinGame.Texture = Content.Load<Texture2D>("Images\\three");
+            joinGame.HighlightColor = Color.Red;
             joinGame.ActionPerformedEvent += new ActionPerformed(HandleJoinGame);
 
             G2DButton buyUpgrades = new G2DButton("Buy Upgrades");
             buyUpgrades.Bounds = new Rectangle(120, 30, 100, 30);
             buyUpgrades.Name = "buyUpgrades";
             buyUpgrades.TextFont = textFont;
+            buyUpgrades.Texture = Content.Load<Texture2D>("Images\\three");
+            buyUpgrades.HighlightColor = Color.Red;
             buyUpgrades.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
 
             G2DButton back = new G2DButton("Back");
             back.Bounds = new Rectangle(120, 150, 100, 30);
             back.Name = "back";
             back.TextFont = textFont;
+            back.Texture = Content.Load<Texture2D>("Images\\three");
+            back.HighlightColor = Color.Red;
             back.ActionPerformedEvent += new ActionPerformed(HandleBack);
 
+            G2DButton back2 = new G2DButton("Back");
+            back2.Bounds = new Rectangle(110, 160, 100, 30);
+            back2.Name = "back2";
+            back2.TextFont = textFont;
+            back2.Texture = Content.Load<Texture2D>("Images\\three");
+            back2.HighlightColor = Color.Red;
+            back2.ActionPerformedEvent += new ActionPerformed(HandleBack);
+
+            G2DButton save = new G2DButton("Save");
+            save.Bounds = new Rectangle(230, 160, 100, 30);
+            save.Name = "save";
+            save.TextFont = textFont;
+            save.Texture = Content.Load<Texture2D>("Images\\three");
+            save.HighlightColor = Color.Red;
+            save.ActionPerformedEvent += new ActionPerformed(HandleSave);
+
+            G2DButton quit = new G2DButton("Quit");
+            quit.Bounds = new Rectangle(120, 190, 100, 30);
+            quit.Name = "quit";
+            quit.TextFont = textFont;
+            quit.Texture = Content.Load<Texture2D>("Images\\three");
+            quit.HighlightColor = Color.Red;
+            quit.ActionPerformedEvent += new ActionPerformed(HandleQuit);
+
+            ////////////////////////////*****Store****//////////////////////////////////
+
+            G2DButton upgradeSpeed = new G2DButton("Upgrade Speed");
+            upgradeSpeed.Bounds = new Rectangle(20, 30, 130, 30);
+            upgradeSpeed.Name = "upgradeSpeed";
+            upgradeSpeed.TextFont = textFont;
+            upgradeSpeed.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeSpeed.HighlightColor = Color.Red;
+            upgradeSpeed.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+
+            G2DButton upgradeArmour = new G2DButton("Upgrade Armour");
+            upgradeArmour.Bounds = new Rectangle(20, 70, 130, 30);
+            upgradeArmour.Name = "upgradeArmour";
+            upgradeArmour.TextFont = textFont;
+            upgradeArmour.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeArmour.HighlightColor = Color.Red;
+            upgradeArmour.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+
+            G2DButton upgradeMissle = new G2DButton("Upgrade Missle");
+            upgradeMissle.Bounds = new Rectangle(20, 110, 130, 30);
+            upgradeMissle.Name = "upgradeMissle";
+            upgradeMissle.TextFont = textFont;
+            upgradeMissle.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeMissle.HighlightColor = Color.Red;
+            upgradeMissle.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+
+
+            missleLevel = new G2DLabel();
+            missleLevel.Bounds = new Rectangle(170, 115, 130, 30);
+            missleLevel.Name = "missleLevel";
+            missleLevel.TextFont = textFont;
+
+            armourLevel = new G2DLabel();
+            armourLevel.Bounds = new Rectangle(170, 75, 130, 30);
+            armourLevel.Name = "armourLevel";
+            armourLevel.TextFont = textFont;
+
+            speedLevel = new G2DLabel();
+            speedLevel.Bounds = new Rectangle(170, 35, 130, 30);
+            speedLevel.Name = "speedLevel";
+            speedLevel.TextFont = textFont;
+
+
+            missleCost = new G2DLabel();
+            missleCost.Bounds = new Rectangle(270, 115, 130, 30);
+            missleCost.Name = "missleCost";
+            missleCost.TextFont = textFont;
+
+            armourCost = new G2DLabel();
+            armourCost.Bounds = new Rectangle(270, 75, 130, 30);
+            armourCost.Name = "armourCost";
+            armourCost.TextFont = textFont;
+
+            speedCost = new G2DLabel();
+            speedCost.Bounds = new Rectangle(270, 35, 130, 30);
+            speedCost.Name = "speedCost";
+            speedCost.TextFont = textFont;
+
+
+            moneyLevel = new G2DLabel();
+            moneyLevel.Bounds = new Rectangle(370, 35, 130, 30);
+            moneyLevel.Name = "moneyLevel";
+            moneyLevel.TextFont = textFont;
+            moneyLevel.TextColor = Color.YellowGreen;
+
+            //////////////////////////////////////////////////////////////////////////////
 
             scene.UIRenderer.Add2DComponent(frame);
-
+            scene.UIRenderer.Add2DComponent(frame2);
 
             frame.AddChild(localPlay);
             frame.AddChild(networkPlay);
@@ -714,6 +840,22 @@ namespace AR_Battle_Boats
             frame.AddChild(buyUpgrades);
             frame.AddChild(back);
 
+            frame2.AddChild(upgradeSpeed);
+            frame2.AddChild(upgradeArmour);
+            frame2.AddChild(upgradeMissle);
+            frame2.AddChild(back2);
+            frame2.AddChild(save);
+
+            frame2.AddChild(speedLevel);
+            frame2.AddChild(armourLevel);
+            frame2.AddChild(missleLevel);
+
+            frame2.AddChild(moneyLevel);
+
+            frame2.AddChild(missleCost);
+            frame2.AddChild(speedCost);
+            frame2.AddChild(armourCost);
+
             localPlay.Enabled = true;
             networkPlay.Enabled = true;
             store.Enabled = true;
@@ -722,12 +864,21 @@ namespace AR_Battle_Boats
             hostGame.Enabled = false;
             buyUpgrades.Enabled = false;
             back.Enabled = false;
+            upgradeSpeed.Enabled = false;
+            upgradeArmour.Enabled = false;
+            upgradeMissle.Enabled = false;
+
+            frame2.Enabled = false;
+            frame2.Visible = false;
 
             startGame.Visible = false;
             joinGame.Visible = false;
             hostGame.Visible = false;
             buyUpgrades.Visible = false;
             back.Visible = false;
+            upgradeSpeed.Visible = false;
+            upgradeArmour.Visible = false;
+            upgradeMissle.Visible = false;
         }
 
         /// <summary>
@@ -920,11 +1071,39 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleBuyUpgrades(object source)
         {
+
+            string ammoLevelMsg = "Ammo Level: " + activePlayers[0].Ammo_Level;
+            string armourLevelMsg = "Armour Level: " + activePlayers[0].Armour_Level;
+            string speedLevelMsg = "Speed Level: " + activePlayers[0].Speed_Level;
+
+            string ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 100 * 1.5);
+            string armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 100 * 1.5);
+            string speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 100 * 1.5);
+
+            string moneyMsg = "Money: " + activePlayers[0].Money;
+
+            speedLevel.Text = speedLevelMsg;
+            armourLevel.Text = armourLevelMsg;
+            missleLevel.Text = ammoLevelMsg;
+
+            moneyLevel.Text = moneyMsg;
+
+            speedCost.Text = speedCostMsg;
+            armourCost.Text = armourCostMsg;
+            missleCost.Text = ammoCostMsg;
+
             G2DComponent comp = (G2DComponent)source;
 
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "back")
+                frame2.Visible = true;
+                frame2.Enabled = true;
+                frame.Enabled = false;
+                frame.Visible = false;
+
+
+                if (button.Name != "back2" && button.Name != "upgradeMissle1" && button.Name != "upgradeMissle2"
+                    && button.Name != "upgradeDefense1" && button.Name != "upgradeDefense2")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -938,12 +1117,38 @@ namespace AR_Battle_Boats
         }
 
         /// <summary>
+        /// Handles saving the store data
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleSave(object source)
+        {
+
+            G2DComponent comp = (G2DComponent)source;
+
+
+            if (comp.Name == "save")
+            {
+                activePlayers[0].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+            }
+
+        }
+
+        /// <summary>
         /// Return to Main Menu
         /// </summary>
         /// <param name="source"></param>
         private void HandleBack(object source)
         {
             frame.RemoveChild(lob);
+
+            G2DComponent comp = (G2DComponent)source;
+
+            if (comp.Name == "back2")
+            {
+
+                comp.Visible = true;
+                comp.Enabled = true;
+            }
 
             foreach (G2DButton button in frame.Children)
             {
@@ -956,6 +1161,10 @@ namespace AR_Battle_Boats
                 {
                     button.Visible = true;
                     button.Enabled = true;
+                    frame.Visible = true;
+                    frame.Enabled = true;
+                    frame2.Enabled = false;
+                    frame2.Visible = false;
                 }
             }
 
@@ -970,6 +1179,35 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Handler for when the Quit button is pressed
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleQuit(object source)
+        {
+            Exit();
+        }
+
+        /// <summary>
+        /// Creates the HUD for gameplay
+        /// </summary>
+        private void CreateHUD()
+        {
+            Texture2D armour = Content.Load<Texture2D>("Images\\armorHUD");
+            Texture2D health = Content.Load<Texture2D>("Images\\hHUD");
+
+            hud = new HUD(textFont,armour,health);
+            hud.Bounds = new Rectangle(0, 688, 250, 80);
+            scene.UIRenderer.Add2DComponent(hud);
+        }
+
+        /// <summary>
+        /// Update the HUD values
+        /// </summary>
+        private void updateHUD()
+        {
+           
+        }
 
         //Markers Functions
 
@@ -1410,6 +1648,7 @@ namespace AR_Battle_Boats
             missile.Yaw = owner.Yaw;
             missile.Pitch = owner.Pitch;
             missile.Roll = owner.Roll;
+            missile.Type = GameObjectType.Missle;
 
             missile.Player_Information = owner.Player_Information;
             missile.Player_Information.Speed_Level = 7;
@@ -1421,7 +1660,7 @@ namespace AR_Battle_Boats
 
             missile.Geometry.AddToPhysicsEngine = true;
             missile.Geometry.Physics.Shape = ShapeType.Box;
-
+            missile.Geometry.Material = owner.Geometry.Material;
 
             foreach (GameObject obj in ActiveGameObjects)
             {
@@ -1461,10 +1700,13 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
-                        //Console.WriteLine("Object " + obj.Name + " removed");
+                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
+                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
                         break;
                     }
                 }
@@ -1493,6 +1735,5 @@ namespace AR_Battle_Boats
                 player.UpdateRotationByYawPitchRoll();
             }        
         }
-
     }
 }
