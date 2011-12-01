@@ -594,30 +594,27 @@ namespace AR_Battle_Boats
                             Console.WriteLine("Rotation = " + rotation.ToString());
                             Console.WriteLine("Translation = " + translation.ToString());
 
-                            GameObject obj = null;
                             foreach (GameObject obj1 in ActiveGameObjects)
                             {
-                                if (obj1.Name != "Missile")
+                                if (obj1.Name == "Player Ship")
                                 {
                                     if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
                                     {
-                                        obj = obj1;
                                         obj1.Rotation = rotation;
                                         obj1.Translation = translation;
+                                        if (messageType == "Attack")
+                                        {
+                                            Shoot(obj1);
+                                        }
                                     }
                                 }
-                            }
-                            if (messageType == "Attack")
-                            {
-                                Shoot(obj);
                             }
                         }
                         else if (messageType == "Game Over")
                         {
                             winner = packetReader.ReadString();
                             Console.WriteLine(winner + " won the game!");
-                        }
-                    
+                        }                    
                     }
                 }
             }
@@ -1655,13 +1652,13 @@ namespace AR_Battle_Boats
             GameObject missile = new GameObject();
             missile.Rotation = owner.Rotation;
             missile.Name = "Missile";
-
-            Matrix rotation = Matrix.CreateFromYawPitchRoll(owner.Yaw, owner.Pitch, owner.Roll);
-            missile.Translation = owner.Translation + (rotation.Backward * 6f);
-            missile.Scale = new Vector3(0.025f, 0.025f, 0.025f);
             missile.Yaw = owner.Yaw;
             missile.Pitch = owner.Pitch;
             missile.Roll = owner.Roll;
+
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(missile.Yaw, missile.Pitch, missile.Roll);
+            missile.Translation = owner.Translation + (rotation.Backward * 6f);
+            missile.Scale = new Vector3(0.025f, 0.025f, 0.025f);
             missile.Type = GameObjectType.Missle;
 
             missile.Player_Information = new PlayerInfo(owner.Player_Information.ToString());
