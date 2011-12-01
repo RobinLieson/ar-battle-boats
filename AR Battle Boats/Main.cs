@@ -229,17 +229,19 @@ namespace AR_Battle_Boats
                 }
 
                 //Update for the local player, his shooting, moving, etc...
-                if (MarkerNode1.MarkerFound)
+                if (MarkerNode2.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (!MarkerNode2.MarkerFound)
+                if (MarkerNode1.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
                         if (gameMode == GameMode.Network_Multiplayer)
                             SendAttack();
+                        
+                        
                         Shoot(ActiveGameObjects[playerIndex]);
                         ActiveGameObjects[playerIndex].Cool_Down = 200;
                     }                    
@@ -253,7 +255,7 @@ namespace AR_Battle_Boats
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
 
-                    if (!MarkerNode5.MarkerFound)
+                    if (MarkerNode6.MarkerFound)
                     {
                         if (ActiveGameObjects[1].CanFire)
                         {
