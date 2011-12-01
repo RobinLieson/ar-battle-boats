@@ -53,6 +53,7 @@ namespace AR_Battle_Boats
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont textFont;
+        SpriteFont hudFont;
         Scene scene;
         GameMode gameMode;
         GameState gameState;
@@ -156,6 +157,7 @@ namespace AR_Battle_Boats
         protected override void LoadContent()
         {
             textFont = Content.Load<SpriteFont>("Fonts//uiFont");
+            hudFont = Content.Load<SpriteFont>("Fonts//Arial-24-Vector");
 
             CreateShips();
 
@@ -265,6 +267,7 @@ namespace AR_Battle_Boats
                 if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
 
+                updateHUD();
 
                 RemoveInactiveObjects();
             }
@@ -1193,10 +1196,9 @@ namespace AR_Battle_Boats
         /// </summary>
         private void CreateHUD()
         {
-            Texture2D armour = Content.Load<Texture2D>("Images\\armorHUD");
             Texture2D health = Content.Load<Texture2D>("Images\\hHUD");
 
-            hud = new HUD(textFont,armour,health);
+            hud = new HUD(hudFont,health);
             hud.Bounds = new Rectangle(0, 688, 250, 80);
             scene.UIRenderer.Add2DComponent(hud);
         }
@@ -1206,7 +1208,8 @@ namespace AR_Battle_Boats
         /// </summary>
         private void updateHUD()
         {
-           
+            hud.Health = ActiveGameObjects[playerIndex].Health;
+            hud.Update();
         }
 
         //Markers Functions
@@ -1218,10 +1221,17 @@ namespace AR_Battle_Boats
         {
             IVideoCapture captureDevice = null;
 
-            captureDevice = new DirectShowCapture2();
-            captureDevice.InitVideoCapture(0, FrameRate._30Hz, Resolution._640x480,
-                ImageFormat.R8G8B8_24, false);
-
+            try
+            {
+                captureDevice = new DirectShowCapture2();
+                captureDevice.InitVideoCapture(0, FrameRate._30Hz, Resolution._640x480,
+                    ImageFormat.R8G8B8_24, false);
+            }
+            catch
+            {
+                Console.WriteLine("Error:  No Camera detected");
+                Exit();
+            }
             // Add this video capture device to the scene so that it can be used for
             // the marker tracker
             try
@@ -1368,6 +1378,7 @@ namespace AR_Battle_Boats
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
+            hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
         }
 
         /// <summary>
@@ -1401,6 +1412,7 @@ namespace AR_Battle_Boats
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
+            hud.AddMessage(activePlayers[1].PlayerName + " was hit!");
         }
 
         /// <summary>
