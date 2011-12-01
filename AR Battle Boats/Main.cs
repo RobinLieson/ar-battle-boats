@@ -224,17 +224,17 @@ namespace AR_Battle_Boats
                         {
                             RotateAnimation(obj);
                         }
-                        obj.MoveObjectForward(obj.Player_Information.Speed_Level);
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
                     }
                 }
 
                 //Update for the local player, his shooting, moving, etc...
-                if (MarkerNode2.MarkerFound)
+                if (MarkerNode1.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (MarkerNode1.MarkerFound)
+                if (MarkerNode2.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -255,7 +255,7 @@ namespace AR_Battle_Boats
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
 
-                    if (MarkerNode6.MarkerFound)
+                    if (MarkerNode5.MarkerFound)
                     {
                         if (ActiveGameObjects[1].CanFire)
                         {
@@ -1664,7 +1664,7 @@ namespace AR_Battle_Boats
             missile.Roll = owner.Roll;
             missile.Type = GameObjectType.Missle;
 
-            missile.Player_Information = owner.Player_Information;
+            missile.Player_Information = new PlayerInfo(owner.Player_Information.ToString());
             missile.Player_Information.Speed_Level = 7;
 
             GeometryNode missileNode = new GeometryNode("Missile");
@@ -1714,13 +1714,13 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
-                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
-                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        //Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
+                        //    "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
-                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
-                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        //Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
+                        //    "  Scene objects: " + scene.RootNode.Children.Count);
                         break;
                     }
                 }
