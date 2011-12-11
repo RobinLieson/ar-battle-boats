@@ -17,6 +17,7 @@ namespace AR_Battle_Boats
         G2DPanel healthImage;
         Texture2D healthPicture;
 
+
         public HUD(SpriteFont uiFont,Texture2D health)
         {
             Border = GoblinEnums.BorderFactory.LineBorder;
@@ -39,9 +40,10 @@ namespace AR_Battle_Boats
             healthLabel.Bounds = new Rectangle(100, 0, 50, 80);
             healthLabel.TextTransparency = 0.5f;
             healthLabel.TextFont = uiFont;
-            healthLabel.TextColor = Color.Green;
             healthLabel.VerticalAlignment = GoblinEnums.VerticalAlignment.Center;
             AddChild(healthLabel);
+
+            TextFont = uiFont;
         }
 
         /// <summary>
@@ -82,6 +84,19 @@ namespace AR_Battle_Boats
                 {
                     Children.RemoveAt(2);
                 }
+            }
+        }
+
+        public override Color TextColor
+        {
+            get
+            {
+                return base.TextColor;
+            }
+            set
+            {
+                base.TextColor = value;
+                healthLabel.TextColor = value;
             }
         }
     }
