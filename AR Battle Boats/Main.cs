@@ -73,7 +73,8 @@ namespace AR_Battle_Boats
         Cue backgroundMusic;
         Cue explosionSound;
         Cue shootSound;
-        HUD hud;
+        HUD player1_hud;
+        HUD player2_hud;
 
         int playerIndex = 0;
         int packetBuffer = 0;
@@ -269,7 +270,7 @@ namespace AR_Battle_Boats
                 if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
 
-                updateHUD();
+                UpdateHUD();
 
                 RemoveInactiveObjects();
             }
@@ -407,6 +408,7 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Hosting a new Network match");
                     session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
+                    session.AllowHostMigration = true;
                 }
                 else if (gameState == GameState.Joining)
                 {
@@ -428,6 +430,7 @@ namespace AR_Battle_Boats
                 Console.WriteLine("Creating a new Local match");
                 session = NetworkSession.Create(NetworkSessionType.Local, 2, 2);
                 session.AllowJoinInProgress = true;
+                session.AllowHostMigration = true;
             }
 
             if (session != null)
@@ -442,6 +445,12 @@ namespace AR_Battle_Boats
                 CreateMarkers();
                 gameState = GameState.Calibrating;
             }
+            else
+            {
+                gameState = GameState.Main_Menu;
+                HideMainMenu();
+                CreateMainMenu();
+            }
         }
 
         /// <summary>
@@ -451,20 +460,26 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GamerLeft(object sender, GamerLeftEventArgs e)
         {
-            foreach (PlayerInfo player in activePlayers)
+            if (gameState == GameState.Calibrating)
             {
-                if (player.PlayerName == e.Gamer.Gamertag)
+                foreach (PlayerInfo player in activePlayers)
                 {
-                    Console.WriteLine(e.Gamer.Gamertag + " has left the match");
-                    if (gameMode == GameMode.Network_Multiplayer)
+                    if (player.PlayerName == e.Gamer.Gamertag)
                     {
-                        lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
-                        activePlayers.Remove(player);
+                        Console.WriteLine(e.Gamer.Gamertag + " has left the match");
+                        if (gameMode == GameMode.Network_Multiplayer)
+                        {
+                            lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
+                            activePlayers.Remove(player);
+                        }
+                        return;
                     }
-                    return;
                 }
             }
-            
+            else if (gameState == GameState.In_Game)
+            {
+
+            }
         }
 
         /// <summary>
@@ -520,7 +535,7 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
-            Exit();
+            CreateMainMenu();
             Console.WriteLine("Game has ended...");
         }
 
@@ -1197,18 +1212,30 @@ namespace AR_Battle_Boats
         {
             Texture2D health = Content.Load<Texture2D>("Images\\hHUD");
 
-            hud = new HUD(hudFont,health);
-            hud.Bounds = new Rectangle(0, 688, 250, 80);
-            scene.UIRenderer.Add2DComponent(hud);
+            player1_hud = new HUD(hudFont,health);
+            player1_hud.Bounds = new Rectangle(0, 688, 250, 80);
+            player1_hud.TextColor = Color.Red;
+            scene.UIRenderer.Add2DComponent(player1_hud);
+
+            player2_hud = new HUD(hudFont, health);
+            player2_hud.Bounds = new Rectangle(774, 688, 250, 80);
+            player2_hud.TextColor = Color.Green;
+            scene.UIRenderer.Add2DComponent(player2_hud);
         }
 
         /// <summary>
         /// Update the HUD values
         /// </summary>
-        private void updateHUD()
+        private void UpdateHUD()
         {
-            hud.Health = ActiveGameObjects[playerIndex].Health;
-            hud.Update();
+            player1_hud.Health = ActiveGameObjects[playerIndex].Health;
+            player1_hud.Update();
+
+            if (playerIndex == 1)
+                player2_hud.Health = ActiveGameObjects[0].Health;
+            else
+                player2_hud.Health = ActiveGameObjects[1].Health;
+            player2_hud.Update();
         }
 
         //Markers Functions
@@ -1377,7 +1404,7 @@ namespace AR_Battle_Boats
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
-            hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
+            player1_hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
         }
 
         /// <summary>
@@ -1411,7 +1438,7 @@ namespace AR_Battle_Boats
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
-            hud.AddMessage(activePlayers[1].PlayerName + " was hit!");
+            player1_hud.AddMessage(activePlayers[1].PlayerName + " was hit!");
         }
 
         /// <summary>
