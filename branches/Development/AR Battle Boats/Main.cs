@@ -616,22 +616,13 @@ namespace AR_Battle_Boats
                             Console.WriteLine("Rotation = " + rotation.ToString());
                             Console.WriteLine("Translation = " + translation.ToString());
 
-                            foreach (GameObject obj1 in ActiveGameObjects)
-                            {
-                                if (obj1.Name == "Player Ship")
-                                {
-                                    if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
-                                    {
-                                        obj1.Pitch = (float)rotation;
-                                        obj1.UpdateRotationByYawPitchRoll();
-                                        obj1.Translation = translation;
+                            ActiveGameObjects[opponentIndex].Pitch = (float)rotation;
+                            ActiveGameObjects[opponentIndex].UpdateRotationByYawPitchRoll();
+                            ActiveGameObjects[opponentIndex].Translation = translation;
 
-                                        if (messageType == "Attack")
-                                        {
-                                            Shoot(obj1);
-                                        }
-                                    }
-                                }
+                            if (messageType == "Attack")
+                            {
+                                Shoot(ActiveGameObjects[opponentIndex]);
                             }
                         }
                         else if (messageType == "Game Over")

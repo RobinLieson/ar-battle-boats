@@ -221,38 +221,5 @@ namespace AR_Battle_Boats
                 health = value;
             }
         }
-
-        public override bool Equals(object obj)
-        {
-            GameObject gameObj = (GameObject)obj;
-
-            if (info != gameObj.info)
-                return false;
-            /*
-            if (yaw != gameObj.Yaw)
-                return false;
-
-            if (pitch != gameObj.Pitch)
-                return false;
-
-            if (roll != gameObj.Roll)
-                return false;
-
-            if (angle != gameObj.Angle)
-                return false;
-            */
-            if (Type != gameObj.Type)
-                return false;
-
-            if (flagForRemoval != gameObj.flagForRemoval)
-                return false;
-
-            return true;
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
     }
 }
