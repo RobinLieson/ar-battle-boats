@@ -77,6 +77,7 @@ namespace AR_Battle_Boats
         HUD player2_hud;
 
         int playerIndex = 0;
+        int opponentIndex = 0;
         int packetBuffer = 0;
         
 
@@ -235,7 +236,7 @@ namespace AR_Battle_Boats
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (MarkerNode2.MarkerFound)
+                if (!MarkerNode2.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -256,7 +257,7 @@ namespace AR_Battle_Boats
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
 
-                    if (MarkerNode5.MarkerFound)
+                    if (!MarkerNode5.MarkerFound)
                     {
                         if (ActiveGameObjects[1].CanFire)
                         {
@@ -318,7 +319,9 @@ namespace AR_Battle_Boats
             // Create a camera
             Camera camera = new Camera();
             // Put the camera at (0, 0, 10)
-            camera.Translation = new Vector3(0, 50, 0);
+
+            camera.Translation = new Vector3(0, 80, 0);
+            //camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
             //camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
             // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
@@ -525,6 +528,10 @@ namespace AR_Battle_Boats
             if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
             {
                 playerIndex = activePlayers.Count - 1;
+                if (playerIndex == 0)
+                    opponentIndex = 1;
+                else
+                    opponentIndex = 0;
             }
         }
 
@@ -571,7 +578,7 @@ namespace AR_Battle_Boats
                 GameObject obj = ActiveGameObjects[playerIndex];
 
                 packetWriter.Write("Position");
-                packetWriter.Write(obj.Rotation);
+                packetWriter.Write((double)obj.Pitch);
                 packetWriter.Write(obj.Translation);
 
                 // Send it to everyone.
@@ -590,7 +597,7 @@ namespace AR_Battle_Boats
                 while (localPlayer.IsDataAvailable)
                 {
                     string messageType;
-                    Quaternion rotation = new Quaternion();
+                    double rotation = 0.0;
                     Vector3 translation = new Vector3();
                     string winner;
 
@@ -602,7 +609,7 @@ namespace AR_Battle_Boats
 
                         if (messageType == "Attack" || messageType == "Position")
                         {
-                            rotation = packetReader.ReadQuaternion();
+                            rotation = packetReader.ReadDouble();
                             translation = packetReader.ReadVector3();
 
                             Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
@@ -615,8 +622,10 @@ namespace AR_Battle_Boats
                                 {
                                     if (obj1.Player_Information.PlayerName == remoteGamer.Gamertag)
                                     {
-                                        obj1.Rotation = rotation;
+                                        obj1.Pitch = (float)rotation;
+                                        obj1.UpdateRotationByYawPitchRoll();
                                         obj1.Translation = translation;
+
                                         if (messageType == "Attack")
                                         {
                                             Shoot(obj1);
@@ -1370,7 +1379,7 @@ namespace AR_Battle_Boats
         {
             //ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             //ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
-            Console.WriteLine("Collission betwen the Ships!");
+            //Console.WriteLine("Collission betwen the Ships!");
         }
 
         /// <summary>
@@ -1381,7 +1390,7 @@ namespace AR_Battle_Boats
         private void AddCollisionCallbackShips(GameObject ob1, GameObject ob2)
         {
             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
-            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredShips);
+            //((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredShips);
         }
 
         /// <summary>
@@ -1463,11 +1472,11 @@ namespace AR_Battle_Boats
         private bool OutOfBounds(GameObject player)
         {
             
-            if (player.Translation.X > 40 || player.Translation.X < -40)
+            if (player.Translation.X > 38 || player.Translation.X < -38)
             {
                 return true;
             }
-            else if (player.Translation.Y > 24 || player.Translation.Y < -36)
+            else if (player.Translation.Y > 22 || player.Translation.Y < -34)
             {
                 return true;
             }
@@ -1719,9 +1728,9 @@ namespace AR_Battle_Boats
                     }
                 }
             }
-                
-            scene.RootNode.AddChild(missile);
+
             ActiveGameObjects.Add(missile);
+            scene.RootNode.AddChild(ActiveGameObjects[ActiveGameObjects.Count - 1]);
         }
 
         /// <summary>
@@ -1730,7 +1739,6 @@ namespace AR_Battle_Boats
         private void RemoveInactiveObjects()
         {
             bool objRemoved;
-
             do
             {
                 objRemoved = false;
@@ -1738,17 +1746,34 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
-                        //Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
-                        //    "  Scene objects: " + scene.RootNode.Children.Count);
+                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
+                        scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
-                        //Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
-                        //    "  Scene objects: " + scene.RootNode.Children.Count);
+
+                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        if (obj.Player_Information.PlayerName == activePlayers[playerIndex].PlayerName)
+                        {
+                            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(obj.Geometry.Physics, ActiveGameObjects[playerIndex].Geometry.Physics);
+                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(pair);
+                        }
+                        else
+                        {
+                            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(obj.Geometry.Physics, ActiveGameObjects[opponentIndex].Geometry.Physics);
+                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(pair);
+                        }
                         break;
                     }
                 }
             } while (objRemoved == true);
+
+            if (scene.RootNode.Children.Count > 14)
+            {
+                scene.RootNode.RemoveChildAt(12);
+            }
         }
 
         /// <summary>
