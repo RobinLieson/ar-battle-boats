@@ -128,17 +128,11 @@ namespace AR_Battle_Boats
         /// <returns>False if transparency is equal to zero.</returns>
         public bool Update()
         {
-            time--;
-            float trans = (float)(time / totalTime);
+            Transparency -= 0.01f;
 
-            if (trans <= 0.0f)
-            {
-                trans = 0.0f;
-                Transparency = trans;
+            if (Transparency <= 0.0f)
                 return false;
-            }
 
-            Transparency = trans;
             return true;
         }
     }

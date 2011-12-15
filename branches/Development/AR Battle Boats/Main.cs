@@ -401,8 +401,6 @@ namespace AR_Battle_Boats
         {            
             if (gameMode == GameMode.Network_Multiplayer)
             {
-                AddLobbyToScene();
-
                 packetReader = new PacketReader();
                 packetWriter = new PacketWriter();
 
@@ -422,10 +420,20 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                     if (availableSessions.Count > 0)
                     {
-                        session = NetworkSession.Join(availableSessions[0]);
-                        Console.WriteLine("Session Joined!");
+                        try
+                        {
+                            session = NetworkSession.Join(availableSessions[0]);
+                            Console.WriteLine("Session Joined!");
+                        }
+                        catch
+                        {
+                            Console.WriteLine("Could not join session, returning to menu.");
+                        }
                     }
                 }
+
+                if (session != null)
+                    AddLobbyToScene();
             }
 
             else if (gameMode == GameMode.Local_Multiplayer || gameMode == GameMode.Single_Player)
@@ -527,11 +535,7 @@ namespace AR_Battle_Boats
 
             if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
             {
-                playerIndex = activePlayers.Count - 1;
-                if (playerIndex == 0)
-                    opponentIndex = 1;
-                else
-                    opponentIndex = 0;
+                playerIndex = activePlayers.Count - 1;  
             }
         }
 
@@ -542,6 +546,15 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
+            gameState = GameState.Main_Menu;
+            gameMode = GameMode.Menu;
+
+            int x;
+            for (x = 11; x < scene.RootNode.Children.Count; x++)
+            {
+                scene.RootNode.RemoveChildAt(x);
+            }
+
             CreateMainMenu();
             Console.WriteLine("Game has ended...");
         }
@@ -554,6 +567,12 @@ namespace AR_Battle_Boats
         void session_GameStarted(object sender, GameStartedEventArgs e)
         {
             Console.WriteLine("Game has started...");
+
+            if (playerIndex == 0)
+                opponentIndex = 1;
+            else
+                opponentIndex = 0;
+
 
             CreateLights();
             CreateGameObjects();
@@ -604,7 +623,6 @@ namespace AR_Battle_Boats
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
                     {
-
                         messageType = packetReader.ReadString();
 
                         if (messageType == "Attack" || messageType == "Position")
