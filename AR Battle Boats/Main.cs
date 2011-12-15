@@ -100,6 +100,9 @@ namespace AR_Battle_Boats
         G2DLabel armourCost;
         G2DLabel missleCost;
 
+        List<NewtonPhysics.CollisionPair> collisionPairsPlayer1;
+        List<NewtonPhysics.CollisionPair> collisionPairsPlayer2;
+
         public Main()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -132,6 +135,8 @@ namespace AR_Battle_Boats
             scene.BackgroundTexture = Content.Load<Texture2D>("Images\\two");
 
             activePlayers = new List<PlayerInfo>();
+            collisionPairsPlayer1 = new List<NewtonPhysics.CollisionPair>();
+            collisionPairsPlayer2 = new List<NewtonPhysics.CollisionPair>();
 
             this.IsMouseVisible = true; //Set Mouse Visible   
 
@@ -236,7 +241,7 @@ namespace AR_Battle_Boats
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (!MarkerNode2.MarkerFound)
+                if (!MarkerNode2.MarkerFound && !OutOfBounds(ActiveGameObjects[playerIndex]) )
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -252,7 +257,7 @@ namespace AR_Battle_Boats
                 //If this is a local game, update for player 2
                 if (gameMode == GameMode.Local_Multiplayer)
                 {
-                    if (MarkerNode4.MarkerFound)
+                    if (MarkerNode4.MarkerFound && !OutOfBounds(ActiveGameObjects[opponentIndex]) )
                     {
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
@@ -662,7 +667,7 @@ namespace AR_Battle_Boats
             GameObject obj = ActiveGameObjects[playerIndex];
 
             packetWriter.Write("Attack");
-            packetWriter.Write(obj.Rotation);
+            packetWriter.Write((double)obj.Pitch);
             packetWriter.Write(obj.Translation);
 
             // Send it to everyone.
@@ -1411,7 +1416,6 @@ namespace AR_Battle_Boats
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
 
-            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             if (ActiveGameObjects[0].Health <= 0)
             {
@@ -1434,6 +1438,7 @@ namespace AR_Battle_Boats
         {
             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
             ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer1);
+            collisionPairsPlayer1.Add(pair);
         }
 
         /// <summary>
@@ -1445,7 +1450,6 @@ namespace AR_Battle_Boats
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
 
-            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
             {
@@ -1468,6 +1472,7 @@ namespace AR_Battle_Boats
         {
             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
             ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer2);
+            collisionPairsPlayer2.Add(pair);
         }
 
 
@@ -1718,24 +1723,13 @@ namespace AR_Battle_Boats
             missile.Geometry.Physics.Shape = ShapeType.Box;
             missile.Geometry.Material = owner.Geometry.Material;
 
-            foreach (GameObject obj in ActiveGameObjects)
+            if (owner.Player_Information.PlayerName == activePlayers[0].PlayerName)
             {
-                if (obj.Name != "Missile")
-                {
-                    if (owner.Player_Information.PlayerName != obj.Player_Information.PlayerName)
-                    {
-                        if (ActiveGameObjects[0].Player_Information.PlayerName == obj.Player_Information.PlayerName)
-                        {
-                            //Console.WriteLine("Added collision callback player 1");
-                            AddCollisionCallbackPlayer1(obj, missile);
-                        }
-                        else if (ActiveGameObjects[1].Player_Information.PlayerName == obj.Player_Information.PlayerName)
-                        {
-                            //Console.WriteLine("Added collision callback player 2");
-                            AddCollisionCallbackPlayer2(obj, missile);
-                        }
-                    }
-                }
+                AddCollisionCallbackPlayer2(missile,ActiveGameObjects[1]);
+            }
+            else
+            {
+                AddCollisionCallbackPlayer1(missile,ActiveGameObjects[0]);
             }
 
             ActiveGameObjects.Add(missile);
@@ -1755,25 +1749,22 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
-                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
-                            "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
                         scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
 
-                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
-                            "  Scene objects: " + scene.RootNode.Children.Count);
-                        if (obj.Player_Information.PlayerName == activePlayers[playerIndex].PlayerName)
+                        if (activePlayers[0].PlayerName == obj.Player_Information.PlayerName)
                         {
-                            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(obj.Geometry.Physics, ActiveGameObjects[playerIndex].Geometry.Physics);
-                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(pair);
+                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
+                            collisionPairsPlayer1.RemoveAt(0);
                         }
                         else
                         {
-                            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(obj.Geometry.Physics, ActiveGameObjects[opponentIndex].Geometry.Physics);
-                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(pair);
+                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
+                            collisionPairsPlayer2.RemoveAt(0);
                         }
+
                         break;
                     }
                 }
