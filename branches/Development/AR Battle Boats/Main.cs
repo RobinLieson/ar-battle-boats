@@ -545,6 +545,16 @@ namespace AR_Battle_Boats
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
             Console.WriteLine("Game has ended...");
+            if (ActiveGameObjects[playerIndex].Health > 0)
+            {
+                activePlayers[playerIndex].Money += 250;
+            }
+            else
+            {
+                activePlayers[playerIndex].Money += 100;
+            }
+            activePlayers[playerIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+
             backgroundMusic.Stop(AudioStopOptions.Immediate);
             scene.UIRenderer.Remove2DComponent(player1_hud);
             scene.UIRenderer.Remove2DComponent(player2_hud);
@@ -663,7 +673,7 @@ namespace AR_Battle_Boats
             GameObject obj = ActiveGameObjects[playerIndex];
 
             packetWriter.Write("Attack");
-            packetWriter.Write(obj.Pitch);
+            packetWriter.Write((double)obj.Pitch);
             packetWriter.Write(obj.Translation);
 
             // Send it to everyone.
@@ -804,7 +814,7 @@ namespace AR_Battle_Boats
             upgradeSpeed.TextFont = textFont;
             upgradeSpeed.Texture = Content.Load<Texture2D>("Images\\three");
             upgradeSpeed.HighlightColor = Color.Red;
-            upgradeSpeed.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+            upgradeSpeed.ActionPerformedEvent += new ActionPerformed(upgradeSpeed_ActionPerformedEvent);
 
             G2DButton upgradeArmour = new G2DButton("Upgrade Armour");
             upgradeArmour.Bounds = new Rectangle(20, 70, 130, 30);
@@ -812,7 +822,7 @@ namespace AR_Battle_Boats
             upgradeArmour.TextFont = textFont;
             upgradeArmour.Texture = Content.Load<Texture2D>("Images\\three");
             upgradeArmour.HighlightColor = Color.Red;
-            upgradeArmour.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+            upgradeArmour.ActionPerformedEvent += new ActionPerformed(upgradeArmour_ActionPerformedEvent);
 
             G2DButton upgradeMissle = new G2DButton("Upgrade Missle");
             upgradeMissle.Bounds = new Rectangle(20, 110, 130, 30);
@@ -820,7 +830,7 @@ namespace AR_Battle_Boats
             upgradeMissle.TextFont = textFont;
             upgradeMissle.Texture = Content.Load<Texture2D>("Images\\three");
             upgradeMissle.HighlightColor = Color.Red;
-            upgradeMissle.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
+            upgradeMissle.ActionPerformedEvent += new ActionPerformed(upgradeMissle_ActionPerformedEvent);
 
 
             missleLevel = new G2DLabel();
@@ -915,6 +925,43 @@ namespace AR_Battle_Boats
             upgradeArmour.Visible = false;
             upgradeMissle.Visible = false;
         }
+
+        void upgradeMissle_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Money > (activePlayers[0].Ammo_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Ammo_Level * 150);
+                activePlayers[0].Ammo_Level++;
+                missleLevel.Text = "Ammo Level: " + activePlayers[0].Ammo_Level;
+                missleCost.Text = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
+        void upgradeArmour_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Money > (activePlayers[0].Armour_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Armour_Level * 150);
+                activePlayers[0].Armour_Level++;
+                armourLevel.Text = "Armour Level: " + activePlayers[0].Armour_Level;
+                armourCost.Text = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
+        void upgradeSpeed_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Money > (activePlayers[0].Speed_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Speed_Level * 150);
+                activePlayers[0].Speed_Level++;
+                speedLevel.Text = "Speed Level: " + activePlayers[0].Speed_Level;
+                speedCost.Text = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
 
         /// <summary>
         /// Creates lobby
@@ -1112,9 +1159,9 @@ namespace AR_Battle_Boats
             string armourLevelMsg = "Armour Level: " + activePlayers[0].Armour_Level;
             string speedLevelMsg = "Speed Level: " + activePlayers[0].Speed_Level;
 
-            string ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 100 * 1.5);
-            string armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 100 * 1.5);
-            string speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 100 * 1.5);
+            string ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+            string armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
+            string speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
 
             string moneyMsg = "Money: " + activePlayers[0].Money;
 
@@ -1158,7 +1205,6 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleSave(object source)
         {
-
             G2DComponent comp = (G2DComponent)source;
 
 
@@ -1423,11 +1469,14 @@ namespace AR_Battle_Boats
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
             if (ActiveGameObjects[0].Health <= 0)
             {
-                if (session.IsHost)
+                if (session != null)
                 {
-                    SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
-                    session.EndGame();
-                    session.Update();
+                    if (session.IsHost)
+                    {
+                        SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
+                        session.EndGame();
+                        session.Update();
+                    }
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
@@ -1469,11 +1518,14 @@ namespace AR_Battle_Boats
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
             {
-                if (session.IsHost)
+                if (session != null)
                 {
-                    SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
-                    session.EndGame();
-                    session.Update();
+                    if (session.IsHost)
+                    {
+                        SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
+                        session.EndGame();
+                        session.Update();
+                    }
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
