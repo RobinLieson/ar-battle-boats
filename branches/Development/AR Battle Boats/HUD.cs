@@ -128,7 +128,7 @@ namespace AR_Battle_Boats
         /// <returns>False if transparency is equal to zero.</returns>
         public bool Update()
         {
-            Transparency -= 0.01f;
+            Transparency -= 0.001f;
 
             if (Transparency <= 0.0f)
                 return false;
