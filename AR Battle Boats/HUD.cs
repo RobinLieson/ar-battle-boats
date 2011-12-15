@@ -80,7 +80,7 @@ namespace AR_Battle_Boats
         {
             if (Children.Count > 2)
             {
-                if (((FadingMessage)Children[2]).Update())
+                if (!((FadingMessage)Children[2]).Update())
                 {
                     Children.RemoveAt(2);
                 }
