@@ -1162,12 +1162,11 @@ namespace AR_Battle_Boats
             HideMainMenu();
             howto.Visible = true;
             howto.Enabled = true;
+            howtoback.Visible = false;
         }
 
         void howtonext_ActionPerformedEvent(object source)
          {
-           
-         
             if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
             {
                 howtonext.Visible = true;
@@ -1200,7 +1199,7 @@ namespace AR_Battle_Boats
                 if (howto.Texture == Content.Load<Texture2D>(tutorial2))
                 {
                     howtonext.Visible = true;
-                    howtoback.Visible = true;
+                    howtoback.Visible = false;
                     howto.Texture = Content.Load<Texture2D>(tutorial1);
                 }
                 else
