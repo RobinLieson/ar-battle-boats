@@ -26,7 +26,8 @@ namespace AR_Battle_Boats
         Calibrating,
         In_Game,
         Joining,
-        Hosting
+        Hosting,
+        Count_Down
     }
 
     /// <summary>
