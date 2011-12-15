@@ -132,7 +132,7 @@ namespace AR_Battle_Boats
             scene.PhysicsEngine = new NewtonPhysics();
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
-            scene.BackgroundTexture = Content.Load<Texture2D>("Images\\two");
+            scene.BackgroundTexture = Content.Load<Texture2D>("Images\\fournew");
 
             activePlayers = new List<PlayerInfo>();
 
@@ -517,7 +517,7 @@ namespace AR_Battle_Boats
                 player.PlayerName = e.Gamer.Gamertag;
                 player.Ammo_Level = 0;
                 player.Armour_Level = 0;
-                player.Money = 0;
+                player.Money = 10;
                 player.Speed_Level = 0;
                 Console.WriteLine("Creating new profile");
                 Console.WriteLine(player.ToString());
@@ -706,7 +706,6 @@ namespace AR_Battle_Boats
             frame2.Bounds = new Rectangle(262, 150, 500, 300);
             frame2.Border = GoblinEnums.BorderFactory.LineBorder;
             frame2.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
-
 
             G2DButton localPlay = new G2DButton("Local Play");
             localPlay.Bounds = new Rectangle(120, 30, 100, 30);
