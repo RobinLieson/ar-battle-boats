@@ -16,8 +16,8 @@ Global Settings
     Header File = arbattleboatssounds.h;
     Exclude Category Names = 0;
     Exclude Variable Names = 0;
-    Last Modified Low = 494570596;
-    Last Modified High = 30194449;
+    Last Modified Low = 421550340;
+    Last Modified High = 30194460;
 
     Category
     {
@@ -229,6 +229,8 @@ Wave Bank
     Xbox Bank Last Modified High = 0;
     PC Bank Last Modified Low = 494630596;
     PC Bank Last Modified High = 30194449;
+    Header Last Modified Low = 0;
+    Header Last Modified High = 0;
     Bank Last Revised Low = 254930596;
     Bank Last Revised High = 30194449;
 
@@ -332,8 +334,6 @@ Sound Bank
     Windows File = Win\BattleBoatsSoundBank.xsb;
     Xbox Bank Path Edited = 0;
     Windows Bank Path Edited = 0;
-    Bank Last Modified Low = 501030596;
-    Bank Last Modified High = 30194449;
     Header Last Modified High = 0;
     Header Last Modified Low = 0;
 
@@ -561,7 +561,7 @@ Sound Bank
             Name = missile;
             Index = 1;
             Weight Min = 0;
-            Weight Max = 255;
+            Weight Max = 147;
         }
     }
 
