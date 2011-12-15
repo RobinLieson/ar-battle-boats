@@ -224,7 +224,7 @@ namespace AR_Battle_Boats
                     if (obj.Name == "Player Ship")
                     {
                         obj.Cool_Down--;
-                        //obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
                     }
                 }
 
@@ -453,7 +453,6 @@ namespace AR_Battle_Boats
                 SetupMarkerTracking();
                 CreateMarkers();
                 gameState = GameState.Calibrating;
-                activePlayers = new List<PlayerInfo>();
             }
             else
             {
@@ -578,7 +577,7 @@ namespace AR_Battle_Boats
             CreateLights();
             CreateGameObjects();
             CreateHUD();
-            AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
+            //AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
             HideMainMenu();
 
             backgroundMusic.Play();
@@ -664,7 +663,7 @@ namespace AR_Battle_Boats
             GameObject obj = ActiveGameObjects[playerIndex];
 
             packetWriter.Write("Attack");
-            packetWriter.Write(obj.Rotation);
+            packetWriter.Write(obj.Pitch);
             packetWriter.Write(obj.Translation);
 
             // Send it to everyone.
