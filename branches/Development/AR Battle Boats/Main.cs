@@ -64,6 +64,8 @@ namespace AR_Battle_Boats
         PacketReader packetReader; //For reading from the network
         G2DPanel frame;
         G2DPanel frame2;
+        G2DPanel winners;//changed
+        G2DLabel gwinner;//changed
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         Model missileModel;
@@ -81,7 +83,7 @@ namespace AR_Battle_Boats
         int opponentIndex = 0;
         int packetBuffer = 0;
         int countDownTimer = 0;
-        
+        string winner;// changed
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -701,7 +703,7 @@ namespace AR_Battle_Boats
                     string messageType;
                     double rotation = 0.0;
                     Vector3 translation = new Vector3();
-                    string winner;
+                    
 
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
@@ -769,6 +771,14 @@ namespace AR_Battle_Boats
                 gamer.SendData(packetWriter, SendDataOptions.None);
             }
             Console.WriteLine(winner + " won the game!");
+
+            gwinner.TextFont = hudFont;
+            gwinner.TextColor = Color.ForestGreen;
+            gwinner.Text = winner + " is the Winner you received 250 in coins, ENJOY ";
+            winners.Enabled = true;
+            winners.Visible = true;
+            gwinner.Enabled = true;
+            gwinner.Visible = true;
         }
 
 
@@ -795,6 +805,13 @@ namespace AR_Battle_Boats
             frame2.Bounds = new Rectangle(262, 150, 500, 300);
             frame2.Border = GoblinEnums.BorderFactory.LineBorder;
             frame2.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            //Frame after winning
+            winners = new G2DPanel();
+            winners.Bounds = new Rectangle(175, 400, 350, 210);
+            winners.Border = GoblinEnums.BorderFactory.LineBorder;
+            winners.Transparency = 0f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
 
             G2DButton localPlay = new G2DButton("Local Play");
             localPlay.Bounds = new Rectangle(120, 30, 100, 30);
@@ -912,6 +929,15 @@ namespace AR_Battle_Boats
             upgradeMissle.ActionPerformedEvent += new ActionPerformed(upgradeMissle_ActionPerformedEvent);
 
 
+
+
+            /*added for winner label*/
+            gwinner = new G2DLabel();
+            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
+            gwinner.Name = "gwinner";
+            gwinner.TextFont = textFont;
+            gwinner.TextColor = Color.Black;
+
             missleLevel = new G2DLabel();
             missleLevel.Bounds = new Rectangle(170, 115, 130, 30);
             missleLevel.Name = "missleLevel";
@@ -954,6 +980,7 @@ namespace AR_Battle_Boats
 
             scene.UIRenderer.Add2DComponent(frame);
             scene.UIRenderer.Add2DComponent(frame2);
+            scene.UIRenderer.Add2DComponent(winners);// added this
 
             frame.AddChild(localPlay);
             frame.AddChild(networkPlay);
@@ -980,6 +1007,8 @@ namespace AR_Battle_Boats
             frame2.AddChild(speedCost);
             frame2.AddChild(armourCost);
 
+            winners.AddChild(gwinner);//added
+
             localPlay.Enabled = true;
             networkPlay.Enabled = true;
             store.Enabled = true;
@@ -991,6 +1020,11 @@ namespace AR_Battle_Boats
             upgradeSpeed.Enabled = false;
             upgradeArmour.Enabled = false;
             upgradeMissle.Enabled = false;
+
+            gwinner.Enabled = false;//added
+            gwinner.Visible = false;//added
+            winners.Enabled = false;//added
+            winners.Visible = false;//added
 
             frame2.Enabled = false;
             frame2.Visible = false;
