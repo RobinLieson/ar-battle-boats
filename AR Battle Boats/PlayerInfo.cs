@@ -169,7 +169,7 @@ namespace AR_Battle_Boats
             builder.Append("armour:" + armour + "\t");
             builder.Append("ammo:" + ammo + "\t");
             builder.Append("speed:" + speed + "\t");
-            builder.Append("ship:" + ship);
+            builder.Append("ship:Basic");
 
             return builder.ToString();
         }
