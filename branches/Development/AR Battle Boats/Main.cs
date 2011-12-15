@@ -224,7 +224,7 @@ namespace AR_Battle_Boats
                     if (obj.Name == "Player Ship")
                     {
                         obj.Cool_Down--;
-                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
+                        //obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
                     }
                 }
 
@@ -453,6 +453,7 @@ namespace AR_Battle_Boats
                 SetupMarkerTracking();
                 CreateMarkers();
                 gameState = GameState.Calibrating;
+                activePlayers = new List<PlayerInfo>();
             }
             else
             {
@@ -544,8 +545,20 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
-            CreateMainMenu();
             Console.WriteLine("Game has ended...");
+            backgroundMusic.Stop(AudioStopOptions.Immediate);
+            scene.UIRenderer.Remove2DComponent(player1_hud);
+            scene.UIRenderer.Remove2DComponent(player2_hud);
+            HideMainMenu();
+            scene.RootNode.RemoveChildren();
+            session.Dispose();
+            session = null;
+
+
+            backgroundMusic = soundBank.GetCue("Boom Music");
+            gameState = GameState.Main_Menu;
+            gameMode = GameMode.Menu;
+            DisplayMainMenu();
         }
 
         /// <summary>
@@ -932,6 +945,7 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Hiding Main Menu");
             scene.UIRenderer.Remove2DComponent(frame);
+            scene.UIRenderer.Remove2DComponent(frame2);
         }
 
         /// <summary>
@@ -1010,9 +1024,9 @@ namespace AR_Battle_Boats
         /// Called when a game is started
         /// </summary>
         /// <param name="source"></param>
-        private void HandleStartGame(object source)
+        private void HandleStartGame(object source) 
         {
-            if (gameState == GameState.In_Game)
+            if (gameState == GameState.In_Game || gameState == GameState.Main_Menu)
                 return;
 
             if (gameMode == GameMode.Network_Multiplayer)
@@ -1235,13 +1249,10 @@ namespace AR_Battle_Boats
         /// </summary>
         private void UpdateHUD()
         {
-            player1_hud.Health = ActiveGameObjects[playerIndex].Health;
+            player1_hud.Health = ActiveGameObjects[0].Health;
             player1_hud.Update();
 
-            if (playerIndex == 1)
-                player2_hud.Health = ActiveGameObjects[0].Health;
-            else
-                player2_hud.Health = ActiveGameObjects[1].Health;
+            player2_hud.Health = ActiveGameObjects[1].Health;
             player2_hud.Update();
         }
 
@@ -1402,7 +1413,7 @@ namespace AR_Battle_Boats
             
             Console.WriteLine("Distance = " + distance);
             
-            if (distance > 10)
+            if (distance > 8)
                 return;
 
             Console.WriteLine("Hit!");
@@ -1418,6 +1429,7 @@ namespace AR_Battle_Boats
                 {
                     SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
                     session.EndGame();
+                    session.Update();
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
@@ -1447,7 +1459,7 @@ namespace AR_Battle_Boats
 
             Console.WriteLine("Distance = " + distance);
 
-            if (distance > 10)
+            if (distance > 8)
                 return;
 
             Console.WriteLine("Hit!");
@@ -1463,6 +1475,7 @@ namespace AR_Battle_Boats
                 {
                     SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
                     session.EndGame();
+                    session.Update();
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
@@ -1525,7 +1538,8 @@ namespace AR_Battle_Boats
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
                 playerShip.Roll = 1.5f;
-                playerShip.Health = 100;
+                //CHANGE!
+                playerShip.Health = 10;
                 playerShip.UpdateRotationByYawPitchRoll();
                 playerShip.Player_Information = player;
                 playerShip.Name = "Player Ship";
@@ -1737,12 +1751,12 @@ namespace AR_Battle_Boats
                 {
                     if (owner.Player_Information.PlayerName != obj.Player_Information.PlayerName)
                     {
-                        if (ActiveGameObjects[0].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        if (ActiveGameObjects[0].Player_Information.PlayerName == missile.Player_Information.PlayerName)
                         {
                             //Console.WriteLine("Added collision callback player 1");
                             AddCollisionCallbackPlayer2(obj, missile);
                         }
-                        else if (ActiveGameObjects[1].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        else if (ActiveGameObjects[1].Player_Information.PlayerName == missile.Player_Information.PlayerName)
                         {
                             //Console.WriteLine("Added collision callback player 2");
                             AddCollisionCallbackPlayer1(obj, missile);
