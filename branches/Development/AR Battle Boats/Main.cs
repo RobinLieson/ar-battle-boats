@@ -1588,8 +1588,7 @@ namespace AR_Battle_Boats
                 playerShip.Yaw = 1.5f;
                 playerShip.Pitch = 0f;
                 playerShip.Roll = 1.5f;
-                //CHANGE!
-                playerShip.Health = 10;
+                playerShip.Health = 30;
                 playerShip.UpdateRotationByYawPitchRoll();
                 playerShip.Player_Information = player;
                 playerShip.Name = "Player Ship";
