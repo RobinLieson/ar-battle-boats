@@ -73,12 +73,14 @@ namespace AR_Battle_Boats
         Cue backgroundMusic;
         Cue explosionSound;
         Cue shootSound;
+        Cue menuMusic;
         HUD player1_hud;
         HUD player2_hud;
-
+        KeyboardState oldState;
         int playerIndex = 0;
         int opponentIndex = 0;
         int packetBuffer = 0;
+        int countDownTimer = 0;
         
 
         //Marker Node
@@ -100,8 +102,7 @@ namespace AR_Battle_Boats
         G2DLabel armourCost;
         G2DLabel missleCost;
 
-        List<NewtonPhysics.CollisionPair> collisionPairsPlayer1;
-        List<NewtonPhysics.CollisionPair> collisionPairsPlayer2;
+        List<Keys> enteredKeys;
 
         public Main()
         {
@@ -143,16 +144,15 @@ namespace AR_Battle_Boats
             audioEngine = new AudioEngine("Content\\Sound\\arbattleboatssounds.xgs");
             soundBank = new SoundBank(audioEngine, "Content\\Sound\\BattleBoatsSoundBank.xsb");
             waveBank = new WaveBank(audioEngine, "Content\\Sound\\BattleBoatsWaveBank.xwb");
-            backgroundMusic = soundBank.GetCue("Boom Music");
-            explosionSound = soundBank.GetCue("explosion");
-            shootSound = soundBank.GetCue("missile");
-
+            menuMusic = soundBank.GetCue("Plunder");
             base.Initialize();
 
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
             
             DisplayMainMenu();
+
+            enteredKeys = new List<Keys>();
         }
 
         /// <summary>
@@ -188,7 +188,20 @@ namespace AR_Battle_Boats
         {
 
             KeyboardState state = Keyboard.GetState();
-
+            if (state.IsKeyUp(Keys.Up) && oldState.IsKeyDown(Keys.Up))
+                enteredKeys.Add(Keys.Up);
+            if (state.IsKeyUp(Keys.Down) && oldState.IsKeyDown(Keys.Down))
+                enteredKeys.Add(Keys.Down);
+            if (state.IsKeyUp(Keys.Left) && oldState.IsKeyDown(Keys.Left))
+                enteredKeys.Add(Keys.Left);
+            if (state.IsKeyUp(Keys.Right) && oldState.IsKeyDown(Keys.Right))
+                enteredKeys.Add(Keys.Right);
+            if (state.IsKeyUp(Keys.B) && oldState.IsKeyDown(Keys.B))
+                enteredKeys.Add(Keys.B);
+            if (state.IsKeyUp(Keys.A) && oldState.IsKeyDown(Keys.A))
+                enteredKeys.Add(Keys.A);
+            CheckCheatCode();
+            oldState = state;
             //Check to see if the Gamer is Signed In
             if (SignedInGamer.SignedInGamers.Count < 1)
             {
@@ -203,6 +216,20 @@ namespace AR_Battle_Boats
             if (gameState == GameState.Calibrating)
             {
                 CheckReady();
+            }
+
+            if (gameState == GameState.Count_Down)
+            {
+                if (countDownTimer > 0)
+                {
+                    countDownTimer--;
+                }
+                else
+                {
+                    backgroundMusic = soundBank.GetCue("Boom Music");
+                    backgroundMusic.Play();
+                    gameState = GameState.In_Game;
+                }
             }
 
             //Code for playing a match
@@ -389,7 +416,35 @@ namespace AR_Battle_Boats
 
         }
 
+        private void CheckCheatCode()
+        {
 
+            if (enteredKeys.Count < 10)
+                return;
+
+
+            if (enteredKeys[0] == Keys.Up)
+                if (enteredKeys[1] == Keys.Up)
+                    if (enteredKeys[2] == Keys.Down)
+                        if (enteredKeys[3] == Keys.Down)
+                            if (enteredKeys[4] == Keys.Left)
+                                if (enteredKeys[5] == Keys.Right)
+                                    if (enteredKeys[6] == Keys.Left)
+                                        if (enteredKeys[7] == Keys.Right)
+                                            if (enteredKeys[8] == Keys.B)
+                                                if (enteredKeys[9] == Keys.A)
+                                                    if (session.IsHost)
+                                                    {
+                                                        SendGameOver(activePlayers[playerIndex].PlayerName);
+                                                        session.EndGame();
+                                                        session.Update();
+                                                        enteredKeys.Clear();
+                                                        return;
+                                                    }
+
+            if (enteredKeys.Count > 0)
+                enteredKeys.RemoveAt(0);
+        }
         //Networking
 
         /// <summary>
@@ -608,10 +663,9 @@ namespace AR_Battle_Boats
             CreateHUD();
             //AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
             HideMainMenu();
-
-            backgroundMusic.Play();
-
-            gameState = GameState.In_Game;
+            menuMusic.Stop(AudioStopOptions.Immediate);
+            countDownTimer = 300;
+            gameState = GameState.Count_Down;
         }
 
         /// <summary>
@@ -725,6 +779,12 @@ namespace AR_Battle_Boats
         /// </summary>
         private void CreateMainMenu()
         {
+            if (!menuMusic.IsPlaying)
+            {
+                menuMusic = soundBank.GetCue("Plunder");
+                menuMusic.Play();
+            }
+
             // Create the main panel which holds all other GUI components
             frame = new G2DPanel();
             frame.Bounds = new Rectangle(337, 175, 350, 210);
@@ -945,8 +1005,15 @@ namespace AR_Battle_Boats
             upgradeMissle.Visible = false;
         }
 
+        /// <summary>
+        /// Called when the Upgrade Missile button is pressed
+        /// </summary>
+        /// <param name="source"></param>
         void upgradeMissle_ActionPerformedEvent(object source)
         {
+            if (activePlayers[0].Ammo_Level >= 5)
+                return;
+
             if (activePlayers[0].Money > (activePlayers[0].Ammo_Level * 150))
             {
                 activePlayers[0].Money -= (int)(activePlayers[0].Ammo_Level * 150);
@@ -957,8 +1024,15 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Called when the upgrade armour button is pressed
+        /// </summary>
+        /// <param name="source"></param>
         void upgradeArmour_ActionPerformedEvent(object source)
         {
+            if (activePlayers[0].Armour_Level >= 5)
+                return;
+
             if (activePlayers[0].Money > (activePlayers[0].Armour_Level * 150))
             {
                 activePlayers[0].Money -= (int)(activePlayers[0].Armour_Level * 150);
@@ -969,8 +1043,15 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Called when the upgrade speed button is pressed
+        /// </summary>
+        /// <param name="source"></param>
         void upgradeSpeed_ActionPerformedEvent(object source)
         {
+            if (activePlayers[0].Speed_Level >= 5)
+                return;
+
             if (activePlayers[0].Money > (activePlayers[0].Speed_Level * 150))
             {
                 activePlayers[0].Money -= (int)(activePlayers[0].Speed_Level * 150);
@@ -1177,10 +1258,24 @@ namespace AR_Battle_Boats
             string ammoLevelMsg = "Ammo Level: " + activePlayers[0].Ammo_Level;
             string armourLevelMsg = "Armour Level: " + activePlayers[0].Armour_Level;
             string speedLevelMsg = "Speed Level: " + activePlayers[0].Speed_Level;
+            string ammoCostMsg;
+            string armourCostMsg;
+            string speedCostMsg;
 
-            string ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
-            string armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
-            string speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
+            if (activePlayers[0].Ammo_Level < 5)
+                ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+            else
+                ammoCostMsg = "At Max Level";
+            
+            if (activePlayers[0].Ammo_Level < 5)
+                armourCostMsg = "Ammo Cost: " + (activePlayers[0].Armour_Level * 150);
+            else
+                armourCostMsg = "At Max Level";
+            
+            if (activePlayers[0].Ammo_Level < 5)
+                speedCostMsg = "Ammo Cost: " + (activePlayers[0].Speed_Level * 150);
+            else
+                speedCostMsg = "At Max Level";
 
             string moneyMsg = "Money: " + activePlayers[0].Money;
 
@@ -1446,27 +1541,34 @@ namespace AR_Battle_Boats
         /// <summary>
         /// Checks for collission between two game objects
         /// </summary>
-        /// <param name="obj1"></param>
-        /// <param name="obj2"></param>
+        /// <param name="obj1">Missile</param>
+        /// <param name="obj2">Player Ship</param>
         /// <returns>True if collission is detected, False otherwise</returns>
         private bool CheckCollision(GameObject obj1, GameObject obj2)
         {
+            Vector3 translation = obj2.Translation;
+            Matrix rotate = Matrix.CreateFromYawPitchRoll(obj2.Yaw, obj2.Pitch, obj2.Roll);
+            translation += (rotate.Forward * ((2) * 0.05f));  
+
            double distance = getDistance(obj1.Translation.X, obj1.Translation.Y,
-                obj2.Translation.X, obj2.Translation.Y);
+                translation.X, translation.Y);
             
             //Console.WriteLine("Distance = " + distance);
 
-            if (distance > 3)
+            if (distance > 4)
                 return false;
             else
                 return true;
         }
-
-
+         
+        /// <summary>
+        /// Called when a player is hit
+        /// </summary>
+        /// <param name="index">The Active Player index of the guy who got shot</param>
         private void RegisterHitOnPlayer(int index)
         {
-            explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
+            explosionSound.Play();
 
             ActiveGameObjects[index].Health -= 10 - ActiveGameObjects[index].Player_Information.Armour_Level;
             if (ActiveGameObjects[index].Health <= 0)
@@ -1488,8 +1590,8 @@ namespace AR_Battle_Boats
                     }
                 }
             }
-            Console.WriteLine("Player " + index+1 + " Hit!  Health is at " + ActiveGameObjects[index].Health);
-            player1_hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
+            Console.WriteLine("Player " + (index+1) + " Hit!  Health is at " + ActiveGameObjects[index].Health);
+            player1_hud.AddMessage(activePlayers[index].PlayerName + " was hit!");
         }
 
 
@@ -1645,8 +1747,6 @@ namespace AR_Battle_Boats
         private void CreateGameObjects()
         {
             ActiveGameObjects = new List<GameObject>();
-            collisionPairsPlayer1 = new List<NewtonPhysics.CollisionPair>();
-            collisionPairsPlayer2 = new List<NewtonPhysics.CollisionPair>();
             int index = 0;
 
             foreach (PlayerInfo player in activePlayers)
@@ -1740,9 +1840,9 @@ namespace AR_Battle_Boats
 
 
             if (angleTarget < 1)
-                angleTarget = 360;
+                angleTarget += 360;
             if (angleDirection < 1)
-                angleDirection = 360;
+                angleDirection += 360;
 
 
             if ( Math.Abs(angleDirection - angleTarget) < 5)
