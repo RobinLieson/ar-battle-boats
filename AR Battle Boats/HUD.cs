@@ -114,10 +114,11 @@ namespace AR_Battle_Boats
         public FadingMessage(string text, int Time_To_Fade)
             : base()
         {
+            Transparency = 1.0f;
             Text = text;
             time = Time_To_Fade;
             totalTime = Time_To_Fade;
-            Transparency = 1.0f;
+            
         }
 
         /// <summary>
@@ -131,8 +132,10 @@ namespace AR_Battle_Boats
             Transparency -= 0.001f;
 
             if (Transparency <= 0.0f)
+            {
+                Transparency = 1.0f;
                 return false;
-
+            }
             return true;
         }
     }

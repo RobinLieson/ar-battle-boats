@@ -65,7 +65,7 @@ namespace AR_Battle_Boats
         G2DPanel frame;
         G2DPanel frame2;
         G2DPanel winners;//changed
-        G2DLabel gwinner;//changed
+        FadingMessage gwinner;//changed
         Lobby lob;
         List<GameObject> ActiveGameObjects;
         Model missileModel;
@@ -74,7 +74,6 @@ namespace AR_Battle_Boats
         WaveBank waveBank;
         Cue backgroundMusic;
         Cue explosionSound;
-        Cue shootSound;
         Cue menuMusic;
         HUD player1_hud;
         HUD player2_hud;
@@ -135,7 +134,7 @@ namespace AR_Battle_Boats
             scene.PhysicsEngine = new NewtonPhysics();
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
-            scene.BackgroundTexture = Content.Load<Texture2D>("Images\\fournew");
+
 
             activePlayers = new List<PlayerInfo>();
 
@@ -151,7 +150,7 @@ namespace AR_Battle_Boats
 
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
-            
+            ChooseBackground();
             DisplayMainMenu();
 
             enteredKeys = new List<Keys>();
@@ -214,6 +213,23 @@ namespace AR_Battle_Boats
             {
                 GetPlayerInfo();
             }
+
+
+            if (gameState == GameState.Main_Menu)
+            {
+                if (gwinner != null)
+                {
+                    if (!gwinner.Update())
+                    {
+                        scene.UIRenderer.Remove2DComponent(winners);
+                        winners.RemoveChild(gwinner);
+                        gwinner = null;
+                    }
+                }
+            }
+
+
+
             //If joining a game, make sure you have all your markers
             if (gameState == GameState.Calibrating)
             {
@@ -222,6 +238,16 @@ namespace AR_Battle_Boats
 
             if (gameState == GameState.Count_Down)
             {
+                if (gwinner != null)
+                {
+                    if (!gwinner.Update())
+                    {
+                        scene.UIRenderer.Remove2DComponent(winners);
+                        winners.RemoveChild(gwinner);
+                        gwinner = null;
+                    }
+                }
+
                 if (countDownTimer > 0)
                 {
                     countDownTimer--;
@@ -620,16 +646,25 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
+            string winner;
             Console.WriteLine("Game has ended...");
             if (ActiveGameObjects[playerIndex].Health > 0)
             {
                 activePlayers[playerIndex].Money += 250;
+                activePlayers[opponentIndex].Money += 100;
+                winner = activePlayers[playerIndex].PlayerName;
             }
             else
             {
                 activePlayers[playerIndex].Money += 100;
+                activePlayers[opponentIndex].Money += 250;
+                winner = activePlayers[opponentIndex].PlayerName;
             }
-            activePlayers[playerIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+            if (session.IsHost)
+            {
+                activePlayers[playerIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+                activePlayers[opponentIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+            }
 
             backgroundMusic.Stop(AudioStopOptions.Immediate);
             scene.UIRenderer.Remove2DComponent(player1_hud);
@@ -644,6 +679,19 @@ namespace AR_Battle_Boats
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
             DisplayMainMenu();
+
+            /*added for winner label*/
+            gwinner = new FadingMessage(winner + " is the Winner and recieves 250 in coins, ENJOY! ", 1000);
+            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
+            gwinner.Name = "gwinner";
+            gwinner.TextFont = hudFont;
+            gwinner.TextColor = Color.ForestGreen;
+            winners.Enabled = true;
+            winners.Visible = true;
+            gwinner.Enabled = true;
+            gwinner.Visible = true;
+            winners.AddChild(gwinner);
+            gwinner.Transparency = 1.0f;
         }
 
         /// <summary>
@@ -668,6 +716,25 @@ namespace AR_Battle_Boats
             menuMusic.Stop(AudioStopOptions.Immediate);
             countDownTimer = 300;
             gameState = GameState.Count_Down;
+
+            string color;
+            if(playerIndex == 0)
+                color = "Red";
+            else
+                color = "Green";
+
+            gwinner = new FadingMessage("You are " + color, 1000);
+            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
+            gwinner.Name = "gwinner";
+            gwinner.TextFont = hudFont;
+            gwinner.TextColor = Color.ForestGreen;
+            winners.Enabled = true;
+            winners.Visible = true;
+            gwinner.Enabled = true;
+            gwinner.Visible = true;
+            winners.AddChild(gwinner);
+            gwinner.Transparency = 1.0f;
+
         }
 
         /// <summary>
@@ -771,18 +838,19 @@ namespace AR_Battle_Boats
                 gamer.SendData(packetWriter, SendDataOptions.None);
             }
             Console.WriteLine(winner + " won the game!");
-
-            gwinner.TextFont = hudFont;
-            gwinner.TextColor = Color.ForestGreen;
-            gwinner.Text = winner + " is the Winner you received 250 in coins, ENJOY ";
-            winners.Enabled = true;
-            winners.Visible = true;
-            gwinner.Enabled = true;
-            gwinner.Visible = true;
         }
 
 
         //Menu Functions
+
+        private void ChooseBackground()
+        {
+            Random rand = new Random();
+            if (rand.Next() % 2 == 0)
+                scene.BackgroundTexture = Content.Load<Texture2D>("Images\\fournew");
+            else
+                scene.BackgroundTexture = Content.Load<Texture2D>("Images\\one");
+        }
 
         /// <summary>
         /// Creates the Menus
@@ -836,6 +904,14 @@ namespace AR_Battle_Boats
             store.Texture = Content.Load<Texture2D>("Images\\three");
             store.HighlightColor = Color.Red;
             store.ActionPerformedEvent += new ActionPerformed(HandleStore);
+
+            G2DButton howToPlay = new G2DButton("How To Play");
+            howToPlay.Bounds = new Rectangle(120, 150, 100, 30);
+            howToPlay.Name = "howToPlay";
+            howToPlay.TextFont = textFont;
+            howToPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            howToPlay.HighlightColor = Color.Red;
+            howToPlay.ActionPerformedEvent += new ActionPerformed(howToPlay_ActionPerformedEvent);
             /////////////////////////////////////////////////////////////////////////////////
 
             G2DButton startGame = new G2DButton("Start Game");
@@ -929,15 +1005,6 @@ namespace AR_Battle_Boats
             upgradeMissle.ActionPerformedEvent += new ActionPerformed(upgradeMissle_ActionPerformedEvent);
 
 
-
-
-            /*added for winner label*/
-            gwinner = new G2DLabel();
-            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
-            gwinner.Name = "gwinner";
-            gwinner.TextFont = textFont;
-            gwinner.TextColor = Color.Black;
-
             missleLevel = new G2DLabel();
             missleLevel.Bounds = new Rectangle(170, 115, 130, 30);
             missleLevel.Name = "missleLevel";
@@ -990,6 +1057,7 @@ namespace AR_Battle_Boats
             frame.AddChild(hostGame);
             frame.AddChild(buyUpgrades);
             frame.AddChild(back);
+            frame.AddChild(howToPlay);
 
             frame2.AddChild(upgradeSpeed);
             frame2.AddChild(upgradeArmour);
@@ -1007,8 +1075,6 @@ namespace AR_Battle_Boats
             frame2.AddChild(speedCost);
             frame2.AddChild(armourCost);
 
-            winners.AddChild(gwinner);//added
-
             localPlay.Enabled = true;
             networkPlay.Enabled = true;
             store.Enabled = true;
@@ -1020,11 +1086,7 @@ namespace AR_Battle_Boats
             upgradeSpeed.Enabled = false;
             upgradeArmour.Enabled = false;
             upgradeMissle.Enabled = false;
-
-            gwinner.Enabled = false;//added
-            gwinner.Visible = false;//added
-            winners.Enabled = false;//added
-            winners.Visible = false;//added
+            howToPlay.Enabled = true;
 
             frame2.Enabled = false;
             frame2.Visible = false;
@@ -1037,6 +1099,16 @@ namespace AR_Battle_Boats
             upgradeSpeed.Visible = false;
             upgradeArmour.Visible = false;
             upgradeMissle.Visible = false;
+            howToPlay.Visible = true;
+        }
+
+        /// <summary>
+        /// Called when someone needs a tutorial
+        /// </summary>
+        /// <param name="source"></param>
+        void howToPlay_ActionPerformedEvent(object source)
+        {
+
         }
 
         /// <summary>
@@ -1052,8 +1124,13 @@ namespace AR_Battle_Boats
             {
                 activePlayers[0].Money -= (int)(activePlayers[0].Ammo_Level * 150);
                 activePlayers[0].Ammo_Level++;
-                missleLevel.Text = "Ammo Level: " + activePlayers[0].Ammo_Level;
-                missleCost.Text = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+
+                missleLevel.Text = "Ammo Level: " + activePlayers[0].Ammo_Level; 
+                if (activePlayers[0].Ammo_Level < 5)
+                    missleCost.Text = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    missleCost.Text = "At Max Level";
+
                 moneyLevel.Text = "Money: " + activePlayers[0].Money;
             }
         }
@@ -1072,7 +1149,12 @@ namespace AR_Battle_Boats
                 activePlayers[0].Money -= (int)(activePlayers[0].Armour_Level * 150);
                 activePlayers[0].Armour_Level++;
                 armourLevel.Text = "Armour Level: " + activePlayers[0].Armour_Level;
-                armourCost.Text = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
+
+                if (activePlayers[0].Armour_Level < 5)
+                    armourCost.Text = "Armour Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    armourCost.Text = "At Max Level";
+
                 moneyLevel.Text = "Money: " + activePlayers[0].Money;
             }
         }
@@ -1091,7 +1173,12 @@ namespace AR_Battle_Boats
                 activePlayers[0].Money -= (int)(activePlayers[0].Speed_Level * 150);
                 activePlayers[0].Speed_Level++;
                 speedLevel.Text = "Speed Level: " + activePlayers[0].Speed_Level;
-                speedCost.Text = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
+                
+                if (activePlayers[0].Speed_Level < 5)
+                    speedCost.Text = "Speed Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    speedCost.Text = "At Max Level";
+
                 moneyLevel.Text = "Money: " + activePlayers[0].Money;
             }
         }
@@ -1288,7 +1375,7 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleBuyUpgrades(object source)
         {
-
+            ChooseBackground();
             string ammoLevelMsg = "Ammo Level: " + activePlayers[0].Ammo_Level;
             string armourLevelMsg = "Armour Level: " + activePlayers[0].Armour_Level;
             string speedLevelMsg = "Speed Level: " + activePlayers[0].Speed_Level;
@@ -1302,12 +1389,12 @@ namespace AR_Battle_Boats
                 ammoCostMsg = "At Max Level";
             
             if (activePlayers[0].Ammo_Level < 5)
-                armourCostMsg = "Ammo Cost: " + (activePlayers[0].Armour_Level * 150);
+                armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
             else
                 armourCostMsg = "At Max Level";
             
             if (activePlayers[0].Ammo_Level < 5)
-                speedCostMsg = "Ammo Cost: " + (activePlayers[0].Speed_Level * 150);
+                speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
             else
                 speedCostMsg = "At Max Level";
 
@@ -1369,6 +1456,7 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleBack(object source)
         {
+            ChooseBackground();
             frame.RemoveChild(lob);
 
             G2DComponent comp = (G2DComponent)source;
@@ -1382,7 +1470,7 @@ namespace AR_Battle_Boats
 
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store")
+                if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store" && button.Name != "howToPlay")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -1391,10 +1479,10 @@ namespace AR_Battle_Boats
                 {
                     button.Visible = true;
                     button.Enabled = true;
-                    frame.Visible = true;
-                    frame.Enabled = true;
                     frame2.Enabled = false;
                     frame2.Visible = false;
+                    winners.Visible = false;
+                    winners.Enabled = false;
                 }
             }
 
