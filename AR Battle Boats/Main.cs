@@ -231,7 +231,7 @@ namespace AR_Battle_Boats
                         {
                             RotateAnimation(obj);
                         }
-                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
+                        //obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
                     }
                 }
 
@@ -555,11 +555,16 @@ namespace AR_Battle_Boats
             gameMode = GameMode.Menu;
 
             int x;
-            for (x = 11; x < scene.RootNode.Children.Count; x++)
+            for (x = 10; x < scene.RootNode.Children.Count; x++)
             {
                 scene.RootNode.RemoveChildAt(x);
             }
 
+            backgroundMusic.Stop(AudioStopOptions.Immediate);
+            backgroundMusic = soundBank.GetCue("Boom Music");
+            session.Dispose();
+            session = null;
+            HideMainMenu();
             CreateMainMenu();
             Console.WriteLine("Game has ended...");
         }
@@ -948,6 +953,7 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Hiding Main Menu");
             scene.UIRenderer.Remove2DComponent(frame);
+            scene.UIRenderer.Remove2DComponent(frame2);
         }
 
         /// <summary>
@@ -1028,7 +1034,7 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleStartGame(object source)
         {
-            if (gameState == GameState.In_Game)
+            if (gameState == GameState.In_Game || gameState == GameState.Main_Menu)
                 return;
 
             if (gameMode == GameMode.Network_Multiplayer)
@@ -1417,12 +1423,19 @@ namespace AR_Battle_Boats
             explosionSound = soundBank.GetCue("explosion");
 
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+
             if (ActiveGameObjects[0].Health <= 0)
             {
-                if (session.IsHost)
+                if (session != null)
                 {
-                    SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
-                    session.EndGame();
+                    if (session.IsHost)
+                    {
+                        if (session.SessionState == NetworkSessionState.Playing)
+                        {
+                            SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
+                            session.EndGame();
+                        }
+                    }
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
@@ -1447,16 +1460,23 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
         {
+            
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
 
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
             {
-                if (session.IsHost)
+                if (session != null)
                 {
-                    SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
-                    session.EndGame();
+                    if (session.IsHost)
+                    {
+                        if (session.SessionState == NetworkSessionState.Playing)
+                        {
+                            SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
+                            session.EndGame();
+                        }
+                    }
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
@@ -1725,15 +1745,15 @@ namespace AR_Battle_Boats
 
             if (owner.Player_Information.PlayerName == activePlayers[0].PlayerName)
             {
-                AddCollisionCallbackPlayer2(missile,ActiveGameObjects[1]);
+                AddCollisionCallbackPlayer2(ActiveGameObjects[1],missile);
             }
             else
             {
-                AddCollisionCallbackPlayer1(missile,ActiveGameObjects[0]);
+                AddCollisionCallbackPlayer1(ActiveGameObjects[0],missile);
             }
 
             ActiveGameObjects.Add(missile);
-            scene.RootNode.AddChild(ActiveGameObjects[ActiveGameObjects.Count - 1]);
+            scene.RootNode.AddChild(missile);
         }
 
         /// <summary>
@@ -1750,20 +1770,21 @@ namespace AR_Battle_Boats
                     if (obj.flagForRemoval)
                     {
                         scene.RootNode.RemoveChild(obj);
-                        scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
 
+                        /*
                         if (activePlayers[0].PlayerName == obj.Player_Information.PlayerName)
-                        {
-                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
-                            collisionPairsPlayer1.RemoveAt(0);
-                        }
-                        else
                         {
                             ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
                             collisionPairsPlayer2.RemoveAt(0);
                         }
+                        else
+                        {
+                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
+                            collisionPairsPlayer1.RemoveAt(0);
+                        }
+                         */
 
                         break;
                     }
