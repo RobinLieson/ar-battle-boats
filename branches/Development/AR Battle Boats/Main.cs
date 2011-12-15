@@ -135,8 +135,6 @@ namespace AR_Battle_Boats
             scene.BackgroundTexture = Content.Load<Texture2D>("Images\\two");
 
             activePlayers = new List<PlayerInfo>();
-            collisionPairsPlayer1 = new List<NewtonPhysics.CollisionPair>();
-            collisionPairsPlayer2 = new List<NewtonPhysics.CollisionPair>();
 
             this.IsMouseVisible = true; //Set Mouse Visible   
 
@@ -241,7 +239,7 @@ namespace AR_Battle_Boats
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
 
-                if (!MarkerNode2.MarkerFound && !OutOfBounds(ActiveGameObjects[playerIndex]) )
+                if (!MarkerNode2.MarkerFound)
                 {
                     if (ActiveGameObjects[playerIndex].CanFire)
                     {
@@ -257,7 +255,7 @@ namespace AR_Battle_Boats
                 //If this is a local game, update for player 2
                 if (gameMode == GameMode.Local_Multiplayer)
                 {
-                    if (MarkerNode4.MarkerFound && !OutOfBounds(ActiveGameObjects[opponentIndex]) )
+                    if (MarkerNode4.MarkerFound)
                     {
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
@@ -406,6 +404,8 @@ namespace AR_Battle_Boats
         {            
             if (gameMode == GameMode.Network_Multiplayer)
             {
+                AddLobbyToScene();
+
                 packetReader = new PacketReader();
                 packetWriter = new PacketWriter();
 
@@ -425,20 +425,10 @@ namespace AR_Battle_Boats
                     Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                     if (availableSessions.Count > 0)
                     {
-                        try
-                        {
-                            session = NetworkSession.Join(availableSessions[0]);
-                            Console.WriteLine("Session Joined!");
-                        }
-                        catch
-                        {
-                            Console.WriteLine("Could not join session, returning to menu.");
-                        }
+                        session = NetworkSession.Join(availableSessions[0]);
+                        Console.WriteLine("Session Joined!");
                     }
                 }
-
-                if (session != null)
-                    AddLobbyToScene();
             }
 
             else if (gameMode == GameMode.Local_Multiplayer || gameMode == GameMode.Single_Player)
@@ -540,7 +530,11 @@ namespace AR_Battle_Boats
 
             if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
             {
-                playerIndex = activePlayers.Count - 1;  
+                playerIndex = activePlayers.Count - 1;
+                if (playerIndex == 0)
+                    opponentIndex = 1;
+                else
+                    opponentIndex = 0;
             }
         }
 
@@ -551,20 +545,6 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
-            gameState = GameState.Main_Menu;
-            gameMode = GameMode.Menu;
-
-            int x;
-            for (x = 10; x < scene.RootNode.Children.Count; x++)
-            {
-                scene.RootNode.RemoveChildAt(x);
-            }
-
-            backgroundMusic.Stop(AudioStopOptions.Immediate);
-            backgroundMusic = soundBank.GetCue("Boom Music");
-            session.Dispose();
-            session = null;
-            HideMainMenu();
             CreateMainMenu();
             Console.WriteLine("Game has ended...");
         }
@@ -577,12 +557,6 @@ namespace AR_Battle_Boats
         void session_GameStarted(object sender, GameStartedEventArgs e)
         {
             Console.WriteLine("Game has started...");
-
-            if (playerIndex == 0)
-                opponentIndex = 1;
-            else
-                opponentIndex = 0;
-
 
             CreateLights();
             CreateGameObjects();
@@ -633,6 +607,7 @@ namespace AR_Battle_Boats
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
                     {
+
                         messageType = packetReader.ReadString();
 
                         if (messageType == "Attack" || messageType == "Position")
@@ -672,7 +647,7 @@ namespace AR_Battle_Boats
             GameObject obj = ActiveGameObjects[playerIndex];
 
             packetWriter.Write("Attack");
-            packetWriter.Write((double)obj.Pitch);
+            packetWriter.Write(obj.Rotation);
             packetWriter.Write(obj.Translation);
 
             // Send it to everyone.
@@ -953,7 +928,6 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Hiding Main Menu");
             scene.UIRenderer.Remove2DComponent(frame);
-            scene.UIRenderer.Remove2DComponent(frame2);
         }
 
         /// <summary>
@@ -1034,7 +1008,7 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleStartGame(object source)
         {
-            if (gameState == GameState.In_Game || gameState == GameState.Main_Menu)
+            if (gameState == GameState.In_Game)
                 return;
 
             if (gameMode == GameMode.Network_Multiplayer)
@@ -1419,23 +1393,21 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer1(NewtonPhysics.CollisionPair pair)
         {
+            if (getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y) > 8)
+                return;
+
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
 
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
-
             if (ActiveGameObjects[0].Health <= 0)
             {
-                if (session != null)
+                if (session.IsHost)
                 {
-                    if (session.IsHost)
-                    {
-                        if (session.SessionState == NetworkSessionState.Playing)
-                        {
-                            SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
-                            session.EndGame();
-                        }
-                    }
+                    SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
+                    session.EndGame();
                 }
             }
             Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
@@ -1460,23 +1432,21 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
         {
-            
+            if (getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y) > 8)
+                return;
+
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
 
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
             ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
             if (ActiveGameObjects[1].Health <= 0)
             {
-                if (session != null)
+                if (session.IsHost)
                 {
-                    if (session.IsHost)
-                    {
-                        if (session.SessionState == NetworkSessionState.Playing)
-                        {
-                            SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
-                            session.EndGame();
-                        }
-                    }
+                    SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
+                    session.EndGame();
                 }
             }
             Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
@@ -1526,6 +1496,8 @@ namespace AR_Battle_Boats
         private void CreateGameObjects()
         {
             ActiveGameObjects = new List<GameObject>();
+            collisionPairsPlayer1 = new List<NewtonPhysics.CollisionPair>();
+            collisionPairsPlayer2 = new List<NewtonPhysics.CollisionPair>();
             int index = 0;
 
             foreach (PlayerInfo player in activePlayers)
@@ -1743,17 +1715,28 @@ namespace AR_Battle_Boats
             missile.Geometry.Physics.Shape = ShapeType.Box;
             missile.Geometry.Material = owner.Geometry.Material;
 
-            if (owner.Player_Information.PlayerName == activePlayers[0].PlayerName)
+            foreach (GameObject obj in ActiveGameObjects)
             {
-                AddCollisionCallbackPlayer2(ActiveGameObjects[1],missile);
-            }
-            else
-            {
-                AddCollisionCallbackPlayer1(ActiveGameObjects[0],missile);
+                if (obj.Name != "Missile")
+                {
+                    if (owner.Player_Information.PlayerName != obj.Player_Information.PlayerName)
+                    {
+                        if (ActiveGameObjects[0].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        {
+                            //Console.WriteLine("Added collision callback player 1");
+                            AddCollisionCallbackPlayer2(obj, missile);
+                        }
+                        else if (ActiveGameObjects[1].Player_Information.PlayerName == obj.Player_Information.PlayerName)
+                        {
+                            //Console.WriteLine("Added collision callback player 2");
+                            AddCollisionCallbackPlayer1(obj, missile);
+                        }
+                    }
+                }
             }
 
             ActiveGameObjects.Add(missile);
-            scene.RootNode.AddChild(missile);
+            scene.RootNode.AddChild(ActiveGameObjects[ActiveGameObjects.Count - 1]);
         }
 
         /// <summary>
@@ -1769,12 +1752,16 @@ namespace AR_Battle_Boats
                 {
                     if (obj.flagForRemoval)
                     {
+                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
+                        scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
 
-                        /*
-                        if (activePlayers[0].PlayerName == obj.Player_Information.PlayerName)
+                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        if (obj.Player_Information.PlayerName == activePlayers[0].PlayerName)
                         {
                             ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
                             collisionPairsPlayer2.RemoveAt(0);
@@ -1784,8 +1771,6 @@ namespace AR_Battle_Boats
                             ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
                             collisionPairsPlayer1.RemoveAt(0);
                         }
-                         */
-
                         break;
                     }
                 }
@@ -1818,6 +1803,22 @@ namespace AR_Battle_Boats
 
                 player.UpdateRotationByYawPitchRoll();
             }        
+        }
+
+        /// <summary>
+        /// Return the distance between two points
+        /// </summary>
+        /// <param name="a">Point A</param>
+        /// <param name="b">Point B</param>
+        /// <returns></returns>
+        public static double getDistance(double x1, double y1, double x2, double y2)
+        {
+            double distance = 0;
+            double x = Math.Abs(Math.Pow((x1-x2),2));
+            double y = Math.Abs(Math.Pow((y1-y2),2));
+            distance = Math.Sqrt(x + y);
+
+            return distance;
         }
     }
 }
