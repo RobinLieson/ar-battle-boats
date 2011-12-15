@@ -38,7 +38,7 @@ namespace BattleBoatsServer
 
             this.tcpListener = new TcpListener(IPAddress.Any, 3550);
             this.listenerThread = new Thread(new ThreadStart(ListenForClients));
-            this.listenerThread.Start(); 
+            this.listenerThread.Start();
         }
 
         /// <summary>
@@ -53,30 +53,20 @@ namespace BattleBoatsServer
         /// <summary>
         /// This thread listens for incoming connections
         /// </summary>
-        private void ListenForClients(){
+        private void ListenForClients()
+        {
             tcpClientConnected.Reset();
             this.tcpListener.Start();
             while (active)
-            {               
-
-<<<<<<< .mine
+            {
                 try
                 {
                     //blocks until a client has connected to the server
                     TcpClient client = this.tcpListener.AcceptTcpClient();
-=======
-                //blocks until a client has connected to the server
-                tcpListener.BeginAcceptTcpClient(new AsyncCallback(HandleConnection), tcpListener);
->>>>>>> .r54
-
-<<<<<<< .mine
+                    //blocks until a client has connected to the server
+                    tcpListener.BeginAcceptTcpClient(new AsyncCallback(HandleConnection), tcpListener);
                     Console.WriteLine("Client Connected");
-=======
-                tcpClientConnected.WaitOne();
-            }
->>>>>>> .r54
-
-<<<<<<< .mine
+                    tcpClientConnected.WaitOne();
                     //create a thread to handle communication 
                     //with connected client
                     Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
@@ -87,10 +77,8 @@ namespace BattleBoatsServer
                     Console.WriteLine("Error in Server");
                     Console.WriteLine("Server Shutting Down");
                 }
-            } 
-=======
+            }
             tcpListener.Stop();
->>>>>>> .r54
         }
 
         /// <summary>
@@ -168,7 +156,7 @@ namespace BattleBoatsServer
                 Console.WriteLine("GamerTag = " + gamerID);
                 PlayerInfo info = GetPlayerInfo(gamerID);
                 byte[] infoBytes = encoder.GetBytes(info.ToString());
-                clientStream.Write(infoBytes,0,encoder.GetByteCount(info.ToString()));
+                clientStream.Write(infoBytes, 0, encoder.GetByteCount(info.ToString()));
                 clientStream.Flush();
             }
 
@@ -187,10 +175,10 @@ namespace BattleBoatsServer
             String select = "SELECT * FROM PlayerInfo WHERE UserName = \'" + tag + "\'";
 
             SqlCeDataAdapter adapter = new SqlCeDataAdapter(select, conn);
-            adapter.Fill(dataset,"PlayerInfo");
+            adapter.Fill(dataset, "PlayerInfo");
 
-            
-            if(dataset.PlayerInfo.Rows.Count == 0)//New user, create table entries for them
+
+            if (dataset.PlayerInfo.Rows.Count == 0)//New user, create table entries for them
             {
                 BattleBoatsDataSet.PlayerInfoRow playerrow = dataset.PlayerInfo.NewPlayerInfoRow();
                 playerrow.UserName = tag;
@@ -231,6 +219,9 @@ namespace BattleBoatsServer
             SqlCeDataAdapter adapter = new SqlCeDataAdapter(select, conn);
             adapter.Fill(dataset, "PlayerInfo");
 
+            SqlCeCommandBuilder builder = new SqlCeCommandBuilder(adapter);
+            string update = builder.GetUpdateCommand().CommandText;
+
             if (dataset.PlayerInfo.Rows.Count == 1)//New user, create table entries for them
             {
                 dataset.PlayerInfo.Rows[0]["UserName"] = newInfo.PlayerName;
@@ -239,11 +230,6 @@ namespace BattleBoatsServer
                 dataset.PlayerInfo.Rows[0]["Money"] = newInfo.Money;
                 dataset.PlayerInfo.Rows[0]["SpeedUpgrades"] = newInfo.Speed_Level;
                 dataset.PlayerInfo.Rows[0]["ShipModel"] = newInfo.Ship_Model_Name;
-
-                SqlCeCommandBuilder builder = new SqlCeCommandBuilder(adapter);
-                builder.QuotePrefix = "[";
-                builder.QuoteSuffix = "]";
-
                 adapter.Update(dataset, "PlayerInfo");
             }
         }
