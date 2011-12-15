@@ -224,17 +224,16 @@ namespace AR_Battle_Boats
                     if (obj.Name == "Player Ship")
                     {
                         obj.Cool_Down--;
-
-                        if (OutOfBounds(obj) == true)
-                        {
-                            RotateAnimation(obj);
-                        }
-                        //obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
                     }
                 }
 
                 //Update for the local player, his shooting, moving, etc...
-                if (MarkerNode1.MarkerFound)
+                if( OutOfBounds(ActiveGameObjects[playerIndex])){
+
+                    UpdateRotation(ActiveGameObjects[playerIndex],Vector3.Zero);
+
+                }else if (MarkerNode1.MarkerFound)
                 {                   
                     UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
                 }
@@ -255,7 +254,11 @@ namespace AR_Battle_Boats
                 //If this is a local game, update for player 2
                 if (gameMode == GameMode.Local_Multiplayer)
                 {
-                    if (MarkerNode4.MarkerFound)
+                    if (OutOfBounds(ActiveGameObjects[1]))
+                    {
+                        UpdateRotation(ActiveGameObjects[1], Vector3.Zero);
+                    }
+                    else if (MarkerNode4.MarkerFound)
                     {
                         UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
                     }
@@ -531,10 +534,6 @@ namespace AR_Battle_Boats
             if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
             {
                 playerIndex = activePlayers.Count - 1;
-                if (playerIndex == 0)
-                    opponentIndex = 1;
-                else
-                    opponentIndex = 0;
             }
         }
 
@@ -557,6 +556,11 @@ namespace AR_Battle_Boats
         void session_GameStarted(object sender, GameStartedEventArgs e)
         {
             Console.WriteLine("Game has started...");
+
+            if (playerIndex == 0)
+                opponentIndex = 1;
+            else
+                opponentIndex = 0;
 
             CreateLights();
             CreateGameObjects();
@@ -1393,9 +1397,15 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer1(NewtonPhysics.CollisionPair pair)
         {
-            if (getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
-                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y) > 8)
+            double distance = getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y);
+            
+            Console.WriteLine("Distance = " + distance);
+            
+            if (distance > 10)
                 return;
+
+            Console.WriteLine("Hit!");
 
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
@@ -1432,9 +1442,15 @@ namespace AR_Battle_Boats
         /// <param name="pair"></param>
         private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
         {
-            if (getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
-                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y) > 8)
+            double distance = getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y);
+
+            Console.WriteLine("Distance = " + distance);
+
+            if (distance > 10)
                 return;
+
+            Console.WriteLine("Hit!");
 
             explosionSound.Play();
             explosionSound = soundBank.GetCue("explosion");
@@ -1788,7 +1804,6 @@ namespace AR_Battle_Boats
         /// <param name="player"></param>
         private void RotateAnimation(GameObject player)
         {
-
             Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
             Vector3 pos = player.Translation + rotation.Backward;
             double slope = findSlope(player.Translation.X, player.Translation.Y, pos.X, pos.Y);
@@ -1796,13 +1811,15 @@ namespace AR_Battle_Boats
             float angleDirection = (float)Math.Atan(slope);
             angleDirection = MathHelper.ToDegrees(angleDirection);
 
+            /*
             if (OutOfBounds(player) == true)
             {
                 angleDirection += 180;
                 player.Pitch += .1f;
 
                 player.UpdateRotationByYawPitchRoll();
-            }        
+            } 
+             */ 
         }
 
         /// <summary>
