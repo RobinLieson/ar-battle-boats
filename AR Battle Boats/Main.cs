@@ -218,6 +218,25 @@ namespace AR_Battle_Boats
                         {
                             obj.flagForRemoval = true;
                         }
+                        else
+                        {
+                            if (obj.Player_Information.PlayerName == ActiveGameObjects[0].Player_Information.PlayerName)
+                            {
+                                if (CheckCollision(obj, ActiveGameObjects[1]))
+                                {
+                                    RegisterHitOnPlayer(1);
+                                    obj.flagForRemoval = true;
+                                }
+                            }
+                            else if (obj.Player_Information.PlayerName == ActiveGameObjects[1].Player_Information.PlayerName)
+                            {
+                                if (CheckCollision(obj, ActiveGameObjects[0]))
+                                {
+                                    RegisterHitOnPlayer(0);
+                                    obj.flagForRemoval = true;
+                                }
+                            }
+                        }
                     }
 
                     //Update the player ships
@@ -1425,6 +1444,57 @@ namespace AR_Battle_Boats
         //Physics Functions
 
         /// <summary>
+        /// Checks for collission between two game objects
+        /// </summary>
+        /// <param name="obj1"></param>
+        /// <param name="obj2"></param>
+        /// <returns>True if collission is detected, False otherwise</returns>
+        private bool CheckCollision(GameObject obj1, GameObject obj2)
+        {
+           double distance = getDistance(obj1.Translation.X, obj1.Translation.Y,
+                obj2.Translation.X, obj2.Translation.Y);
+            
+            //Console.WriteLine("Distance = " + distance);
+
+            if (distance > 3)
+                return false;
+            else
+                return true;
+        }
+
+
+        private void RegisterHitOnPlayer(int index)
+        {
+            explosionSound.Play();
+            explosionSound = soundBank.GetCue("explosion");
+
+            ActiveGameObjects[index].Health -= 10 - ActiveGameObjects[index].Player_Information.Armour_Level;
+            if (ActiveGameObjects[index].Health <= 0)
+            {
+                if (session != null)
+                {
+                    if (session.IsHost)
+                    {
+                        if (index == playerIndex)
+                        {
+                            SendGameOver(activePlayers[opponentIndex].PlayerName);
+                        }
+                        else
+                        {
+                            SendGameOver(activePlayers[playerIndex].PlayerName);
+                        }
+                        session.EndGame();
+                        session.Update();
+                    }
+                }
+            }
+            Console.WriteLine("Player " + index+1 + " Hit!  Health is at " + ActiveGameObjects[index].Health);
+            player1_hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
+        }
+
+
+        /*
+        /// <summary>
         /// Called whenever a collision occurs
         /// </summary>
         /// <param name="pair"></param>
@@ -1543,7 +1613,7 @@ namespace AR_Battle_Boats
             ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer2);
             collisionPairsPlayer2.Add(pair);
         }
-
+        */
 
         //********************Game Logic Functions********************************//
 
@@ -1791,7 +1861,7 @@ namespace AR_Battle_Boats
             missile.Geometry = missileNode;
 
             missile.Geometry.AddToPhysicsEngine = true;
-            missile.Geometry.Physics.Shape = ShapeType.Box;
+            //missile.Geometry.Physics.Shape = ShapeType.Box;
             missile.Geometry.Material = owner.Geometry.Material;
 
             foreach (GameObject obj in ActiveGameObjects)
@@ -1803,12 +1873,12 @@ namespace AR_Battle_Boats
                         if (ActiveGameObjects[0].Player_Information.PlayerName == missile.Player_Information.PlayerName)
                         {
                             //Console.WriteLine("Added collision callback player 1");
-                            AddCollisionCallbackPlayer2(obj, missile);
+                            //AddCollisionCallbackPlayer2(obj, missile);
                         }
                         else if (ActiveGameObjects[1].Player_Information.PlayerName == missile.Player_Information.PlayerName)
                         {
                             //Console.WriteLine("Added collision callback player 2");
-                            AddCollisionCallbackPlayer1(obj, missile);
+                            //AddCollisionCallbackPlayer1(obj, missile);
                         }
                     }
                 }
@@ -1834,7 +1904,7 @@ namespace AR_Battle_Boats
                         Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
                             "  Scene objects: " + scene.RootNode.Children.Count);
                         scene.RootNode.RemoveChild(obj);
-                        scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
+                        //scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
                         ActiveGameObjects.Remove(obj);
                         objRemoved = true;
 
@@ -1842,13 +1912,13 @@ namespace AR_Battle_Boats
                             "  Scene objects: " + scene.RootNode.Children.Count);
                         if (obj.Player_Information.PlayerName == activePlayers[0].PlayerName)
                         {
-                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
-                            collisionPairsPlayer2.RemoveAt(0);
+                            //((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
+                            //collisionPairsPlayer2.RemoveAt(0);
                         }
                         else
                         {
-                            ((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
-                            collisionPairsPlayer1.RemoveAt(0);
+                            //((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
+                            //collisionPairsPlayer1.RemoveAt(0);
                         }
                         break;
                     }
