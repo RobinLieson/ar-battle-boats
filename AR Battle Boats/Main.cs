@@ -1041,7 +1041,7 @@ namespace AR_Battle_Boats
             moneyLevel.Bounds = new Rectangle(370, 35, 130, 30);
             moneyLevel.Name = "moneyLevel";
             moneyLevel.TextFont = textFont;
-            moneyLevel.TextColor = Color.YellowGreen;
+            moneyLevel.TextColor = Color.ForestGreen;
 
             //////////////////////////////////////////////////////////////////////////////
 
@@ -1468,6 +1468,13 @@ namespace AR_Battle_Boats
                 comp.Enabled = true;
             }
 
+            frame.Enabled = true;
+            frame.Visible = true;
+            frame2.Enabled = false;
+            frame2.Visible = false;
+            winners.Visible = false;
+            winners.Enabled = false;
+
             foreach (G2DButton button in frame.Children)
             {
                 if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store" && button.Name != "howToPlay")
@@ -1479,10 +1486,6 @@ namespace AR_Battle_Boats
                 {
                     button.Visible = true;
                     button.Enabled = true;
-                    frame2.Enabled = false;
-                    frame2.Visible = false;
-                    winners.Visible = false;
-                    winners.Enabled = false;
                 }
             }
 
