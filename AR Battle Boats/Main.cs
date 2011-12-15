@@ -65,6 +65,7 @@ namespace AR_Battle_Boats
         G2DPanel frame;
         G2DPanel frame2;
         G2DPanel winners;//changed
+        G2DPanel howto;
         FadingMessage gwinner;//changed
         Lobby lob;
         List<GameObject> ActiveGameObjects;
@@ -83,6 +84,11 @@ namespace AR_Battle_Boats
         int packetBuffer = 0;
         int countDownTimer = 0;
         string winner;// changed
+        string tutorial1 = "Images\\tutorial1";
+        string tutorial2 = "Images\\tutorial2";
+        string tutorial3= "Images\\tutorial3";
+        string tutorial4 = "Images\\tutorial4";
+    
 
         //Marker Node
         MarkerNode MarkerNode1;
@@ -102,6 +108,9 @@ namespace AR_Battle_Boats
         G2DLabel speedCost;
         G2DLabel armourCost;
         G2DLabel missleCost;
+        G2DButton howtonext;
+        G2DButton howtoback;
+        G2DButton howtomenu;
 
         List<Keys> enteredKeys;
 
@@ -880,6 +889,11 @@ namespace AR_Battle_Boats
             winners.Border = GoblinEnums.BorderFactory.LineBorder;
             winners.Transparency = 0f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
 
+            howto = new G2DPanel();
+            howto.Bounds = new Rectangle(250, 175, 650, 400);
+            howto.Texture = Content.Load<Texture2D>(tutorial1);
+            howto.Border = GoblinEnums.BorderFactory.LineBorder;
+            howto.Transparency = 1f;
 
             G2DButton localPlay = new G2DButton("Local Play");
             localPlay.Bounds = new Rectangle(120, 30, 100, 30);
@@ -1004,6 +1018,31 @@ namespace AR_Battle_Boats
             upgradeMissle.HighlightColor = Color.Red;
             upgradeMissle.ActionPerformedEvent += new ActionPerformed(upgradeMissle_ActionPerformedEvent);
 
+            howtonext = new G2DButton("Next");
+            howtonext.Bounds = new Rectangle(225, 350, 130, 30);
+            howtonext.Name = "howtonext";
+            howtonext.TextFont = textFont;
+            howtonext.Texture = Content.Load<Texture2D>("Images\\three");
+            howtonext.HighlightColor = Color.Red;
+            //change
+            howtonext.ActionPerformedEvent += new ActionPerformed(howtonext_ActionPerformedEvent);
+
+            howtomenu = new G2DButton("Main Menu");
+            howtomenu.Bounds = new Rectangle(450, 350, 130, 30);
+            howtomenu.Name = "howtonext";
+            howtomenu.TextFont = textFont;
+            howtomenu.Texture = Content.Load<Texture2D>("Images\\three");
+            howtomenu.HighlightColor = Color.Red;
+            //change
+            howtomenu.ActionPerformedEvent += new ActionPerformed(howtomenu_ActionPerformedEvent);
+
+            howtoback = new G2DButton("Back");
+            howtoback.Bounds = new Rectangle(25, 350, 130, 30);
+            howtoback.Name = "howtoback";
+            howtoback.TextFont = textFont;
+            howtoback.Texture = Content.Load<Texture2D>("Images\\three");
+            howtoback.HighlightColor = Color.Red;
+            howtoback.ActionPerformedEvent += new ActionPerformed(howtoback_ActionPerformedEvent);
 
             missleLevel = new G2DLabel();
             missleLevel.Bounds = new Rectangle(170, 115, 130, 30);
@@ -1048,6 +1087,7 @@ namespace AR_Battle_Boats
             scene.UIRenderer.Add2DComponent(frame);
             scene.UIRenderer.Add2DComponent(frame2);
             scene.UIRenderer.Add2DComponent(winners);// added this
+            scene.UIRenderer.Add2DComponent(howto);
 
             frame.AddChild(localPlay);
             frame.AddChild(networkPlay);
@@ -1074,6 +1114,9 @@ namespace AR_Battle_Boats
             frame2.AddChild(missleCost);
             frame2.AddChild(speedCost);
             frame2.AddChild(armourCost);
+            howto.AddChild(howtonext);
+            howto.AddChild(howtoback);
+            howto.AddChild(howtomenu);
 
             localPlay.Enabled = true;
             networkPlay.Enabled = true;
@@ -1100,6 +1143,14 @@ namespace AR_Battle_Boats
             upgradeArmour.Visible = false;
             upgradeMissle.Visible = false;
             howToPlay.Visible = true;
+            howto.Visible = false;
+            howto.Enabled = false;
+            howtonext.Visible = false;
+            howtonext.Enabled = false;
+            howtoback.Visible = false;
+            howtoback.Enabled = false;
+            howtomenu.Visible = false;
+            howtomenu.Enabled = false;
         }
 
         /// <summary>
@@ -1108,7 +1159,76 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         void howToPlay_ActionPerformedEvent(object source)
         {
+            HideMainMenu();
+            howto.Visible = true;
+            howto.Enabled = true;
+        }
 
+        void howtonext_ActionPerformedEvent(object source)
+         {
+           
+         
+            if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
+            {
+                howtonext.Visible = true;
+                howtoback.Visible = true;
+                howto.Texture = Content.Load<Texture2D>(tutorial2);
+            }else
+
+            if (howto.Texture == Content.Load<Texture2D>(tutorial2))
+            {
+                howto.Texture = Content.Load<Texture2D>(tutorial3);
+                howtonext.Visible = true;
+                howtoback.Visible = true;
+            }else
+            if (howto.Texture == Content.Load<Texture2D>(tutorial3))
+            {
+                howto.Texture = Content.Load<Texture2D>(tutorial4);
+                howtonext.Visible = false;
+                howtoback.Visible = true;
+            }
+        }
+
+        void howtoback_ActionPerformedEvent(object source)
+        {
+            if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
+            {
+                howtoback.Visible = false;
+                howtonext.Visible = true;
+            }
+            else
+                if (howto.Texture == Content.Load<Texture2D>(tutorial2))
+                {
+                    howtonext.Visible = true;
+                    howtoback.Visible = true;
+                    howto.Texture = Content.Load<Texture2D>(tutorial1);
+                }
+                else
+                    if (howto.Texture == Content.Load<Texture2D>(tutorial3))
+                    {
+                        howto.Texture = Content.Load<Texture2D>(tutorial2);
+                        howtoback.Visible = true;
+                        howtonext.Visible = true;
+                    }else
+                        if (howto.Texture == Content.Load<Texture2D>(tutorial4))
+                        {
+                            howtonext.Visible = true;
+                            howtoback.Visible = true;
+                            howto.Texture = Content.Load<Texture2D>(tutorial3);
+                        }
+        }
+
+        void howtomenu_ActionPerformedEvent(object source)
+        {
+            howtonext.Enabled = false;
+            howtonext.Visible = false;
+            howtoback.Enabled = false;
+            howtoback.Visible = false;
+            howtomenu.Enabled = false;
+            howtomenu.Visible= false;
+            howto.Enabled = false;
+            howto.Visible = false;
+            CreateMainMenu();
         }
 
         /// <summary>
