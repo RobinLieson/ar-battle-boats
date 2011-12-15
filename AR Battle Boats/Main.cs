@@ -226,6 +226,13 @@ namespace AR_Battle_Boats
 
             if (gameState == GameState.Main_Menu)
             {
+
+                if (menuMusic.IsStopped)
+                {
+                    menuMusic = soundBank.GetCue("Plunder");
+                    menuMusic.Play();
+                }
+
                 if (gwinner != null)
                 {
                     if (!gwinner.Update())
@@ -409,8 +416,8 @@ namespace AR_Battle_Boats
             Camera camera = new Camera();
             // Put the camera at (0, 0, 10)
 
-            camera.Translation = new Vector3(0, 80, 0);
-            //camera.Translation = new Vector3(0, 50, 0);
+            //camera.Translation = new Vector3(0, 80, 0);
+            camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
             //camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
             // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
