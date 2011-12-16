@@ -23,9 +23,11 @@ namespace AR_Battle_Boats
     {
         Main_Menu,
         Game_Load,
+        Calibrating,
         In_Game,
         Joining,
-        Hosting
+        Hosting,
+        Count_Down
     }
 
     /// <summary>
@@ -36,5 +38,14 @@ namespace AR_Battle_Boats
         Round_Shot,
         Grape_Shot,
         Chain_Shot
+    }
+
+    /// <summary>
+    /// The network locatin of a player
+    /// </summary>
+    public enum Player_Location
+    {
+        Local,
+        Remote
     }
 }
