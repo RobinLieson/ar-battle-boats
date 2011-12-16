@@ -46,14 +46,14 @@ namespace AR_Battle_Boats
     /// </summary>
     public class Main : Microsoft.Xna.Framework.Game
     {
-        string SERVER_IP = "127.0.0.1";
+        string SERVER_IP = "www.thenewzerov.com";
         int SERVER_PORT_NUM = 3550;
 
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont textFont;
-        PlayerInfo playerInfo1; //Information for Player 1
+        SpriteFont hudFont;
         Scene scene;
         GameMode gameMode;
         GameState gameState;
@@ -62,12 +62,35 @@ namespace AR_Battle_Boats
         List<PlayerInfo> activePlayers;
         PacketWriter packetWriter; //For writing to the network
         PacketReader packetReader; //For reading from the network
-        GeometryNode playerGeometryNode;
-        TransformNode playerTransformNode;
         G2DPanel frame;
+        G2DPanel frame2;
+        G2DPanel winners;//changed
+        G2DPanel howto;
+        FadingMessage gwinner;//changed
+        Lobby lob;
+        List<GameObject> ActiveGameObjects;
+        Model missileModel;
+        AudioEngine audioEngine;
+        SoundBank soundBank;
+        WaveBank waveBank;
+        Cue backgroundMusic;
+        Cue explosionSound;
+        Cue menuMusic;
+        HUD player1_hud;
+        HUD player2_hud;
+        KeyboardState oldState;
+        int playerIndex = 0;
+        int opponentIndex = 0;
+        int packetBuffer = 0;
+        int countDownTimer = 0;
+        string winner;// changed
+        string tutorial1 = "Images\\tutorial1";
+        string tutorial2 = "Images\\tutorial2";
+        string tutorial3= "Images\\tutorial3";
+        string tutorial4 = "Images\\tutorial4";
+    
 
-        //Markers initialization starts here
-        MarkerNode groundMarkerNode, toolbarMarkerNode;
+        //Marker Node
         MarkerNode MarkerNode1;
         MarkerNode MarkerNode2;
         MarkerNode MarkerNode3;
@@ -76,30 +99,20 @@ namespace AR_Battle_Boats
         MarkerNode MarkerNode6;
         MarkerNode MarkerNode7;
 
-        GeometryNode boxNode;
+        G2DLabel armourLevel;
+        G2DLabel speedLevel;
+        G2DLabel missleLevel;
 
-        GeometryNode cylinderNode1;
-        GeometryNode cylinderNode2;
-        GeometryNode cylinderNode3;
-        GeometryNode cylinderNode4;
+        G2DLabel moneyLevel;
 
-        GeometryNode sphereNode;
+        G2DLabel speedCost;
+        G2DLabel armourCost;
+        G2DLabel missleCost;
+        G2DButton howtonext;
+        G2DButton howtoback;
+        G2DButton howtomenu;
 
-        bool useStaticImage = false;
-
-        GeometryNode allShapesNode;
-        TransformNode allShapesTransNode;
-        Material allShapesMat;
-
-        int[] ids1;
-        int[] ids2;
-        int[] ids3;
-        int[] ids4;
-        int[] ids5;
-        int[] ids6;
-        int[] ids7;
-        
-        // Markers ini ends here
+        List<Keys> enteredKeys;
 
         public Main()
         {
@@ -118,8 +131,12 @@ namespace AR_Battle_Boats
             Components.Add(new GamerServicesComponent(this));
 
             //Init Goblin, Create and setup scene
-            State.InitGoblin(graphics, Content, "");          
-            scene = new Scene(this);
+            State.InitGoblin(graphics, Content, "");
+            scene = new Scene(this); 
+
+            graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 768;
+            graphics.ApplyChanges();
 
             scene.BackgroundColor = Color.DarkBlue;
 
@@ -127,16 +144,25 @@ namespace AR_Battle_Boats
             State.ThreadOption = (ushort)ThreadOptions.MarkerTracking;
             scene.PreferPerPixelLighting = true;
 
+
+            activePlayers = new List<PlayerInfo>();
+
             this.IsMouseVisible = true; //Set Mouse Visible   
 
             CreateCamera();
-            
+
+            audioEngine = new AudioEngine("Content\\Sound\\arbattleboatssounds.xgs");
+            soundBank = new SoundBank(audioEngine, "Content\\Sound\\BattleBoatsSoundBank.xsb");
+            waveBank = new WaveBank(audioEngine, "Content\\Sound\\BattleBoatsWaveBank.xwb");
+            menuMusic = soundBank.GetCue("Plunder");
             base.Initialize();
-            
+
             gameState = GameState.Main_Menu;
             gameMode = GameMode.Menu;
-
+            ChooseBackground();
             DisplayMainMenu();
+
+            enteredKeys = new List<Keys>();
         }
 
         /// <summary>
@@ -146,6 +172,7 @@ namespace AR_Battle_Boats
         protected override void LoadContent()
         {
             textFont = Content.Load<SpriteFont>("Fonts//uiFont");
+            hudFont = Content.Load<SpriteFont>("Fonts//Arial-24-Vector");
 
             CreateShips();
 
@@ -169,24 +196,180 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+
+            KeyboardState state = Keyboard.GetState();
+            if (state.IsKeyUp(Keys.Up) && oldState.IsKeyDown(Keys.Up))
+                enteredKeys.Add(Keys.Up);
+            if (state.IsKeyUp(Keys.Down) && oldState.IsKeyDown(Keys.Down))
+                enteredKeys.Add(Keys.Down);
+            if (state.IsKeyUp(Keys.Left) && oldState.IsKeyDown(Keys.Left))
+                enteredKeys.Add(Keys.Left);
+            if (state.IsKeyUp(Keys.Right) && oldState.IsKeyDown(Keys.Right))
+                enteredKeys.Add(Keys.Right);
+            if (state.IsKeyUp(Keys.B) && oldState.IsKeyDown(Keys.B))
+                enteredKeys.Add(Keys.B);
+            if (state.IsKeyUp(Keys.A) && oldState.IsKeyDown(Keys.A))
+                enteredKeys.Add(Keys.A);
+            CheckCheatCode();
+            oldState = state;
             //Check to see if the Gamer is Signed In
             if (SignedInGamer.SignedInGamers.Count < 1)
             {
                 if (!Guide.IsVisible)
-                {
                     Guide.ShowSignIn(1, true);
-                }
             }
-            else
+            else if (activePlayers.Count < 1)
             {
                 GetPlayerInfo();
+            }
+
+
+            if (gameState == GameState.Main_Menu)
+            {
+
+                if (menuMusic.IsStopped)
+                {
+                    menuMusic = soundBank.GetCue("Plunder");
+                    menuMusic.Play();
+                }
+
+                if (gwinner != null)
+                {
+                    if (!gwinner.Update())
+                    {
+                        scene.UIRenderer.Remove2DComponent(winners);
+                        winners.RemoveChild(gwinner);
+                        gwinner = null;
+                    }
+                }
+            }
+
+
+
+            //If joining a game, make sure you have all your markers
+            if (gameState == GameState.Calibrating)
+            {
+                CheckReady();
+            }
+
+            if (gameState == GameState.Count_Down)
+            {
+                if (gwinner != null)
+                {
+                    if (!gwinner.Update())
+                    {
+                        scene.UIRenderer.Remove2DComponent(winners);
+                        winners.RemoveChild(gwinner);
+                        gwinner = null;
+                    }
+                }
+
+                if (countDownTimer > 0)
+                {
+                    countDownTimer--;
+                }
+                else
+                {
+                    backgroundMusic = soundBank.GetCue("Boom Music");
+                    backgroundMusic.Play();
+                    gameState = GameState.In_Game;
+                }
             }
 
             //Code for playing a match
             if (gameState == GameState.In_Game)
             {
-                if(gameMode == GameMode.Network_Multiplayer)
+                foreach (GameObject obj in ActiveGameObjects)
+                {
+                    //Update missle positions, remove any out of bounds ones
+                    if (obj.Name == "Missile")
+                    {
+                        obj.MoveObjectForward(10);
+                        if (OutOfBounds(obj))
+                        {
+                            obj.flagForRemoval = true;
+                        }
+                        else
+                        {
+                            if (obj.Player_Information.PlayerName == ActiveGameObjects[0].Player_Information.PlayerName)
+                            {
+                                if (CheckCollision(obj, ActiveGameObjects[1]))
+                                {
+                                    RegisterHitOnPlayer(1);
+                                    obj.flagForRemoval = true;
+                                }
+                            }
+                            else if (obj.Player_Information.PlayerName == ActiveGameObjects[1].Player_Information.PlayerName)
+                            {
+                                if (CheckCollision(obj, ActiveGameObjects[0]))
+                                {
+                                    RegisterHitOnPlayer(0);
+                                    obj.flagForRemoval = true;
+                                }
+                            }
+                        }
+                    }
+
+                    //Update the player ships
+                    if (obj.Name == "Player Ship")
+                    {
+                        obj.Cool_Down--;
+                        obj.MoveObjectForward(obj.Player_Information.Speed_Level+2);
+                    }
+                }
+
+                //Update for the local player, his shooting, moving, etc...
+                if( OutOfBounds(ActiveGameObjects[playerIndex])){
+
+                    UpdateRotation(ActiveGameObjects[playerIndex],Vector3.Zero);
+
+                }else if (MarkerNode1.MarkerFound)
+                {                   
+                    UpdateRotation(ActiveGameObjects[playerIndex], MarkerNode1.WorldTransformation.Translation);
+                }
+
+                if (!MarkerNode2.MarkerFound)
+                {
+                    if (ActiveGameObjects[playerIndex].CanFire)
+                    {
+                        if (gameMode == GameMode.Network_Multiplayer)
+                            SendAttack();
+                        
+                        
+                        Shoot(ActiveGameObjects[playerIndex]);
+                        ActiveGameObjects[playerIndex].Cool_Down = 200;
+                    }                    
+                }
+
+                //If this is a local game, update for player 2
+                if (gameMode == GameMode.Local_Multiplayer)
+                {
+                    if (OutOfBounds(ActiveGameObjects[1]))
+                    {
+                        UpdateRotation(ActiveGameObjects[1], Vector3.Zero);
+                    }
+                    else if (MarkerNode4.MarkerFound)
+                    {
+                        UpdateRotation(ActiveGameObjects[1], MarkerNode4.WorldTransformation.Translation);
+                    }
+
+                    if (!MarkerNode5.MarkerFound)
+                    {
+                        if (ActiveGameObjects[1].CanFire)
+                        {
+                            Shoot(ActiveGameObjects[1]);
+                            ActiveGameObjects[1].Cool_Down = 200;
+                        }
+                    }
+                }
+
+                //Update the network if this is a network game
+                if (gameMode == GameMode.Network_Multiplayer)
                     UpdateNetwork();
+
+                UpdateHUD();
+
+                RemoveInactiveObjects();
             }
 
             if (session != null)
@@ -201,11 +384,6 @@ namespace AR_Battle_Boats
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            if (gameState == GameState.In_Game)
-            {
-                DrawMarkerUpdate();
-            }
-                        
             base.Draw(gameTime);
         }
 
@@ -237,14 +415,16 @@ namespace AR_Battle_Boats
             // Create a camera
             Camera camera = new Camera();
             // Put the camera at (0, 0, 10)
+
+            //camera.Translation = new Vector3(0, 80, 0);
             camera.Translation = new Vector3(0, 50, 0);
             // Rotate the camera -20 degrees about the X axis
-            camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0,1,0), MathHelper.ToRadians(180));
-           // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
+            //camera.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(0, 1, 0), MathHelper.ToRadians(180));
+            // camera.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(-10));
             // Set the vertical field of view to be 45 degrees
             camera.FieldOfViewY = MathHelper.ToRadians(90);
             // Set the near clipping plane to be 0.1f unit away from the camera
-           // camera.ZNearPlane = 0.1f;
+            // camera.ZNearPlane = 0.1f;
             camera.ZNearPlane = 10f;
             // Set the far clipping plane to be 1000 units away from the camera
             camera.ZFarPlane = 1000;
@@ -267,40 +447,47 @@ namespace AR_Battle_Boats
             Ship sailBoat = new Ship();
             sailBoat.Ammo = 0;
             sailBoat.Armour = 0;
-            sailBoat.Boat_Name = "Sailboat";
+            sailBoat.Boat_Name = "Fighter";
             sailBoat.Health = 100;
             sailBoat.Speed = 0;
             sailBoat.Position = Vector3.Zero;
 
             ModelLoader loader = new ModelLoader();
-            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "Ship");
-
+            sailBoat.Player_Ship_Model = (Model)loader.Load("Models//", "fighter");
+            missileModel = (Model)loader.Load("Models//", "missile");
 
             AvailableShips.Add(sailBoat);
 
         }
 
-        /// <summary>
-        /// Add the ship objects to the screen
-        /// </summary>
-        private void AddShipsToScene()
-        {         
+        private void CheckCheatCode()
+        {
 
-            foreach (PlayerInfo player in activePlayers)
-            {
-                playerGeometryNode = new GeometryNode(player.PlayerName);
-                playerGeometryNode.Model = player.Player_Ship.Player_Ship_Model;
-                playerTransformNode = new TransformNode();
-              
-                playerTransformNode.Translation = new Vector3(0, 0, 650);
-                playerTransformNode.Rotation = Quaternion.CreateFromAxisAngle(new Vector3(1,0,0), MathHelper.ToRadians(90));
-                playerGeometryNode.Physics.Shape = GoblinXNA.Physics.ShapeType.Box;
-                playerGeometryNode.AddToPhysicsEngine = true;// Add this sailBoat model to the physics engine
-                playerTransformNode.AddChild(playerGeometryNode);
-                scene.RootNode.AddChild(playerTransformNode);            
-            
-            }
+            if (enteredKeys.Count < 10)
+                return;
 
+
+            if (enteredKeys[0] == Keys.Up)
+                if (enteredKeys[1] == Keys.Up)
+                    if (enteredKeys[2] == Keys.Down)
+                        if (enteredKeys[3] == Keys.Down)
+                            if (enteredKeys[4] == Keys.Left)
+                                if (enteredKeys[5] == Keys.Right)
+                                    if (enteredKeys[6] == Keys.Left)
+                                        if (enteredKeys[7] == Keys.Right)
+                                            if (enteredKeys[8] == Keys.B)
+                                                if (enteredKeys[9] == Keys.A)
+                                                    if (session.IsHost)
+                                                    {
+                                                        SendGameOver(activePlayers[playerIndex].PlayerName);
+                                                        session.EndGame();
+                                                        session.Update();
+                                                        enteredKeys.Clear();
+                                                        return;
+                                                    }
+
+            if (enteredKeys.Count > 0)
+                enteredKeys.RemoveAt(0);
         }
 
         //Networking
@@ -310,52 +497,53 @@ namespace AR_Battle_Boats
         /// </summary>
         private void GetPlayerInfo()
         {
-            if (playerInfo1 == null)
+            PlayerInfo playerInfo1; //Information for Player 1
+
+            playerInfo1 = new PlayerInfo();
+            bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, SERVER_IP, SERVER_PORT_NUM);
+            if (!result)
             {
                 playerInfo1 = new PlayerInfo();
-                bool result = playerInfo1.GetPlayerInfoFromServer(SignedInGamer.SignedInGamers[0].Gamertag, SERVER_IP, SERVER_PORT_NUM);
-                if (!result)
-                {
-                    playerInfo1 = new PlayerInfo();
-                    playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
-                    playerInfo1.Ammo_Level = 0;
-                    playerInfo1.Armour_Level = 0;
-                    playerInfo1.Money = 0;
-                    playerInfo1.Speed_Level = 0;
-                    playerInfo1.Player_Ship = AvailableShips[0];
-                    Console.WriteLine("Creating new profile");
-                    Console.Write(playerInfo1.ToString());
-                }
+                playerInfo1.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                playerInfo1.Ammo_Level = 0;
+                playerInfo1.Armour_Level = 0;
+                playerInfo1.Money = 0;
+                playerInfo1.Speed_Level = 0;
+                playerInfo1.Player_Ship = AvailableShips[0];
+                playerInfo1.PlayerLocation = Player_Location.Local;
+                Console.WriteLine("Creating new profile");
+                Console.Write(playerInfo1.ToString());
             }
 
             playerInfo1.Player_Ship = AvailableShips[0];
+            activePlayers.Add(playerInfo1);
         }
 
         /// <summary>
         /// Setup everything to start a game
         /// </summary>
         private void StartNetworkSession()
-        {
-
-            activePlayers = new List<PlayerInfo>();
-
+        {            
             if (gameMode == GameMode.Network_Multiplayer)
             {
+                AddLobbyToScene();
+
                 packetReader = new PacketReader();
                 packetWriter = new PacketWriter();
 
                 if (gameState == GameState.Hosting)
-                {
+                {                    
                     Console.WriteLine("Hosting a new Network match");
-                    session = NetworkSession.Create(NetworkSessionType.SystemLink, 1, 10);
+                    session = NetworkSession.Create(NetworkSessionType.SystemLink, 1,10,0,null);
                     session.AllowJoinInProgress = true;
+                    session.AllowHostMigration = true;
                 }
                 else if (gameState == GameState.Joining)
                 {
                     Console.WriteLine("Looking for a game to join...");
                     AvailableNetworkSessionCollection availableSessions;
 
-                    availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 2, null);
+                    availableSessions = NetworkSession.Find(NetworkSessionType.SystemLink, 1, null);
                     Console.WriteLine("Found " + availableSessions.Count + " available sessions");
                     if (availableSessions.Count > 0)
                     {
@@ -370,6 +558,7 @@ namespace AR_Battle_Boats
                 Console.WriteLine("Creating a new Local match");
                 session = NetworkSession.Create(NetworkSessionType.Local, 2, 2);
                 session.AllowJoinInProgress = true;
+                session.AllowHostMigration = true;
             }
 
             if (session != null)
@@ -378,6 +567,17 @@ namespace AR_Battle_Boats
                 session.GameEnded += new EventHandler<GameEndedEventArgs>(session_GameEnded);
                 session.GamerJoined += new EventHandler<GamerJoinedEventArgs>(session_GamerJoined);
                 session.GamerLeft += new EventHandler<GamerLeftEventArgs>(session_GamerLeft);
+
+                scene.CameraNode = null;
+                SetupMarkerTracking();
+                CreateMarkers();
+                gameState = GameState.Calibrating;
+            }
+            else
+            {
+                gameState = GameState.Main_Menu;
+                HideMainMenu();
+                CreateMainMenu();
             }
         }
 
@@ -388,6 +588,26 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GamerLeft(object sender, GamerLeftEventArgs e)
         {
+            if (gameState == GameState.Calibrating)
+            {
+                foreach (PlayerInfo player in activePlayers)
+                {
+                    if (player.PlayerName == e.Gamer.Gamertag)
+                    {
+                        Console.WriteLine(e.Gamer.Gamertag + " has left the match");
+                        if (gameMode == GameMode.Network_Multiplayer)
+                        {
+                            lob.RemovePlayerFromLobby(e.Gamer.Gamertag);
+                            activePlayers.Remove(player);
+                        }
+                        return;
+                    }
+                }
+            }
+            else if (gameState == GameState.In_Game)
+            {
+
+            }
         }
 
         /// <summary>
@@ -398,23 +618,42 @@ namespace AR_Battle_Boats
         void session_GamerJoined(object sender, GamerJoinedEventArgs e)
         {
             Console.WriteLine("A new Gamer, " + e.Gamer.Gamertag + " has joined");
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                lob.AddPlayerToLobby(e.Gamer.Gamertag);
+            }
+            foreach (PlayerInfo info in activePlayers)
+            {
+                if (info.PlayerName == e.Gamer.Gamertag)
+                    return;              
+            }            
 
             PlayerInfo player = new PlayerInfo();
             bool result = player.GetPlayerInfoFromServer(e.Gamer.Gamertag, SERVER_IP, SERVER_PORT_NUM);
             if (!result)
             {
                 player = new PlayerInfo();
-                player.PlayerName = SignedInGamer.SignedInGamers[0].Gamertag;
+                player.PlayerName = e.Gamer.Gamertag;
                 player.Ammo_Level = 0;
                 player.Armour_Level = 0;
-                player.Money = 0;
+                player.Money = 10;
                 player.Speed_Level = 0;
                 Console.WriteLine("Creating new profile");
-                Console.Write(playerInfo1.ToString());
+                Console.WriteLine(player.ToString());
             }
-
             player.Player_Ship = AvailableShips[0];
+
+            if (gameMode == GameMode.Network_Multiplayer && e.Gamer.Gamertag != SignedInGamer.SignedInGamers[0].Gamertag)
+                player.PlayerLocation = Player_Location.Remote;
+            else
+                player.PlayerLocation = Player_Location.Local;
+
             activePlayers.Add(player);
+
+            if (player.PlayerName == SignedInGamer.SignedInGamers[0].Gamertag)
+            {
+                playerIndex = activePlayers.Count - 1;
+            }
         }
 
         /// <summary>
@@ -424,7 +663,52 @@ namespace AR_Battle_Boats
         /// <param name="e"></param>
         void session_GameEnded(object sender, GameEndedEventArgs e)
         {
+            string winner;
             Console.WriteLine("Game has ended...");
+            if (ActiveGameObjects[playerIndex].Health > 0)
+            {
+                activePlayers[playerIndex].Money += 250;
+                activePlayers[opponentIndex].Money += 100;
+                winner = activePlayers[playerIndex].PlayerName;
+            }
+            else
+            {
+                activePlayers[playerIndex].Money += 100;
+                activePlayers[opponentIndex].Money += 250;
+                winner = activePlayers[opponentIndex].PlayerName;
+            }
+            if (session.IsHost)
+            {
+                activePlayers[playerIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+                activePlayers[opponentIndex].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+            }
+
+            backgroundMusic.Stop(AudioStopOptions.Immediate);
+            scene.UIRenderer.Remove2DComponent(player1_hud);
+            scene.UIRenderer.Remove2DComponent(player2_hud);
+            HideMainMenu();
+            scene.RootNode.RemoveChildren();
+            session.Dispose();
+            session = null;
+
+
+            backgroundMusic = soundBank.GetCue("Boom Music");
+            gameState = GameState.Main_Menu;
+            gameMode = GameMode.Menu;
+            DisplayMainMenu();
+
+            /*added for winner label*/
+            gwinner = new FadingMessage(winner + " is the Winner and recieves 250 in coins, ENJOY! ", 1000);
+            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
+            gwinner.Name = "gwinner";
+            gwinner.TextFont = hudFont;
+            gwinner.TextColor = Color.ForestGreen;
+            winners.Enabled = true;
+            winners.Visible = true;
+            gwinner.Enabled = true;
+            gwinner.Visible = true;
+            winners.AddChild(gwinner);
+            gwinner.Transparency = 1.0f;
         }
 
         /// <summary>
@@ -436,18 +720,53 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Game has started...");
 
-            SetupMarkerTracking();
+            if (playerIndex == 0)
+                opponentIndex = 1;
+            else
+                opponentIndex = 0;
+
             CreateLights();
-            CreateObjects();
-            CreateGround();
+            CreateGameObjects();
+            CreateHUD();
+            //AddCollisionCallbackShips(ActiveGameObjects[0], ActiveGameObjects[1]);
+            HideMainMenu();
+            menuMusic.Stop(AudioStopOptions.Immediate);
+            countDownTimer = 300;
+            gameState = GameState.Count_Down;
 
-
-            foreach (PlayerInfo player in activePlayers)
+            string color;
+            if (playerIndex == 0)
             {
-                AddShipsToScene();
+                color = "Red";
+            }
+            else
+            {
+                color = "Green";
             }
 
-            gameState = GameState.In_Game;
+            gwinner = new FadingMessage("You are " + color, 1000);
+            gwinner.Bounds = new Rectangle(0, 0, 130, 30);
+            gwinner.Name = "gwinner";
+            gwinner.TextFont = hudFont;
+            if (playerIndex == 0)
+            {
+                color = "Red";
+                gwinner.TextColor = Color.Red;
+            }
+            else
+            {
+                color = "Green";
+                gwinner.TextColor = Color.Green;
+            }
+
+
+            winners.Enabled = true;
+            winners.Visible = true;
+            gwinner.Enabled = true;
+            gwinner.Visible = true;
+            winners.AddChild(gwinner);
+            gwinner.Transparency = 1.0f;
+
         }
 
         /// <summary>
@@ -455,106 +774,345 @@ namespace AR_Battle_Boats
         /// </summary>
         private void UpdateNetwork()
         {
-            foreach (LocalNetworkGamer gamer in session.LocalGamers)
+            //Write data
+            if (packetBuffer <= 0)
             {
-                // Get the tank associated with this player.
-                Ship myShip = activePlayers[0].Player_Ship;
-                // Write the data.
-                packetWriter.Write(myShip.Position);
-                packetWriter.Write(myShip.Health);
-                packetWriter.Write(myShip.Firing);
+                LocalNetworkGamer gamer = session.LocalGamers[0];
+                GameObject obj = ActiveGameObjects[playerIndex];
+
+                packetWriter.Write("Position");
+                packetWriter.Write((double)obj.Pitch);
+                packetWriter.Write(obj.Translation);
 
                 // Send it to everyone.
                 gamer.SendData(packetWriter, SendDataOptions.None);
+
+                packetBuffer = 3;
             }
+            else
+                packetBuffer--;
 
+
+            //Read data
             NetworkGamer remoteGamer;
-
             foreach (LocalNetworkGamer localPlayer in session.LocalGamers)
             {
                 while (localPlayer.IsDataAvailable)
                 {
+                    string messageType;
+                    double rotation = 0.0;
+                    Vector3 translation = new Vector3();
+                    
+
                     localPlayer.ReceiveData(packetReader, out remoteGamer);
                     if (!remoteGamer.IsLocal)
                     {
-                        Vector3 vect = packetReader.ReadVector3();
-                        int health = packetReader.ReadInt32();
-                        bool shooting = packetReader.ReadBoolean();
-                        Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
-                        Console.WriteLine("Pos = " + vect.ToString());
-                        Console.WriteLine("Health = " + health.ToString());
-                        Console.WriteLine("Shooting = " + shooting.ToString());
+
+                        messageType = packetReader.ReadString();
+
+                        if (messageType == "Attack" || messageType == "Position")
+                        {
+                            rotation = packetReader.ReadDouble();
+                            translation = packetReader.ReadVector3();
+
+                            Console.WriteLine("Recieved message from " + remoteGamer.Gamertag);
+                            Console.WriteLine("Rotation = " + rotation.ToString());
+                            Console.WriteLine("Translation = " + translation.ToString());
+
+                            ActiveGameObjects[opponentIndex].Pitch = (float)rotation;
+                            ActiveGameObjects[opponentIndex].UpdateRotationByYawPitchRoll();
+                            ActiveGameObjects[opponentIndex].Translation = translation;
+
+                            if (messageType == "Attack")
+                            {
+                                Shoot(ActiveGameObjects[opponentIndex]);
+                            }
+                        }
+                        else if (messageType == "Game Over")
+                        {
+                            winner = packetReader.ReadString();
+                            Console.WriteLine(winner + " won the game!");
+                        }                    
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Sends a message to other game members that you are attacking
+        /// </summary>
+        private void SendAttack()
+        {
+            LocalNetworkGamer gamer = session.LocalGamers[0];
+            GameObject obj = ActiveGameObjects[playerIndex];
+
+            packetWriter.Write("Attack");
+            packetWriter.Write((double)obj.Pitch);
+            packetWriter.Write(obj.Translation);
+
+            // Send it to everyone.
+            gamer.SendData(packetWriter, SendDataOptions.None);
+        }
+
+        /// <summary>
+        /// Send a message to game clients that game is over
+        /// </summary>
+        private void SendGameOver(string winner)
+        {
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                LocalNetworkGamer gamer = session.LocalGamers[0];
+
+                packetWriter.Write("Game Over");
+                packetWriter.Write(winner);
+
+                // Send it to everyone.
+                gamer.SendData(packetWriter, SendDataOptions.None);
+            }
+            Console.WriteLine(winner + " won the game!");
+        }
+
 
         //Menu Functions
+        /// <summary>
+        /// Randomly chooses a background
+        /// </summary>
+        private void ChooseBackground()
+        {
+            Random rand = new Random();
+            if (rand.Next() % 2 == 0)
+                scene.BackgroundTexture = Content.Load<Texture2D>("Images\\fournew");
+            else
+                scene.BackgroundTexture = Content.Load<Texture2D>("Images\\one");
+        }
 
         /// <summary>
         /// Creates the Menus
         /// </summary>
         private void CreateMainMenu()
         {
+            if (!menuMusic.IsPlaying)
+            {
+                menuMusic = soundBank.GetCue("Plunder");
+                menuMusic.Play();
+            }
+
             // Create the main panel which holds all other GUI components
             frame = new G2DPanel();
-            frame.Bounds = new Rectangle(220, 120, 350, 210);
+            frame.Bounds = new Rectangle(337, 175, 350, 210);
             frame.Border = GoblinEnums.BorderFactory.LineBorder;
             frame.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            frame2 = new G2DPanel();
+            frame2.Bounds = new Rectangle(262, 150, 500, 300);
+            frame2.Border = GoblinEnums.BorderFactory.LineBorder;
+            frame2.Transparency = 0.7f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            //Frame after winning
+            winners = new G2DPanel();
+            winners.Bounds = new Rectangle(175, 400, 350, 210);
+            winners.Border = GoblinEnums.BorderFactory.LineBorder;
+            winners.Transparency = 0f;  // Ranges from 0 (fully transparent) to 1 (fully opaque)
+
+            howto = new G2DPanel();
+            howto.Bounds = new Rectangle(250, 175, 650, 400);
+            howto.Texture = Content.Load<Texture2D>(tutorial1);
+            howto.Border = GoblinEnums.BorderFactory.LineBorder;
+            howto.Transparency = 1f;
 
             G2DButton localPlay = new G2DButton("Local Play");
             localPlay.Bounds = new Rectangle(120, 30, 100, 30);
             localPlay.Name = "localPlay";
             localPlay.TextFont = textFont;
+            localPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            localPlay.HighlightColor = Color.Red;
             localPlay.ActionPerformedEvent += new ActionPerformed(HandleLocalPlay);
 
             G2DButton networkPlay = new G2DButton("Network Play");
             networkPlay.Bounds = new Rectangle(120, 70, 100, 30);
             networkPlay.Name = "networkPlay";
             networkPlay.TextFont = textFont;
+            networkPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            networkPlay.HighlightColor = Color.Red;
             networkPlay.ActionPerformedEvent += new ActionPerformed(HandleNetworkPlay);
 
             G2DButton store = new G2DButton("Store");
             store.Bounds = new Rectangle(120, 110, 100, 30);
             store.Name = "store";
             store.TextFont = textFont;
+            store.Texture = Content.Load<Texture2D>("Images\\three");
+            store.HighlightColor = Color.Red;
             store.ActionPerformedEvent += new ActionPerformed(HandleStore);
+
+            G2DButton howToPlay = new G2DButton("How To Play");
+            howToPlay.Bounds = new Rectangle(120, 150, 100, 30);
+            howToPlay.Name = "howToPlay";
+            howToPlay.TextFont = textFont;
+            howToPlay.Texture = Content.Load<Texture2D>("Images\\three");
+            howToPlay.HighlightColor = Color.Red;
+            howToPlay.ActionPerformedEvent += new ActionPerformed(howToPlay_ActionPerformedEvent);
             /////////////////////////////////////////////////////////////////////////////////
 
             G2DButton startGame = new G2DButton("Start Game");
             startGame.Bounds = new Rectangle(120, 30, 100, 30);
             startGame.Name = "startGame";
             startGame.TextFont = textFont;
+            startGame.Texture = Content.Load<Texture2D>("Images\\three");
+            startGame.HighlightColor = Color.Red;
             startGame.ActionPerformedEvent += new ActionPerformed(HandleStartGame);
 
             G2DButton hostGame = new G2DButton("Host Game");
             hostGame.Bounds = new Rectangle(120, 30, 100, 30);
             hostGame.Name = "hostGame";
             hostGame.TextFont = textFont;
+            hostGame.Texture = Content.Load<Texture2D>("Images\\three");
+            hostGame.HighlightColor = Color.Red;
             hostGame.ActionPerformedEvent += new ActionPerformed(HandleHostGame);
 
             G2DButton joinGame = new G2DButton("Join Game");
             joinGame.Bounds = new Rectangle(120, 70, 100, 30);
             joinGame.Name = "joinGame";
             joinGame.TextFont = textFont;
+            joinGame.Texture = Content.Load<Texture2D>("Images\\three");
+            joinGame.HighlightColor = Color.Red;
             joinGame.ActionPerformedEvent += new ActionPerformed(HandleJoinGame);
 
             G2DButton buyUpgrades = new G2DButton("Buy Upgrades");
             buyUpgrades.Bounds = new Rectangle(120, 30, 100, 30);
             buyUpgrades.Name = "buyUpgrades";
             buyUpgrades.TextFont = textFont;
+            buyUpgrades.Texture = Content.Load<Texture2D>("Images\\three");
+            buyUpgrades.HighlightColor = Color.Red;
             buyUpgrades.ActionPerformedEvent += new ActionPerformed(HandleBuyUpgrades);
 
             G2DButton back = new G2DButton("Back");
             back.Bounds = new Rectangle(120, 150, 100, 30);
             back.Name = "back";
             back.TextFont = textFont;
+            back.Texture = Content.Load<Texture2D>("Images\\three");
+            back.HighlightColor = Color.Red;
             back.ActionPerformedEvent += new ActionPerformed(HandleBack);
 
-            
-            scene.UIRenderer.Add2DComponent(frame);
+            G2DButton back2 = new G2DButton("Back");
+            back2.Bounds = new Rectangle(110, 160, 100, 30);
+            back2.Name = "back2";
+            back2.TextFont = textFont;
+            back2.Texture = Content.Load<Texture2D>("Images\\three");
+            back2.HighlightColor = Color.Red;
+            back2.ActionPerformedEvent += new ActionPerformed(HandleBack);
 
+            G2DButton save = new G2DButton("Save");
+            save.Bounds = new Rectangle(230, 160, 100, 30);
+            save.Name = "save";
+            save.TextFont = textFont;
+            save.Texture = Content.Load<Texture2D>("Images\\three");
+            save.HighlightColor = Color.Red;
+            save.ActionPerformedEvent += new ActionPerformed(HandleSave);
+
+            G2DButton quit = new G2DButton("Quit");
+            quit.Bounds = new Rectangle(120, 190, 100, 30);
+            quit.Name = "quit";
+            quit.TextFont = textFont;
+            quit.Texture = Content.Load<Texture2D>("Images\\three");
+            quit.HighlightColor = Color.Red;
+            quit.ActionPerformedEvent += new ActionPerformed(HandleQuit);
+
+            ////////////////////////////*****Store****//////////////////////////////////
+
+            G2DButton upgradeSpeed = new G2DButton("Upgrade Speed");
+            upgradeSpeed.Bounds = new Rectangle(20, 30, 130, 30);
+            upgradeSpeed.Name = "upgradeSpeed";
+            upgradeSpeed.TextFont = textFont;
+            upgradeSpeed.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeSpeed.HighlightColor = Color.Red;
+            upgradeSpeed.ActionPerformedEvent += new ActionPerformed(upgradeSpeed_ActionPerformedEvent);
+
+            G2DButton upgradeArmour = new G2DButton("Upgrade Armour");
+            upgradeArmour.Bounds = new Rectangle(20, 70, 130, 30);
+            upgradeArmour.Name = "upgradeArmour";
+            upgradeArmour.TextFont = textFont;
+            upgradeArmour.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeArmour.HighlightColor = Color.Red;
+            upgradeArmour.ActionPerformedEvent += new ActionPerformed(upgradeArmour_ActionPerformedEvent);
+
+            G2DButton upgradeMissle = new G2DButton("Upgrade Missle");
+            upgradeMissle.Bounds = new Rectangle(20, 110, 130, 30);
+            upgradeMissle.Name = "upgradeMissle";
+            upgradeMissle.TextFont = textFont;
+            upgradeMissle.Texture = Content.Load<Texture2D>("Images\\three");
+            upgradeMissle.HighlightColor = Color.Red;
+            upgradeMissle.ActionPerformedEvent += new ActionPerformed(upgradeMissle_ActionPerformedEvent);
+
+            howtonext = new G2DButton("Next");
+            howtonext.Bounds = new Rectangle(225, 350, 130, 30);
+            howtonext.Name = "howtonext";
+            howtonext.TextFont = textFont;
+            howtonext.Texture = Content.Load<Texture2D>("Images\\three");
+            howtonext.HighlightColor = Color.Red;
+            //change
+            howtonext.ActionPerformedEvent += new ActionPerformed(howtonext_ActionPerformedEvent);
+
+            howtomenu = new G2DButton("Main Menu");
+            howtomenu.Bounds = new Rectangle(450, 350, 130, 30);
+            howtomenu.Name = "howtonext";
+            howtomenu.TextFont = textFont;
+            howtomenu.Texture = Content.Load<Texture2D>("Images\\three");
+            howtomenu.HighlightColor = Color.Red;
+            //change
+            howtomenu.ActionPerformedEvent += new ActionPerformed(howtomenu_ActionPerformedEvent);
+
+            howtoback = new G2DButton("Back");
+            howtoback.Bounds = new Rectangle(25, 350, 130, 30);
+            howtoback.Name = "howtoback";
+            howtoback.TextFont = textFont;
+            howtoback.Texture = Content.Load<Texture2D>("Images\\three");
+            howtoback.HighlightColor = Color.Red;
+            howtoback.ActionPerformedEvent += new ActionPerformed(howtoback_ActionPerformedEvent);
+
+            missleLevel = new G2DLabel();
+            missleLevel.Bounds = new Rectangle(170, 115, 130, 30);
+            missleLevel.Name = "missleLevel";
+            missleLevel.TextFont = textFont;
+
+            armourLevel = new G2DLabel();
+            armourLevel.Bounds = new Rectangle(170, 75, 130, 30);
+            armourLevel.Name = "armourLevel";
+            armourLevel.TextFont = textFont;
+
+            speedLevel = new G2DLabel();
+            speedLevel.Bounds = new Rectangle(170, 35, 130, 30);
+            speedLevel.Name = "speedLevel";
+            speedLevel.TextFont = textFont;
+
+
+            missleCost = new G2DLabel();
+            missleCost.Bounds = new Rectangle(270, 115, 130, 30);
+            missleCost.Name = "missleCost";
+            missleCost.TextFont = textFont;
+
+            armourCost = new G2DLabel();
+            armourCost.Bounds = new Rectangle(270, 75, 130, 30);
+            armourCost.Name = "armourCost";
+            armourCost.TextFont = textFont;
+
+            speedCost = new G2DLabel();
+            speedCost.Bounds = new Rectangle(270, 35, 130, 30);
+            speedCost.Name = "speedCost";
+            speedCost.TextFont = textFont;
+
+
+            moneyLevel = new G2DLabel();
+            moneyLevel.Bounds = new Rectangle(370, 35, 130, 30);
+            moneyLevel.Name = "moneyLevel";
+            moneyLevel.TextFont = textFont;
+            moneyLevel.TextColor = Color.ForestGreen;
+
+            //////////////////////////////////////////////////////////////////////////////
+
+            scene.UIRenderer.Add2DComponent(frame);
+            scene.UIRenderer.Add2DComponent(frame2);
+            scene.UIRenderer.Add2DComponent(winners);// added this
+            scene.UIRenderer.Add2DComponent(howto);
 
             frame.AddChild(localPlay);
             frame.AddChild(networkPlay);
@@ -564,6 +1122,26 @@ namespace AR_Battle_Boats
             frame.AddChild(hostGame);
             frame.AddChild(buyUpgrades);
             frame.AddChild(back);
+            frame.AddChild(howToPlay);
+
+            frame2.AddChild(upgradeSpeed);
+            frame2.AddChild(upgradeArmour);
+            frame2.AddChild(upgradeMissle);
+            frame2.AddChild(back2);
+            frame2.AddChild(save);
+
+            frame2.AddChild(speedLevel);
+            frame2.AddChild(armourLevel);
+            frame2.AddChild(missleLevel);
+
+            frame2.AddChild(moneyLevel);
+
+            frame2.AddChild(missleCost);
+            frame2.AddChild(speedCost);
+            frame2.AddChild(armourCost);
+            howto.AddChild(howtonext);
+            howto.AddChild(howtoback);
+            howto.AddChild(howtomenu);
 
             localPlay.Enabled = true;
             networkPlay.Enabled = true;
@@ -573,12 +1151,204 @@ namespace AR_Battle_Boats
             hostGame.Enabled = false;
             buyUpgrades.Enabled = false;
             back.Enabled = false;
+            upgradeSpeed.Enabled = false;
+            upgradeArmour.Enabled = false;
+            upgradeMissle.Enabled = false;
+            howToPlay.Enabled = true;
+
+            frame2.Enabled = false;
+            frame2.Visible = false;
 
             startGame.Visible = false;
             joinGame.Visible = false;
             hostGame.Visible = false;
             buyUpgrades.Visible = false;
             back.Visible = false;
+            upgradeSpeed.Visible = false;
+            upgradeArmour.Visible = false;
+            upgradeMissle.Visible = false;
+            howToPlay.Visible = true;
+            howto.Visible = false;
+            howto.Enabled = false;
+            howtonext.Visible = false;
+            howtonext.Enabled = false;
+            howtoback.Visible = false;
+            howtoback.Enabled = false;
+            howtomenu.Visible = false;
+            howtomenu.Enabled = false;
+        }
+
+        /// <summary>
+        /// Called when someone needs a tutorial
+        /// </summary>
+        /// <param name="source"></param>
+        void howToPlay_ActionPerformedEvent(object source)
+        {
+            HideMainMenu();
+            howto.Visible = true;
+            howto.Enabled = true;
+            howtoback.Visible = false;
+        }
+
+        /// <summary>
+        /// Goes to the next picture in the tutorial
+        /// </summary>
+        /// <param name="source"></param>
+        void howtonext_ActionPerformedEvent(object source)
+         {
+            if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
+            {
+                howtonext.Visible = true;
+                howtoback.Visible = true;
+                howto.Texture = Content.Load<Texture2D>(tutorial2);
+            }else
+
+            if (howto.Texture == Content.Load<Texture2D>(tutorial2))
+            {
+                howto.Texture = Content.Load<Texture2D>(tutorial3);
+                howtonext.Visible = true;
+                howtoback.Visible = true;
+            }else
+            if (howto.Texture == Content.Load<Texture2D>(tutorial3))
+            {
+                howto.Texture = Content.Load<Texture2D>(tutorial4);
+                howtonext.Visible = false;
+                howtoback.Visible = true;
+            }
+        }
+
+        /// <summary>
+        /// Goes to the previous slide in the tutorial
+        /// </summary>
+        /// <param name="source"></param>
+        void howtoback_ActionPerformedEvent(object source)
+        {
+            if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
+            {
+                howtoback.Visible = false;
+                howtonext.Visible = true;
+            }
+            else
+                if (howto.Texture == Content.Load<Texture2D>(tutorial2))
+                {
+                    howtonext.Visible = true;
+                    howtoback.Visible = false;
+                    howto.Texture = Content.Load<Texture2D>(tutorial1);
+                }
+                else
+                    if (howto.Texture == Content.Load<Texture2D>(tutorial3))
+                    {
+                        howto.Texture = Content.Load<Texture2D>(tutorial2);
+                        howtoback.Visible = true;
+                        howtonext.Visible = true;
+                    }else
+                        if (howto.Texture == Content.Load<Texture2D>(tutorial4))
+                        {
+                            howtonext.Visible = true;
+                            howtoback.Visible = true;
+                            howto.Texture = Content.Load<Texture2D>(tutorial3);
+                        }
+        }
+
+        /// <summary>
+        /// Exits tutorial and goes back to the main menu
+        /// </summary>
+        /// <param name="source"></param>
+        void howtomenu_ActionPerformedEvent(object source)
+        {
+            howtonext.Enabled = false;
+            howtonext.Visible = false;
+            howtoback.Enabled = false;
+            howtoback.Visible = false;
+            howtomenu.Enabled = false;
+            howtomenu.Visible= false;
+            howto.Enabled = false;
+            howto.Visible = false;
+            CreateMainMenu();
+        }
+
+        /// <summary>
+        /// Called when the Upgrade Missile button is pressed
+        /// </summary>
+        /// <param name="source"></param>
+        void upgradeMissle_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Ammo_Level >= 5)
+                return;
+
+            if (activePlayers[0].Money > (activePlayers[0].Ammo_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Ammo_Level * 150);
+                activePlayers[0].Ammo_Level++;
+
+                missleLevel.Text = "Ammo Level: " + activePlayers[0].Ammo_Level; 
+                if (activePlayers[0].Ammo_Level < 5)
+                    missleCost.Text = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    missleCost.Text = "At Max Level";
+
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
+        /// <summary>
+        /// Called when the upgrade armour button is pressed
+        /// </summary>
+        /// <param name="source"></param>
+        void upgradeArmour_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Armour_Level >= 5)
+                return;
+
+            if (activePlayers[0].Money > (activePlayers[0].Armour_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Armour_Level * 150);
+                activePlayers[0].Armour_Level++;
+                armourLevel.Text = "Armour Level: " + activePlayers[0].Armour_Level;
+
+                if (activePlayers[0].Armour_Level < 5)
+                    armourCost.Text = "Armour Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    armourCost.Text = "At Max Level";
+
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
+        /// <summary>
+        /// Called when the upgrade speed button is pressed
+        /// </summary>
+        /// <param name="source"></param>
+        void upgradeSpeed_ActionPerformedEvent(object source)
+        {
+            if (activePlayers[0].Speed_Level >= 5)
+                return;
+
+            if (activePlayers[0].Money > (activePlayers[0].Speed_Level * 150))
+            {
+                activePlayers[0].Money -= (int)(activePlayers[0].Speed_Level * 150);
+                activePlayers[0].Speed_Level++;
+                speedLevel.Text = "Speed Level: " + activePlayers[0].Speed_Level;
+                
+                if (activePlayers[0].Speed_Level < 5)
+                    speedCost.Text = "Speed Cost: " + (activePlayers[0].Ammo_Level * 150);
+                else
+                    speedCost.Text = "At Max Level";
+
+                moneyLevel.Text = "Money: " + activePlayers[0].Money;
+            }
+        }
+
+
+        /// <summary>
+        /// Creates lobby
+        /// </summary>
+        private void AddLobbyToScene()
+        {
+            lob = new Lobby();
+            lob.Bounds = new Rectangle(120, 70, 100, 70);
+            lob.TextFont = textFont;
+            frame.AddChild(lob);            
         }
 
         /// <summary>
@@ -597,6 +1367,7 @@ namespace AR_Battle_Boats
         {
             Console.WriteLine("Hiding Main Menu");
             scene.UIRenderer.Remove2DComponent(frame);
+            scene.UIRenderer.Remove2DComponent(frame2);
         }
 
         /// <summary>
@@ -623,6 +1394,7 @@ namespace AR_Battle_Boats
 
             gameState = GameState.Hosting;
             gameMode = GameMode.Local_Multiplayer;
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -674,15 +1446,33 @@ namespace AR_Battle_Boats
         /// Called when a game is started
         /// </summary>
         /// <param name="source"></param>
-        private void HandleStartGame(object source)
+        private void HandleStartGame(object source) 
         {
-            HideMainMenu();
-            StartNetworkSession();
+            if (gameState == GameState.In_Game || gameState == GameState.Main_Menu)
+                return;
 
-            gameState = GameState.Game_Load;
-
-            session.StartGame();
-            session.Update();
+            if (gameMode == GameMode.Network_Multiplayer)
+            {
+                if (session.IsEveryoneReady || !session.IsEveryoneReady && session.SessionState == NetworkSessionState.Lobby)
+                {
+                    session.StartGame();
+                    session.Update();
+                    HideMainMenu();
+                }
+            }
+            else
+            {
+                PlayerInfo info = new PlayerInfo(activePlayers[0].ToString());
+                info.PlayerName = info.PlayerName + " Guest";
+                info.Player_Ship = AvailableShips[0];
+                activePlayers.Add(info);
+                if (session.SessionState == NetworkSessionState.Lobby)
+                {
+                    session.StartGame();
+                    session.Update();
+                    HideMainMenu();
+                }
+            }
         }
 
         /// <summary>
@@ -692,10 +1482,10 @@ namespace AR_Battle_Boats
         private void HandleJoinGame(object source)
         {
             G2DComponent comp = (G2DComponent)source;
-
+            
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "startGame" && button.Name != "back")
+                if (button.Name != "back")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -708,6 +1498,8 @@ namespace AR_Battle_Boats
             }
 
             gameState = GameState.Joining;
+            activePlayers.Clear();
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -733,6 +1525,7 @@ namespace AR_Battle_Boats
             }
 
             gameState = GameState.Hosting;
+            StartNetworkSession();
         }
 
         /// <summary>
@@ -741,11 +1534,53 @@ namespace AR_Battle_Boats
         /// <param name="source"></param>
         private void HandleBuyUpgrades(object source)
         {
+            ChooseBackground();
+            string ammoLevelMsg = "Ammo Level: " + activePlayers[0].Ammo_Level;
+            string armourLevelMsg = "Armour Level: " + activePlayers[0].Armour_Level;
+            string speedLevelMsg = "Speed Level: " + activePlayers[0].Speed_Level;
+            string ammoCostMsg;
+            string armourCostMsg;
+            string speedCostMsg;
+
+            if (activePlayers[0].Ammo_Level < 5)
+                ammoCostMsg = "Ammo Cost: " + (activePlayers[0].Ammo_Level * 150);
+            else
+                ammoCostMsg = "At Max Level";
+            
+            if (activePlayers[0].Ammo_Level < 5)
+                armourCostMsg = "Armour Cost: " + (activePlayers[0].Armour_Level * 150);
+            else
+                armourCostMsg = "At Max Level";
+            
+            if (activePlayers[0].Ammo_Level < 5)
+                speedCostMsg = "Speed Cost: " + (activePlayers[0].Speed_Level * 150);
+            else
+                speedCostMsg = "At Max Level";
+
+            string moneyMsg = "Money: " + activePlayers[0].Money;
+
+            speedLevel.Text = speedLevelMsg;
+            armourLevel.Text = armourLevelMsg;
+            missleLevel.Text = ammoLevelMsg;
+
+            moneyLevel.Text = moneyMsg;
+
+            speedCost.Text = speedCostMsg;
+            armourCost.Text = armourCostMsg;
+            missleCost.Text = ammoCostMsg;
+
             G2DComponent comp = (G2DComponent)source;
 
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "back")
+                frame2.Visible = true;
+                frame2.Enabled = true;
+                frame.Enabled = false;
+                frame.Visible = false;
+
+
+                if (button.Name != "back2" && button.Name != "upgradeMissle1" && button.Name != "upgradeMissle2"
+                    && button.Name != "upgradeDefense1" && button.Name != "upgradeDefense2")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -759,14 +1594,49 @@ namespace AR_Battle_Boats
         }
 
         /// <summary>
+        /// Handles saving the store data
+        /// </summary>
+        /// <param name="source"></param>
+        private void HandleSave(object source)
+        {
+            G2DComponent comp = (G2DComponent)source;
+
+
+            if (comp.Name == "save")
+            {
+                activePlayers[0].UpdateInfoOnServer(SERVER_IP, SERVER_PORT_NUM);
+            }
+
+        }
+
+        /// <summary>
         /// Return to Main Menu
         /// </summary>
         /// <param name="source"></param>
         private void HandleBack(object source)
         {
+            ChooseBackground();
+            frame.RemoveChild(lob);
+
+            G2DComponent comp = (G2DComponent)source;
+
+            if (comp.Name == "back2")
+            {
+
+                comp.Visible = true;
+                comp.Enabled = true;
+            }
+
+            frame.Enabled = true;
+            frame.Visible = true;
+            frame2.Enabled = false;
+            frame2.Visible = false;
+            winners.Visible = false;
+            winners.Enabled = false;
+
             foreach (G2DButton button in frame.Children)
             {
-                if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store")
+                if (button.Name != "localPlay" && button.Name != "networkPlay" && button.Name != "store" && button.Name != "howToPlay")
                 {
                     button.Visible = false;
                     button.Enabled = false;
@@ -780,39 +1650,55 @@ namespace AR_Battle_Boats
 
             gameMode = GameMode.Menu;
             gameState = GameState.Main_Menu;
+
+
+            if (session != null)
+            {
+                session.Dispose();
+                session = null;
+            }
         }
-
-
-        //Markers Functions
 
         /// <summary>
-        /// Creates a Ground Marker Array
+        /// Handler for when the Quit button is pressed
         /// </summary>
-        private void CreateGround()
+        /// <param name="source"></param>
+        private void HandleQuit(object source)
         {
-            GeometryNode groundNode = new GeometryNode("Ground");
-
-            groundNode.Model = new Box(95, 59, 0.1f);
-            // Set this ground model to act as an occluder so that it appears transparent
-            groundNode.IsOccluder = true;
-
-            // Make the ground model to receive shadow casted by other objects with
-            // CastShadows set to true
-            groundNode.Model.ReceiveShadows = true;
-
-            Material groundMaterial = new Material();
-
-            groundMaterial.Diffuse = Color.Gray.ToVector4();
-
-            groundMaterial.Diffuse = Color.MediumBlue.ToVector4();
-            groundMaterial.Specular = Color.White.ToVector4();
-            groundMaterial.SpecularPower = 20;
-
-            //groundMaterial.Texture = Content.Load<Texture2D>("sea3");
-            groundNode.Material = groundMaterial;
-            groundMarkerNode.AddChild(groundNode);
-
+            Exit();
         }
+
+        /// <summary>
+        /// Creates the HUD for gameplay
+        /// </summary>
+        private void CreateHUD()
+        {
+            Texture2D health = Content.Load<Texture2D>("Images\\hHUD");
+
+            player1_hud = new HUD(hudFont,health);
+            player1_hud.Bounds = new Rectangle(0, 688, 250, 80);
+            player1_hud.TextColor = Color.Red;
+            scene.UIRenderer.Add2DComponent(player1_hud);
+
+            player2_hud = new HUD(hudFont, health);
+            player2_hud.Bounds = new Rectangle(774, 688, 250, 80);
+            player2_hud.TextColor = Color.Green;
+            scene.UIRenderer.Add2DComponent(player2_hud);
+        }
+
+        /// <summary>
+        /// Update the HUD values
+        /// </summary>
+        private void UpdateHUD()
+        {
+            player1_hud.Health = ActiveGameObjects[0].Health;
+            player1_hud.Update();
+
+            player2_hud.Health = ActiveGameObjects[1].Health;
+            player2_hud.Update();
+        }
+
+        //Markers Functions
 
         /// <summary>
         /// Setup the marker tracking capture devices
@@ -821,23 +1707,27 @@ namespace AR_Battle_Boats
         {
             IVideoCapture captureDevice = null;
 
-            if (useStaticImage)
-            {
-                captureDevice = new NullCapture();
-                captureDevice.InitVideoCapture(0, FrameRate._60Hz, Resolution._640x480,
-                    ImageFormat.R8G8B8_24, false);
-                //((NullCapture)captureDevice).StaticImageFile = "testImage800x600.jpg";
-            }
-            else
+            try
             {
                 captureDevice = new DirectShowCapture2();
                 captureDevice.InitVideoCapture(0, FrameRate._30Hz, Resolution._640x480,
                     ImageFormat.R8G8B8_24, false);
             }
-
+            catch
+            {
+                Console.WriteLine("Error:  No Camera detected");
+                Exit();
+            }
             // Add this video capture device to the scene so that it can be used for
             // the marker tracker
-            scene.AddVideoCaptureDevice(captureDevice);
+            try
+            {
+                scene.AddVideoCaptureDevice(captureDevice);
+            }
+            catch
+            {
+
+            }
 
             // Create an optical marker tracker that uses ALVAR library
             ALVARMarkerTracker tracker = new ALVARMarkerTracker();
@@ -853,316 +1743,616 @@ namespace AR_Battle_Boats
         }
 
         /// <summary>
-        /// A callback function that will be called when the box and sphere model collides
+        /// Create the objects for the markers
+        /// </summary>
+        private void CreateMarkers()
+        {
+            int[] ids1;
+            ids1 = new int[4];
+            ids1[0] = 70;
+            ids1[1] = 71;
+            ids1[2] = 72;
+            ids1[3] = 73;
+
+            MarkerNode1 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML1.xml", ids1);
+            scene.RootNode.AddChild(MarkerNode1);
+
+            int[] ids2;
+            ids2 = new int[4];
+            ids2[0] = 80;
+            ids2[1] = 81;
+            ids2[2] = 82;
+            ids2[3] = 83;
+
+            MarkerNode2 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML2.xml", ids2);
+            scene.RootNode.AddChild(MarkerNode2);
+
+            int[] ids3;
+            ids3 = new int[4];
+            ids3[0] = 90;
+            ids3[1] = 91;
+            ids3[2] = 92;
+            ids3[3] = 93;
+
+            MarkerNode3 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML3.xml", ids3);
+            scene.RootNode.AddChild(MarkerNode3);
+
+
+            int[] ids4;
+            ids4 = new int[4];
+            ids4[0] = 100;
+            ids4[1] = 101;
+            ids4[2] = 102;
+            ids4[3] = 103;
+
+            MarkerNode4 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML4.xml", ids4);
+            scene.RootNode.AddChild(MarkerNode4);
+
+
+            int[] ids5;
+            ids5 = new int[4];
+            ids5[0] = 110;
+            ids5[1] = 111;
+            ids5[2] = 112;
+            ids5[3] = 113;
+
+            MarkerNode5 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML5.xml", ids5);
+            scene.RootNode.AddChild(MarkerNode5);
+
+            int[] ids6;
+            ids6 = new int[4];
+            ids6[0] = 120;
+            ids6[1] = 121;
+            ids6[2] = 122;
+            ids6[3] = 123;
+
+            MarkerNode6 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML6.xml", ids6);
+            scene.RootNode.AddChild(MarkerNode6);
+
+            int[] ids7;
+            ids7 = new int[4];
+            ids7[0] = 130;
+            ids7[1] = 131;
+            ids7[2] = 132;
+            ids7[3] = 133;
+
+            MarkerNode7 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML7.xml", ids7);
+            scene.RootNode.AddChild(MarkerNode7);
+        }
+
+        //Physics Functions
+
+        /// <summary>
+        /// Checks for collission between two game objects
+        /// </summary>
+        /// <param name="obj1">Missile</param>
+        /// <param name="obj2">Player Ship</param>
+        /// <returns>True if collission is detected, False otherwise</returns>
+        private bool CheckCollision(GameObject obj1, GameObject obj2)
+        {
+            Vector3 translation = obj2.Translation;
+            Matrix rotate = Matrix.CreateFromYawPitchRoll(obj2.Yaw, obj2.Pitch, obj2.Roll);
+            translation += (rotate.Forward * ((2) * 0.05f));  
+
+           double distance = getDistance(obj1.Translation.X, obj1.Translation.Y,
+                translation.X, translation.Y);
+            
+            //Console.WriteLine("Distance = " + distance);
+
+            if (distance > 4)
+                return false;
+            else
+                return true;
+        }
+         
+        /// <summary>
+        /// Called when a player is hit
+        /// </summary>
+        /// <param name="index">The Active Player index of the guy who got shot</param>
+        private void RegisterHitOnPlayer(int index)
+        {
+            explosionSound = soundBank.GetCue("explosion");
+            explosionSound.Play();
+
+            ActiveGameObjects[index].Health -= 10 - ActiveGameObjects[index].Player_Information.Armour_Level;
+            if (ActiveGameObjects[index].Health <= 0)
+            {
+                if (session != null)
+                {
+                    if (session.IsHost)
+                    {
+                        if (index == playerIndex)
+                        {
+                            SendGameOver(activePlayers[opponentIndex].PlayerName);
+                        }
+                        else
+                        {
+                            SendGameOver(activePlayers[playerIndex].PlayerName);
+                        }
+                        session.EndGame();
+                        session.Update();
+                    }
+                }
+            }
+            Console.WriteLine("Player " + (index+1) + " Hit!  Health is at " + ActiveGameObjects[index].Health);
+            player1_hud.AddMessage(activePlayers[index].PlayerName + " was hit!");
+        }
+
+
+        /*
+        /// <summary>
+        /// Called whenever a collision occurs
         /// </summary>
         /// <param name="pair"></param>
-        private void BoxSphereCollision(NewtonPhysics.CollisionPair pair)
+        private void CollisionOccuredShips(NewtonPhysics.CollisionPair pair)
         {
-            Console.WriteLine("Box and Sphere has collided");
+            //ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+            //ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
+            //Console.WriteLine("Collission betwen the Ships!");
         }
 
         /// <summary>
-        /// Update the directions based on the markers
+        /// Adds a collision callback to a pair of GameObjects
         /// </summary>
-        void UpdateDirections()
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallbackShips(GameObject ob1, GameObject ob2)
         {
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            //((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredShips);
+        }
 
-            if (groundMarkerNode.MarkerFound)
+        /// <summary>
+        /// Called whenever a collision occurs
+        /// </summary>
+        /// <param name="pair"></param>
+        private void CollisionOccuredPlayer1(NewtonPhysics.CollisionPair pair)
+        {
+            double distance = getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y);
+            
+            Console.WriteLine("Distance = " + distance);
+            
+            if (distance > 8)
+                return;
+
+            Console.WriteLine("Hit!");
+
+            explosionSound.Play();
+            explosionSound = soundBank.GetCue("explosion");
+
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
+            ActiveGameObjects[0].Health -= 10 - ActiveGameObjects[0].Player_Information.Armour_Level;
+            if (ActiveGameObjects[0].Health <= 0)
             {
-                if ((MarkerNode1.MarkerFound && MarkerNode2.MarkerFound) || (MarkerNode4.MarkerFound && MarkerNode3.MarkerFound))
+                if (session != null)
                 {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    // ((TransformNode)allShapesNode.Parent).Translation += new Vector3(0f, 0f, 0f);
-                }
-                else if (MarkerNode3.MarkerFound && MarkerNode1.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation -= new Vector3(.10f, .10f, 0f);
-                }
-                else if (MarkerNode3.MarkerFound && MarkerNode2.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation -= new Vector3(-.10f, .10f, 0f);
-                }
-                else if (MarkerNode4.MarkerFound && MarkerNode1.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(.10f, .10f, 0f);
-                }
-                else if (MarkerNode4.MarkerFound && MarkerNode2.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(-.10f, .10f, 0f);
-                }
-                else if (MarkerNode1.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    //allShapesNode= ((GeometryNode)((NewtonPhysics)scene.).GetPhysicsObject);
-                    //((TransformNode)allShapesNode.Parent).Translation = (new Vector3((MarkerNode2.WorldTransformation.Translation.X * -1f), ((TransformNode)allShapesNode.Parent).Translation.Y,((TransformNode)allShapesNode.Parent).Translation.Z));
-                    ((TransformNode)allShapesNode.Parent).Translation -= new Vector3(.10f, 0f, 0f);
-                }
-                else if (MarkerNode2.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(.10f, 0f, 0f);
-                }
-                else if (MarkerNode3.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation -= new Vector3(0f, .10f, 0f);
-                }
-                else if (MarkerNode4.MarkerFound)
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(0f, .10f, 0f);
+                    if (session.IsHost)
+                    {
+                        SendGameOver(ActiveGameObjects[1].Player_Information.PlayerName);
+                        session.EndGame();
+                        session.Update();
+                    }
                 }
             }
+            Console.WriteLine("Player 1 Hit!  Health is at " + ActiveGameObjects[0].Health);
+            player1_hud.AddMessage(activePlayers[0].PlayerName + " was hit!");
         }
 
         /// <summary>
-        /// ???
+        /// Adds a collision callback to a pair of GameObjects
         /// </summary>
-        void updateAttack()
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallbackPlayer1(GameObject ob1, GameObject ob2)
         {
-            if (groundMarkerNode.MarkerFound)
-            {
-                if (MarkerNode5.MarkerFound) // attack
-                {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(0f, .10f, 0f);
-                }
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer1);
+            collisionPairsPlayer1.Add(pair);
+        }
 
-                else if (MarkerNode6.MarkerFound) // defend
+        /// <summary>
+        /// Called whenever a collision occurs
+        /// </summary>
+        /// <param name="pair"></param>
+        private void CollisionOccuredPlayer2(NewtonPhysics.CollisionPair pair)
+        {
+            double distance = getDistance(pair.CollisionObject1.PhysicsWorldTransform.Translation.X, pair.CollisionObject1.PhysicsWorldTransform.Translation.Y,
+                pair.CollisionObject2.PhysicsWorldTransform.Translation.X, pair.CollisionObject2.PhysicsWorldTransform.Translation.Y);
+
+            Console.WriteLine("Distance = " + distance);
+
+            if (distance > 8)
+                return;
+
+            Console.WriteLine("Hit!");
+
+            explosionSound.Play();
+            explosionSound = soundBank.GetCue("explosion");
+
+            scene.PhysicsEngine.RemovePhysicsObject(pair.CollisionObject2);
+            ActiveGameObjects[1].Health -= 10 - ActiveGameObjects[1].Player_Information.Armour_Level;
+            if (ActiveGameObjects[1].Health <= 0)
+            {
+                if (session != null)
                 {
-                    allShapesNode = (GeometryNode)sphereNode.Physics.Container;
-                    ((TransformNode)allShapesNode.Parent).Translation += new Vector3(0f, .10f, 0f);
+                    if (session.IsHost)
+                    {
+                        SendGameOver(ActiveGameObjects[0].Player_Information.PlayerName);
+                        session.EndGame();
+                        session.Update();
+                    }
                 }
             }
+            Console.WriteLine("Player 2 Hit!  Health is at " + ActiveGameObjects[1].Health);
+            player1_hud.AddMessage(activePlayers[1].PlayerName + " was hit!");
         }
 
         /// <summary>
-        /// This is called when the game should draw itself.
+        /// Adds a collision callback to a pair of GameObjects
         /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
-        void DrawMarkerUpdate()
+        /// <param name="ob1">The first object to add to the collision</param>
+        /// <param name="ob2">The second object to add to the collision</param>
+        private void AddCollisionCallbackPlayer2(GameObject ob1, GameObject ob2)
         {
-            // If ground marker array is detected
-            if (groundMarkerNode.MarkerFound)
-            {
-                // If the toolbar marker array is detected, then overlay the box model on top
-                // of the toolbar marker array; otherwise, overlay the box model on top of
-                // the ground marker array
-                if (toolbarMarkerNode.MarkerFound)
-                {
-                    // The box model is overlaid on the ground marker array, so in order to
-                    // make the box model appear overlaid on the toolbar marker array, we need
-                    // to offset the ground marker array's transformation. Thus, we multiply
-                    // the toolbar marker array's transformation with the inverse of the ground marker
-                    // array's transformation, which becomes T*G(inv)*G = T*I = T as a result, 
-                    // where T is the transformation of the toolbar marker array, G is the 
-                    // transformation of the ground marker array, and I is the identity matrix. 
-                    // The Vector3(4, 4, 4) is a shift translation to make the box overlaid right 
-                    // on top of the toolbar marker. The top-left corner of the left marker of the 
-                    // toolbar marker array is defined as (0, 0, 0), so in order to make the box model
-                    // appear right on top of the left marker of the toolbar marker array, we shift by
-                    // half of each dimension of the 8x8x8 box model.  The approach used here requires that
-                    // the ground marker array remains visible at all times.
-                    Vector3 shiftVector = new Vector3(4, -4, 4);
-                    Matrix mat = Matrix.CreateTranslation(shiftVector) *
-                        toolbarMarkerNode.WorldTransformation *
-                        Matrix.Invert(groundMarkerNode.WorldTransformation);
+            NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(ob1.Geometry.Physics, ob2.Geometry.Physics);
+            ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, CollisionOccuredPlayer2);
+            collisionPairsPlayer2.Add(pair);
+        }
+        */
 
-                    // Modify the transformation in the physics engine
-                    ((NewtonPhysics)scene.PhysicsEngine).SetTransform(boxNode.Physics, mat);
+        //********************Game Logic Functions********************************//
+
+        /// <summary>
+        /// Checks to see if a GameObject is out of bounds
+        /// </summary>
+        /// <param name="player">The GameObjecct to be checked</param>
+        /// <returns>True if the object is out of bounds, false otherwise</returns>
+        private bool OutOfBounds(GameObject player)
+        {
+            
+            if (player.Translation.X > 38 || player.Translation.X < -38)
+            {
+                return true;
+            }
+            else if (player.Translation.Y > 22 || player.Translation.Y < -34)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// Creates all the initial game objects
+        /// </summary>
+        private void CreateGameObjects()
+        {
+            ActiveGameObjects = new List<GameObject>();
+            int index = 0;
+
+            foreach (PlayerInfo player in activePlayers)
+            {
+                //Create a Game Object for every active player
+                GameObject playerShip;
+                playerShip = new GameObject();
+                playerShip.Scale = new Vector3(0.25f, 0.25f, 0.25f);
+                playerShip.Yaw = 1.5f;
+                playerShip.Pitch = 0f;
+                playerShip.Roll = 1.5f;
+                playerShip.Health = 30;
+                playerShip.UpdateRotationByYawPitchRoll();
+                playerShip.Player_Information = player;
+                playerShip.Name = "Player Ship";
+                playerShip.shootingSound = soundBank.GetCue("missile");
+                playerShip.explosionSound = soundBank.GetCue("explosion");
+                Material shipMaterial = new Material();
+                shipMaterial.Diffuse = new Vector4(0, 0, 0, 1);
+                shipMaterial.SpecularPower = 10;
+                if (index == 0)
+                {
+                    shipMaterial.Specular = Color.Red.ToVector4();
                 }
                 else
                 {
-                    ((NewtonPhysics)scene.PhysicsEngine).SetTransform(boxNode.Physics,
-                        Matrix.CreateTranslation(Vector3.One * 4));
+                    shipMaterial.Specular = Color.Green.ToVector4();
                 }
 
+                GeometryNode playerShipNode = new GeometryNode("Player Ship");
+                playerShipNode.Model = player.Player_Ship.Player_Ship_Model;
+                playerShipNode.Material = shipMaterial;
+                playerShip.Geometry = playerShipNode;
+
+                playerShipNode.AddToPhysicsEngine = true;
+                playerShipNode.Physics.Shape = ShapeType.Box;
+
+                scene.RootNode.AddChild(playerShip);                
+                ActiveGameObjects.Add(playerShip);
+
+
+                if (index == 0)
+                {
+                    playerShip.Translation = new Vector3(-25, 20, -100);
+                }
+                else if (index == 1)
+                {
+                    playerShip.Translation = new Vector3(25,-25, -100);
+                    playerShip.Pitch = 9.5f;
+                    playerShip.UpdateRotationByYawPitchRoll();
+                }
+
+                index++;
+            }
+
+        }
+
+        /// <summary>
+        /// Updates the rotation of an object based on it's target position
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="targetPosition"></param>
+        private void UpdateRotation(GameObject player, Vector3 targetPosition)
+        {
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
+            Vector3 pos = player.Translation + rotation.Backward;
+
+            double slope = findSlope(player.Translation.X,player.Translation.Y,pos.X,pos.Y);
+            double slopeDiff = findSlope(player.Translation.X, player.Translation.Y, targetPosition.X, targetPosition.Y);
+
+
+            float angleDirection = (float)Math.Atan(slope);
+            angleDirection = MathHelper.ToDegrees(angleDirection);
+            
+            float angleTarget = (float)Math.Atan(slopeDiff);
+            angleTarget = MathHelper.ToDegrees(angleTarget);
+
+            if (pos.X < player.Translation.X && pos.Y > player.Translation.Y)
+                angleDirection += 180;
+            if (pos.X < player.Translation.X && pos.Y < player.Translation.Y)
+                angleDirection += 180;
+            if (pos.X > player.Translation.X && pos.Y < player.Translation.Y)
+                angleDirection += 360; 
+
+            if (targetPosition.X < player.Translation.X && targetPosition.Y > player.Translation.Y)
+                angleTarget += 180;
+            if (targetPosition.X < player.Translation.X && targetPosition.Y < player.Translation.Y)
+                angleTarget += 180;
+            if (targetPosition.X > player.Translation.X && targetPosition.Y < player.Translation.Y)
+                angleTarget += 360;
+
+
+            if (angleTarget < 1)
+                angleTarget += 360;
+            if (angleDirection < 1)
+                angleDirection += 360;
+
+
+            if ( Math.Abs(angleDirection - angleTarget) < 5)
+            {
+                player.turnCounter = 0;
+                return;
+            }
+            else
+            {
+                if (player.turnCounter == 60 || player.turnCounter == -60)
+                {
+                    player.turnCounter = 0;
+                }
+
+                if (player.turnCounter > 0)
+                {
+                    player.Pitch += 0.1f;
+                    player.turnCounter++;
+                }
+                else if ( player.turnCounter < 0)
+                {
+                    player.Pitch -= 0.1f;
+                    player.turnCounter--;
+                }
+                else if ( Math.Abs(angleDirection - angleTarget) <= 180.0f)
+                {   
+                    player.Pitch += 0.1f;
+                    player.turnCounter++;
+                }
+                else
+                {
+                    player.Pitch -= 0.1f;
+                    player.turnCounter--;
+                }
+            }
+
+
+            player.UpdateRotationByYawPitchRoll();
+        }
+
+        /// <summary>
+        /// Returns the slope of the line from an object
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        private float findSlope(float x1, float y1, float x2, float y2){
+
+            float x = x2 - x1;
+            float y = y2 - y1;
+
+            if (x == 0)
+                return 0;
+
+            return (y) / (x);
+        }
+
+        /// <summary>
+        /// Checks to see if a player has all their markers
+        /// </summary>
+        private void CheckReady()
+        {
+            bool startGame = true;
+            if (!MarkerNode1.MarkerFound)
+            {
+                //Console.WriteLine("Missing Marker 1");
+                startGame = false;
+            }
+            if (!MarkerNode2.MarkerFound)
+            {
+                //Console.WriteLine("Missing Marker 2");
+                startGame = false;
+            }
+            if (!MarkerNode3.MarkerFound)
+            {
+                //Console.WriteLine("Missing Marker 3");
+                startGame = false;
+            }
+
+            if (startGame)
+            {
+                Console.WriteLine("All markers found, gamer ready.");
+                gameState = GameState.Game_Load;
+                session.LocalGamers[0].IsReady = true;
             }
         }
 
         /// <summary>
-        /// Create the objects for the markers
+        /// Creates a new missle in front of owner with their rotation
         /// </summary>
-        private void CreateObjects()
-         {
-             allShapesNode = new GeometryNode();
-             allShapesMat = new Material();
-             allShapesTransNode = new TransformNode();
+        /// <param name="owner">The owner of the object</param>
+        private void Shoot(GameObject owner)
+        {
+            if (!owner.shootingSound.IsPlaying)
+                owner.shootingSound.Play();
+            owner.shootingSound = soundBank.GetCue("missile");
+                
 
-             // Create a geometry node with a model of a sphere that will be overlaid on
-             // top of the ground marker array
-             sphereNode = new GeometryNode("Sphere");
-             sphereNode.Model = new Sphere(3, 20, 20);
+            GameObject missile = new GameObject();
+            missile.Rotation = owner.Rotation;
+            missile.Name = "Missile";
+            missile.Yaw = owner.Yaw;
+            missile.Pitch = owner.Pitch;
+            missile.Roll = owner.Roll;
 
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(missile.Yaw, missile.Pitch, missile.Roll);
+            missile.Translation = owner.Translation + (rotation.Backward * 6f);
+            missile.Scale = new Vector3(0.025f, 0.025f, 0.025f);
+            missile.Type = GameObjectType.Missle;
 
-             // Add this sphere model to the physics engine for collision detection
-             sphereNode.AddToPhysicsEngine = true;
-             sphereNode.Physics.Shape = ShapeType.Sphere;
-             // Make this sphere model cast and receive shadows
-             sphereNode.Model.CastShadows = true;
-             sphereNode.Model.ReceiveShadows = true;
+            missile.Player_Information = new PlayerInfo(owner.Player_Information.ToString());
+            missile.Player_Information.Speed_Level = 7;
 
-             // Create a marker node to track a ground marker array.
-             groundMarkerNode = new MarkerNode(scene.MarkerTracker, "ALVARGroundArray.xml");
+            GeometryNode missileNode = new GeometryNode("Missile");
+            missileNode.Model = missileModel;
 
-             // Since the ground marker's size is 80x52 ARTag units, in order to move the sphere model
-             // to the center of the ground marker, we shift it by 40x26 units and also make it
-             // float from the ground marker's center
-             TransformNode sphereTransNode = new TransformNode();
-             sphereTransNode.Translation = new Vector3(40, 26, 10);
+            missile.Geometry = missileNode;
 
-             // Create a material to apply to the sphere model
-             Material sphereMaterial = new Material();
-             sphereMaterial.Diffuse = new Vector4(0, 0.5f, 0, 1);
-             sphereMaterial.Specular = Color.White.ToVector4();
-             sphereMaterial.SpecularPower = 10;
+            missile.Geometry.AddToPhysicsEngine = true;
+            //missile.Geometry.Physics.Shape = ShapeType.Box;
+            missile.Geometry.Material = owner.Geometry.Material;
 
-             sphereNode.Material = sphereMaterial;
+            foreach (GameObject obj in ActiveGameObjects)
+            {
+                if (obj.Name != "Missile")
+                {
+                    if (owner.Player_Information.PlayerName != obj.Player_Information.PlayerName)
+                    {
+                        if (ActiveGameObjects[0].Player_Information.PlayerName == missile.Player_Information.PlayerName)
+                        {
+                            //Console.WriteLine("Added collision callback player 1");
+                            //AddCollisionCallbackPlayer2(obj, missile);
+                        }
+                        else if (ActiveGameObjects[1].Player_Information.PlayerName == missile.Player_Information.PlayerName)
+                        {
+                            //Console.WriteLine("Added collision callback player 2");
+                            //AddCollisionCallbackPlayer1(obj, missile);
+                        }
+                    }
+                }
+            }
 
-             // Now add the above nodes to the scene graph in the appropriate order.
-             // Note that only the nodes added below the marker node are affected by 
-             // the marker transformation.
-             scene.RootNode.AddChild(groundMarkerNode);
-             groundMarkerNode.AddChild(sphereTransNode);
-             sphereTransNode.AddChild(sphereNode);
+            ActiveGameObjects.Add(missile);
+            scene.RootNode.AddChild(ActiveGameObjects[ActiveGameObjects.Count - 1]);
+        }
 
-             // Create a geometry node with a model of a box that will be overlaid on
-             // top of the ground marker array initially. (When the toolbar marker array is
-             // detected, it will be overlaid on top of the toolbar marker array.)
-             boxNode = new GeometryNode("Box");
-             boxNode.Model = new Box(800);
+        /// <summary>
+        /// Removes all inactive objects from ActiveGameObjects
+        /// </summary>
+        private void RemoveInactiveObjects()
+        {
+            bool objRemoved;
+            do
+            {
+                objRemoved = false;
+                foreach (GameObject obj in ActiveGameObjects)
+                {
+                    if (obj.flagForRemoval)
+                    {
+                        Console.WriteLine("Removing Object. ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        scene.RootNode.RemoveChild(obj);
+                        //scene.PhysicsEngine.RemovePhysicsObject(obj.Geometry.Physics);
+                        ActiveGameObjects.Remove(obj);
+                        objRemoved = true;
 
-             // Add this box model to the physics engine for collision detection
-             boxNode.AddToPhysicsEngine = true;
-             boxNode.Physics.Shape = ShapeType.Box;
-             // Make this box model cast and receive shadows
-             boxNode.Model.CastShadows = true;
-             boxNode.Model.ReceiveShadows = true;
+                        Console.WriteLine("Object removed.  ActiveObjects: " + ActiveGameObjects.Count +
+                            "  Scene objects: " + scene.RootNode.Children.Count);
+                        if (obj.Player_Information.PlayerName == activePlayers[0].PlayerName)
+                        {
+                            //((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer2[0]);
+                            //collisionPairsPlayer2.RemoveAt(0);
+                        }
+                        else
+                        {
+                            //((NewtonPhysics)scene.PhysicsEngine).RemoveCollisionCallback(collisionPairsPlayer1[0]);
+                            //collisionPairsPlayer1.RemoveAt(0);
+                        }
+                        break;
+                    }
+                }
+            } while (objRemoved == true);
 
-             // Create a marker node to track a toolbar marker array.
-             toolbarMarkerNode = new MarkerNode(scene.MarkerTracker, "Toolbar.txt");
+            if (scene.RootNode.Children.Count > 14)
+            {
+                scene.RootNode.RemoveChildAt(12);
+            }
+        }
 
-             scene.RootNode.AddChild(toolbarMarkerNode);
+        /// <summary>
+        /// Rotates the ship when it goes out of bounds
+        /// </summary>
+        /// <param name="player"></param>
+        private void RotateAnimation(GameObject player)
+        {
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(player.Yaw, player.Pitch, player.Roll);
+            Vector3 pos = player.Translation + rotation.Backward;
+            double slope = findSlope(player.Translation.X, player.Translation.Y, pos.X, pos.Y);
 
-             // Create a material to apply to the box model
-             Material boxMaterial = new Material();
-             boxMaterial.Diffuse = new Vector4(0.5f, 0, 0, 1);
-             boxMaterial.Specular = Color.White.ToVector4();
-             boxMaterial.SpecularPower = 10;
+            float angleDirection = (float)Math.Atan(slope);
+            angleDirection = MathHelper.ToDegrees(angleDirection);
 
-             boxNode.Material = boxMaterial;
+            /*
+            if (OutOfBounds(player) == true)
+            {
+                angleDirection += 180;
+                player.Pitch += .1f;
 
-             // Add this box model node to the ground marker node
-             groundMarkerNode.AddChild(boxNode);
+                player.UpdateRotationByYawPitchRoll();
+            } 
+             */ 
+        }
 
-             // Create a collision pair and add a collision callback function that will be
-             // called when the pair collides
-             NewtonPhysics.CollisionPair pair = new NewtonPhysics.CollisionPair(boxNode.Physics, sphereNode.Physics);
-             ((NewtonPhysics)scene.PhysicsEngine).AddCollisionCallback(pair, BoxSphereCollision);
+        /// <summary>
+        /// Return the distance between two points
+        /// </summary>
+        /// <param name="a">Point A</param>
+        /// <param name="b">Point B</param>
+        /// <returns></returns>
+        public static double getDistance(double x1, double y1, double x2, double y2)
+        {
+            double distance = 0;
+            double x = Math.Abs(Math.Pow((x1-x2),2));
+            double y = Math.Abs(Math.Pow((y1-y2),2));
+            distance = Math.Sqrt(x + y);
 
-             //NewtonPhysics.CollisionPair tmp = new NewtonPhysics.CollisionPair
-
-             // NewtonMaterial.ContactBegin startWar = new NewtonMaterial.ContactBegin(boxNode.Physics, sphereNode.Physics);
-
-
-             ids1 = new int[4];
-             ids1[0] = 70;
-             ids1[1] = 71;
-             ids1[2] = 72;
-             ids1[3] = 73;
-             MarkerNode1 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML1.xml", ids1);
-             cylinderNode1 = new GeometryNode("ENEMY's SHIP");
-             cylinderNode1.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode1.Material = sphereMaterial;
-             TransformNode cylinderTransNode = new TransformNode();
-             cylinderTransNode.Translation = new Vector3(0, 0, 3);
-             MarkerNode1.AddChild(cylinderTransNode);
-             cylinderTransNode.AddChild(cylinderNode1);
-             scene.RootNode.AddChild(MarkerNode1);
-
-             ids2 = new int[4];
-             ids2[0] = 80;
-             ids2[1] = 81;
-             ids2[2] = 82;
-             ids2[3] = 83;
-
-             MarkerNode2 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML2.xml", ids2);
-
-             cylinderNode2 = new GeometryNode("PLAYER's SHIP EAST");
-             cylinderNode2.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode2.Material = boxMaterial;
-             TransformNode cylinderTransNode2 = new TransformNode();
-             cylinderTransNode2.Translation = new Vector3(20, 5, 10);
-             MarkerNode2.AddChild(cylinderTransNode2);
-             cylinderTransNode2.AddChild(cylinderNode2);
-             scene.RootNode.AddChild(MarkerNode2);
-
-
-             ids3 = new int[4];
-             ids3[0] = 90;
-             ids3[1] = 91;
-             ids3[2] = 92;
-             ids3[3] = 93;
-
-             MarkerNode3 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML3.xml", ids3);
-
-             cylinderNode3 = new GeometryNode("PLAYER's SHIP WEST");
-             cylinderNode3.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode3.Material = sphereMaterial;
-             TransformNode cylinderTransNode3 = new TransformNode();
-             cylinderTransNode3.Translation = new Vector3(0, 5, 0);
-             MarkerNode3.AddChild(cylinderTransNode3);
-             cylinderTransNode3.AddChild(cylinderNode3);
-             scene.RootNode.AddChild(MarkerNode3);
-
-
-             ids4 = new int[4];
-             ids4[0] = 100;
-             ids4[1] = 101;
-             ids4[2] = 102;
-             ids4[3] = 103;
-
-             MarkerNode4 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML4.xml", ids4);
-
-             cylinderNode4 = new GeometryNode("PLAYER's NORTH");
-             cylinderNode4.Model = new Cylinder(3, 3, 6, 10);
-             cylinderNode4.Material = boxMaterial;
-             TransformNode cylinderTransNode4 = new TransformNode();
-             cylinderTransNode4.Translation = new Vector3(0, 0, 0);
-             MarkerNode4.AddChild(cylinderTransNode4);
-             cylinderTransNode4.AddChild(cylinderNode4);
-             scene.RootNode.AddChild(MarkerNode4);
-
-             ids5 = new int[4];
-             ids5[0] = 110;
-             ids5[1] = 111;
-             ids5[2] = 112;
-             ids5[3] = 113;
-             MarkerNode5 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML5.xml", ids5);
-
-             ids6 = new int[4];
-             ids6[0] = 120;
-             ids6[1] = 121;
-             ids6[2] = 122;
-             ids6[3] = 123;
-             MarkerNode6 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML6.xml", ids6);
-
-             ids7 = new int[4];
-             ids7[0] = 130;
-             ids7[1] = 131;
-             ids7[2] = 132;
-             ids7[3] = 133;
-             MarkerNode7 = new MarkerNode(scene.MarkerTracker, "Markers//ALVARConfigFromXML7.xml", ids7);
-
-             scene.RootNode.AddChild(MarkerNode5);
-             scene.RootNode.AddChild(MarkerNode6);
-             scene.RootNode.AddChild(MarkerNode7);
-
-
-         }
+            return distance;
+        }
     }
 }

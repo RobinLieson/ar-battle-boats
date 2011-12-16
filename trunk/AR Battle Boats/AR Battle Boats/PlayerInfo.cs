@@ -2,9 +2,13 @@
 using System.Net.Sockets;
 using System.Net;
 using System;
+using System.Collections.Generic;
 
 namespace AR_Battle_Boats
 {
+    /// <summary>
+    /// The info for a server, 
+    /// </summary>
     public class PlayerInfo
     {
         private string userName;
@@ -13,6 +17,7 @@ namespace AR_Battle_Boats
         private int ammo;
         private int speed;
         private Ship ship;
+        public Player_Location PlayerLocation;
 
         /// <summary>
         /// Create a new PlayerInfo class
@@ -107,6 +112,7 @@ namespace AR_Battle_Boats
             }
         }
 
+
         /// <summary>
         /// Get or Set the Ship Model Info for this PlayerInfo
         /// </summary>
@@ -163,7 +169,7 @@ namespace AR_Battle_Boats
             builder.Append("armour:" + armour + "\t");
             builder.Append("ammo:" + ammo + "\t");
             builder.Append("speed:" + speed + "\t");
-            builder.Append("ship:" + ship);
+            builder.Append("ship:Basic");
 
             return builder.ToString();
         }
@@ -182,12 +188,30 @@ namespace AR_Battle_Boats
             ASCIIEncoding encoder = new ASCIIEncoding();
 
             TcpClient client = new TcpClient();
-            IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(Server_Address), Port_Num);
+            IPEndPoint serverEndPoint;
+
 
             try
             {
+                serverEndPoint = new IPEndPoint(IPAddress.Parse(Server_Address), Port_Num);
                 Console.Write("Connecting to server...");
                 client.Connect(serverEndPoint);
+            }
+            catch
+            {
+                try
+                {
+                    Console.Write("Connecting to server...");
+                    client.Connect(Server_Address, Port_Num);
+                }
+                catch
+                {
+                    Console.WriteLine("ERROR:  Could not connect to server!");
+                    return false;
+                }
+            }
+            try
+            {
 
                 Console.WriteLine("Connected!");
 
@@ -235,20 +259,37 @@ namespace AR_Battle_Boats
         /// <param name="Server_address">Address of the Remote Server</param>
         /// <param name="Port_Num">Port Number on the Remote Server</param>
         /// <returns>True if update was successful, false otherwise</returns>
-        private bool UpdateInfoOnServer(string Server_address, int Port_Num)
+        public bool UpdateInfoOnServer(string Server_Address, int Port_Num)
         {
             NetworkStream stream; //Stream to write and read data to
 
             ASCIIEncoding encoder = new ASCIIEncoding();
 
             TcpClient client = new TcpClient();
-            IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 3550);
+            IPEndPoint serverEndPoint;
+
 
             try
             {
+                serverEndPoint = new IPEndPoint(IPAddress.Parse(Server_Address), Port_Num);
                 Console.Write("Connecting to server...");
                 client.Connect(serverEndPoint);
-
+            }
+            catch
+            {
+                try
+                {
+                    Console.Write("Connecting to server...");
+                    client.Connect(Server_Address, Port_Num);
+                }
+                catch
+                {
+                    Console.WriteLine("ERROR:  Could not connect to server!");
+                    return false;
+                }
+            }
+            try
+            {
                 Console.WriteLine("Connected!");
 
                 Console.Write("Sending data to server...");
@@ -285,5 +326,58 @@ namespace AR_Battle_Boats
 
             return true;
         }
+    }
+
+    /// <summary>
+    /// Class used to compare two player info together
+    /// </summary>
+    public class PlayerInfoEqualityComprarer : IEqualityComparer<PlayerInfo>
+    {
+        /// <summary>
+        /// Returns true if two PlayerInfo objects are the same
+        /// </summary>
+        /// <param name="p1">PlayerInfo 1</param>
+        /// <param name="p2">PlayerInfo 2</param>
+        /// <returns></returns>
+        public bool Equals(PlayerInfo p1, PlayerInfo p2)
+        {
+            if (p1.PlayerName == p2.PlayerName && p1.Ammo_Level == p2.Ammo_Level && p1.Armour_Level == p2.Armour_Level &&
+                p1.Money == p2.Money && p1.Player_Ship == p2.Player_Ship && p1.PlayerLocation == p2.PlayerLocation &&
+                p1.Speed_Level == p2.Speed_Level)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the two playerInfo's have the same name
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        public bool HasName(PlayerInfo p1, PlayerInfo p2)
+        {
+            if (p1.PlayerName == p2.PlayerName)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        #region IEqualityComparer<PlayerInfo> Members
+        
+        public int GetHashCode(PlayerInfo obj)
+        {
+            return obj.PlayerName.GetHashCode();
+        }
+
+        #endregion
     }
 }

@@ -58,19 +58,18 @@
   <ItemGroup>
     <Reference Include="DirectX.Capture, Version=1.0.3674.42904, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\DirectX.Capture.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\DirectX.Capture.dll</HintPath>
     </Reference>
     <Reference Include="DShowNET, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\DShowNET.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\DShowNET.dll</HintPath>
     </Reference>
     <Reference Include="GoblinXNA, Version=3.6.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\GoblinXNA.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\GoblinXNA.dll</HintPath>
     </Reference>
     <Reference Include="Lidgren.Network, Version=2010.7.15.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\Lidgren.Network.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\Lidgren.Network.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Xna.Framework, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d, processorArchitecture=x86">
       <Private>False</Private>
@@ -85,16 +84,13 @@
     </Reference>
     <Reference Include="NewtonWrapper, Version=1.1.30.2009, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\NewtonWrapper.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\NewtonWrapper.dll</HintPath>
     </Reference>
     <Reference Include="Nuclex.Fonts, Version=2.0.3554.30001, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\Nuclex.Fonts.dll</HintPath>
+      <HintPath>..\..\..\..\..\Documents\Visual Studio 2008\Projects\WindowsGame3\WindowsGame3\bin\x86\Debug\Nuclex.Fonts.dll</HintPath>
     </Reference>
-    <Reference Include="Nuclex.Fonts.Content.TrueTypeImporter, Version=1.0.3554.30260, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>DLL Files\managed\Nuclex.Fonts.Content.TrueTypeImporter.dll</HintPath>
-    </Reference>
+    <Reference Include="Nuclex.Fonts.Content.TrueTypeImporter, Version=1.0.3554.30260, Culture=neutral, processorArchitecture=x86" />
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
@@ -112,7 +108,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HUD.cs" />
+    <Compile Include="lobby.cs" />
     <Compile Include="Enumerables.cs" />
+    <Compile Include="GameObject.cs" />
     <Compile Include="PlayerInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
