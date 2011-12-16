@@ -735,16 +735,31 @@ namespace AR_Battle_Boats
             gameState = GameState.Count_Down;
 
             string color;
-            if(playerIndex == 0)
+            if (playerIndex == 0)
+            {
                 color = "Red";
+            }
             else
+            {
                 color = "Green";
+            }
 
             gwinner = new FadingMessage("You are " + color, 1000);
             gwinner.Bounds = new Rectangle(0, 0, 130, 30);
             gwinner.Name = "gwinner";
             gwinner.TextFont = hudFont;
-            gwinner.TextColor = Color.ForestGreen;
+            if (playerIndex == 0)
+            {
+                color = "Red";
+                gwinner.TextColor = Color.Red;
+            }
+            else
+            {
+                color = "Green";
+                gwinner.TextColor = Color.Green;
+            }
+
+
             winners.Enabled = true;
             winners.Visible = true;
             gwinner.Enabled = true;
