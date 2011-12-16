@@ -489,6 +489,7 @@ namespace AR_Battle_Boats
             if (enteredKeys.Count > 0)
                 enteredKeys.RemoveAt(0);
         }
+
         //Networking
 
         /// <summary>
@@ -858,7 +859,9 @@ namespace AR_Battle_Boats
 
 
         //Menu Functions
-
+        /// <summary>
+        /// Randomly chooses a background
+        /// </summary>
         private void ChooseBackground()
         {
             Random rand = new Random();
@@ -1172,6 +1175,10 @@ namespace AR_Battle_Boats
             howtoback.Visible = false;
         }
 
+        /// <summary>
+        /// Goes to the next picture in the tutorial
+        /// </summary>
+        /// <param name="source"></param>
         void howtonext_ActionPerformedEvent(object source)
          {
             if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
@@ -1195,6 +1202,10 @@ namespace AR_Battle_Boats
             }
         }
 
+        /// <summary>
+        /// Goes to the previous slide in the tutorial
+        /// </summary>
+        /// <param name="source"></param>
         void howtoback_ActionPerformedEvent(object source)
         {
             if ((howto.Texture == Content.Load<Texture2D>(tutorial1)))
@@ -1224,6 +1235,10 @@ namespace AR_Battle_Boats
                         }
         }
 
+        /// <summary>
+        /// Exits tutorial and goes back to the main menu
+        /// </summary>
+        /// <param name="source"></param>
         void howtomenu_ActionPerformedEvent(object source)
         {
             howtonext.Enabled = false;
@@ -1423,7 +1438,7 @@ namespace AR_Battle_Boats
 
             if (gameMode == GameMode.Network_Multiplayer)
             {
-                if (session.IsEveryoneReady || !session.IsEveryoneReady)
+                if (session.IsEveryoneReady || !session.IsEveryoneReady && session.SessionState == NetworkSessionState.Lobby)
                 {
                     session.StartGame();
                     session.Update();
@@ -1436,9 +1451,12 @@ namespace AR_Battle_Boats
                 info.PlayerName = info.PlayerName + " Guest";
                 info.Player_Ship = AvailableShips[0];
                 activePlayers.Add(info);
-                session.StartGame();
-                session.Update();
-                HideMainMenu();
+                if (session.SessionState == NetworkSessionState.Lobby)
+                {
+                    session.StartGame();
+                    session.Update();
+                    HideMainMenu();
+                }
             }
         }
 
